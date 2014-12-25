@@ -17,7 +17,7 @@
 		<spring.version>4.1.2.RELEASE</spring.version>
 		<jackson.version>2.4.4</jackson.version>
 		<!-- <resource-utility.version>1.0.0</resource-utility.version> -->
-		<selenium-utility.version>1.0.0</selenium-utility.version>
+		<selenium-assistant.version>1.0.0</selenium-assistant.version>
 		<package-utility.version>1.0.0</package-utility.version>
 	</properties>
 
@@ -51,13 +51,13 @@
 			<version>${jackson.version}</version>
 		</dependency>
 
-		<!-- selenium-utility -->
+		<!-- selenium-assistant -->
 		<dependency>
 			<groupId>idv.hsiehpinghan</groupId>
-			<artifactId>selenium-utility</artifactId>
-			<version>${selenium-utility.version}</version>
+			<artifactId>selenium-assistant</artifactId>
+			<version>${selenium-assistant.version}</version>
 		</dependency>
-		
+
 		<!-- resource-utility -->
 		<!-- <dependency> -->
 		<!-- <groupId>idv.hsiehpinghan</groupId> -->

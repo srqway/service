@@ -1,7 +1,7 @@
-package idv.hsiehpinghan.mopsservice.manager.implement;
+package idv.hsiehpinghan.mopsservice.manager.nosql;
 
 import idv.hsiehpinghan.mopsservice.manager.IMopsManager;
-import idv.hsiehpinghan.mopsservice.operator.IFinancialReportOperator;
+import idv.hsiehpinghan.mopsservice.operator.FinancialReportOperator;
 
 import java.io.File;
 
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class MopsManager implements IMopsManager {
 	@Autowired
-	IFinancialReportOperator financialReportOperator;
+	FinancialReportOperator financialReportOperator;
 	
 	@Override
 	public void downloadFinancialReport() {
