@@ -41,7 +41,7 @@ public class MopsAjaxWaitUtility {
 					}
 					return false;
 				} catch (Exception e) {
-					logger.debug("Exception : ", e);
+					logger.trace("Exception : ", e);
 					return false;
 				}
 			}

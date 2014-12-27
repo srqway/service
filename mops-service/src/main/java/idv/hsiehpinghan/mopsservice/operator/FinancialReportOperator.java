@@ -201,7 +201,7 @@ public class FinancialReportOperator implements InitializingBean {
 									: " failed !!!"));
 					throw new RuntimeException(e);
 				}
-				sleep(tryAmount * 60);
+				sleep(tryAmount * 30);
 			}
 		}
 	}
@@ -282,7 +282,7 @@ public class FinancialReportOperator implements InitializingBean {
 				if (tryAmount >= MAX_TRY_AMOUNT) {
 					throw new RuntimeException(e);
 				}
-				sleep(tryAmount * 60);
+				sleep(tryAmount * 30);
 			}
 		}
 	}
