@@ -1,7 +1,7 @@
 package idv.hsiehpinghan.mopsservice.operator;
 
 import idv.hsiehpinghan.compressutility.utility.CompressUtility;
-import idv.hsiehpinghan.mopsservice.operator.utility.MopsAjaxWaitUtility;
+import idv.hsiehpinghan.mopsservice.utility.MopsAjaxWaitUtility;
 import idv.hsiehpinghan.mopsservice.webelement.XbrlDownloadTable;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
 import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;

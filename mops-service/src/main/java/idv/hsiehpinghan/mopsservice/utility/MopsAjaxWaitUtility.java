@@ -1,4 +1,4 @@
-package idv.hsiehpinghan.mopsservice.operator.utility;
+package idv.hsiehpinghan.mopsservice.utility;
 
 import idv.hsiehpinghan.mopsservice.webelement.XbrlDownloadTable;
 
