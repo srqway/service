@@ -9,7 +9,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.testng.annotations.BeforeSuite;
 
 public class TestngSuitSetting {
-	private static ApplicationContext applicationContext;
+	private static AnnotationConfigApplicationContext applicationContext;
 
 	@BeforeSuite()
 	public void beforeSuite() throws IOException {

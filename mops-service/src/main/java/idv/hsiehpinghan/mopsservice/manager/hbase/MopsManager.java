@@ -1,4 +1,4 @@
-package idv.hsiehpinghan.mopsservice.manager.nosql;
+package idv.hsiehpinghan.mopsservice.manager.hbase;
 
 import idv.hsiehpinghan.mopsservice.manager.IMopsManager;
 import idv.hsiehpinghan.mopsservice.operator.FinancialReportOperator;

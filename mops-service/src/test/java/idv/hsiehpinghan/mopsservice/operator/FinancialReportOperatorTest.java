@@ -4,11 +4,13 @@ import idv.hsiehpinghan.mopsservice.suit.TestngSuitSetting;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 
+import java.io.File;
 import java.io.IOException;
 
 import junit.framework.Assert;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.springframework.context.ApplicationContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -39,7 +41,16 @@ public class FinancialReportOperatorTest {
 
 	@Test(dependsOnMethods = { "getMarketTypeSelect" })
 	public void downloadFinancialReport() {
-		operator.downloadFinancialReport();
+//		try {
+			File f = operator.downloadFinancialReport();
+			Assert.assertNotNull(f);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			WebDriver driver = operator.getBrowser().getWebDriver();
+//			System.out.println(driver.getPageSource());
+//
+//		}
+
 	}
 
 }

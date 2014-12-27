@@ -19,6 +19,7 @@
 		<!-- <resource-utility.version>1.0.0</resource-utility.version> -->
 		<selenium-assistant.version>1.0.0</selenium-assistant.version>
 		<package-utility.version>1.0.0</package-utility.version>
+		<compress-utility.version>1.0.0</compress-utility.version>
 	</properties>
 
 	<dependencies>
@@ -58,6 +59,13 @@
 			<version>${selenium-assistant.version}</version>
 		</dependency>
 
+		<!-- compress-utility -->
+		<dependency>
+			<groupId>idv.hsiehpinghan</groupId>
+			<artifactId>compress-utility</artifactId>
+			<version>${compress-utility.version}</version>
+		</dependency>
+
 		<!-- resource-utility -->
 		<!-- <dependency> -->
 		<!-- <groupId>idv.hsiehpinghan</groupId> -->
@@ -72,5 +80,6 @@
 			<version>${package-utility.version}</version>
 			<scope>test</scope>
 		</dependency>
+
 	</dependencies>
 </project>
