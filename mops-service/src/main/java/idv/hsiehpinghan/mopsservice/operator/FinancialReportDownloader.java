@@ -22,8 +22,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+/**
+ * Response for download xbrl instance files from mops.
+ * @author thank.hsiehpinghan
+ *
+ */
 @Service
-public class FinancialReportOperator implements InitializingBean {
+public class FinancialReportDownloader implements InitializingBean {
 	private final String NO_DATA_MSG_CSS_SELECTOR = "#table01 > h4 > font";
 	private final String NO_DATA_MSG = "查無符合資料！";
 	private final int MAX_TRY_AMOUNT = 3;
@@ -92,10 +97,19 @@ public class FinancialReportOperator implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		downloadDir = new File(
-				environment.getProperty("mops-service.download_dir"));
-		extractDir = new File(
-				environment.getProperty("mops-service.extract_dir"));
+		String dStr = "mops-service.download_dir";
+		String dProp = environment.getProperty(dStr);
+		if (dProp == null) {
+			throw new RuntimeException(dStr + " not set !!!");
+		}
+		downloadDir = new File(dProp);
+
+		String eStr = "mops-service.extract_dir";
+		String eProp = environment.getProperty(eStr);
+		if (eProp == null) {
+			throw new RuntimeException(eStr + " not set !!!");
+		}
+		extractDir = new File(eProp);
 	}
 
 	Select getMarketTypeSelect() {
