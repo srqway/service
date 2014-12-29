@@ -1,6 +1,5 @@
 package idv.hsiehpinghan.mopsservice.operator;
 
-import idv.hsiehpinghan.compressutility.utility.CompressUtility;
 import idv.hsiehpinghan.mopsservice.utility.MopsAjaxWaitUtility;
 import idv.hsiehpinghan.mopsservice.webelement.XbrlDownloadTable;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
@@ -24,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Response for download xbrl instance files from mops.
+ * 
  * @author thank.hsiehpinghan
  *
  */
@@ -34,11 +34,13 @@ public class FinancialReportDownloader implements InitializingBean {
 	private final int MAX_TRY_AMOUNT = 3;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
-	private File extractDir;
+
 	@Autowired
 	private Environment environment;
 	@Autowired
 	private HtmlUnitBrowser browser;
+	@Autowired
+	private FinancialReportUnzipper unzipper;
 
 	// @Autowired
 	// private FirefoxBrowser browser;
@@ -92,7 +94,7 @@ public class FinancialReportDownloader implements InitializingBean {
 				}
 			}
 		}
-		return extractDir;
+		return unzipper.getExtractDir();
 	}
 
 	@Override
@@ -103,13 +105,6 @@ public class FinancialReportDownloader implements InitializingBean {
 			throw new RuntimeException(dStr + " not set !!!");
 		}
 		downloadDir = new File(dProp);
-
-		String eStr = "mops-service.extract_dir";
-		String eProp = environment.getProperty(eStr);
-		if (eProp == null) {
-			throw new RuntimeException(eStr + " not set !!!");
-		}
-		extractDir = new File(eProp);
 	}
 
 	Select getMarketTypeSelect() {
@@ -182,40 +177,11 @@ public class FinancialReportDownloader implements InitializingBean {
 				File f = browser.download(downloadDir.getAbsolutePath() + "/"
 						+ fileName);
 				logger.info(f.getAbsolutePath() + " downloaded.");
-				repeatTryUnzip(f);
+				unzipper.repeatTryUnzip(f);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			} finally {
 				browser.restorePage();
-			}
-		}
-	}
-
-	private void repeatTryUnzip(File file) {
-		int tryAmount = 0;
-		while (true) {
-			File dir = null;
-			try {
-				dir = CompressUtility.unzip(file, extractDir);
-				logger.info("Unzipp to " + dir + " success.");
-				break;
-			} catch (Exception e) {
-				++tryAmount;
-				logger.warn("Unzip fail " + tryAmount + " times !!!");
-				if (tryAmount >= MAX_TRY_AMOUNT) {
-					logger.warn("File("
-							+ file.getAbsolutePath()
-							+ ") delete "
-							+ (file.delete() == true ? " success !!!"
-									: " failed !!!"));
-					logger.warn("Directory("
-							+ dir.getAbsolutePath()
-							+ ") delete "
-							+ (dir.delete() == true ? " success !!!"
-									: " failed !!!"));
-					throw new RuntimeException(e);
-				}
-				sleep(tryAmount * 60);
 			}
 		}
 	}
