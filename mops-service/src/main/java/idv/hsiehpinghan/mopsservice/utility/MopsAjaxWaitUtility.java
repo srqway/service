@@ -1,4 +1,4 @@
-package idv.hsiehpinghan.mopsservice.operator.utility;
+package idv.hsiehpinghan.mopsservice.utility;
 
 import idv.hsiehpinghan.mopsservice.webelement.XbrlDownloadTable;
 
@@ -41,7 +41,7 @@ public class MopsAjaxWaitUtility {
 					}
 					return false;
 				} catch (Exception e) {
-					logger.debug("Exception : ", e);
+					logger.trace("Exception : ", e);
 					return false;
 				}
 			}
