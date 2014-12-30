@@ -14,24 +14,36 @@ public class MopsHbaseManager implements IMopsManager {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	@Autowired
-	FinancialReportDownloader downloader;
+	private FinancialReportDownloader downloader;
 
 	@Override
-	public boolean downloadFinancialReport() {
+	public File downloadFinancialReport() {
 		try {
-			File dir = downloader.downloadFinancialReport();
-			logger.info(dir.getAbsolutePath() + " download finish.");
-			return true;
+			File xbrlDir = downloader.downloadFinancialReport();
+			logger.info(xbrlDir.getAbsolutePath() + " download finish.");
+			return xbrlDir;
 		} catch (Exception e) {
 			logger.error("Download fail !!!");
-			return false;
+			return null;
 		}
 	}
 
 	@Override
-	public boolean saveFinancialReportToDatabase() {
-		// TODO Auto-generated method stub
+	public boolean saveFinancialReportToDatabase(File xbrlDirectory) {
+		processSubFiles(xbrlDirectory);
 		return false;
 	}
 
+	private void processSubFiles(File file) {
+		if (file.isDirectory()) {
+			File[] fs = file.listFiles();
+			for (File f : fs) {
+				processSubFiles(f);
+			}
+		} else {
+			// xbrlAssistant.get
+			System.err.println(file.getAbsolutePath());
+		}
+
+	}
 }

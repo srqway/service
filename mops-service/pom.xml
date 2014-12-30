@@ -18,6 +18,7 @@
 		<jackson.version>2.4.4</jackson.version>
 		<!-- <resource-utility.version>1.0.0</resource-utility.version> -->
 		<selenium-assistant.version>1.0.0</selenium-assistant.version>
+		<xbrl-assistant.version>1.0.0</xbrl-assistant.version>
 		<package-utility.version>1.0.0</package-utility.version>
 		<compress-utility.version>1.0.0</compress-utility.version>
 	</properties>
@@ -59,6 +60,13 @@
 			<version>${selenium-assistant.version}</version>
 		</dependency>
 
+		<!-- xbrl-assistant -->
+		<dependency>
+			<groupId>idv.hsiehpinghan</groupId>
+			<artifactId>xbrl-assistant</artifactId>
+			<version>${xbrl-assistant.version}</version>
+		</dependency>
+		
 		<!-- compress-utility -->
 		<dependency>
 			<groupId>idv.hsiehpinghan</groupId>
