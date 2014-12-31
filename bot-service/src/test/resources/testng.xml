@@ -4,7 +4,9 @@
 	<test name="test_1">
 		<classes>
 			<class name="idv.hsiehpinghan.botservice.suit.TestngSuitSetting" />
-			<class name="idv.hsiehpinghan.botservice.operator.ExchangeRateDownloaderTest" />
+<!-- 			<class -->
+<!-- 				name="idv.hsiehpinghan.botservice.operator.ExchangeRateDownloaderTest" /> -->
+			<class name="idv.hsiehpinghan.botservice.entity.ExchangeRateTest" />
 		</classes>
 	</test>
 </suite>

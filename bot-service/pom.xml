@@ -16,6 +16,7 @@
 		<testng.version>6.1.1</testng.version>
 		<spring.version>4.1.2.RELEASE</spring.version>
 		<selenium-assistant.version>1.0.0</selenium-assistant.version>
+		<hbase-assistant.version>1.0.0</hbase-assistant.version>
 		<package-utility.version>1.0.0</package-utility.version>
 	</properties>
 
@@ -49,6 +50,13 @@
 			<version>${selenium-assistant.version}</version>
 		</dependency>
 
+		<!-- hbase-assistant -->
+		<dependency>
+			<groupId>idv.hsiehpinghan</groupId>
+			<artifactId>hbase-assistant</artifactId>
+			<version>${hbase-assistant.version}</version>
+		</dependency>
+		
 		<!-- package-utility -->
 		<dependency>
 			<groupId>idv.hsiehpinghan</groupId>
