@@ -2,13 +2,15 @@ package idv.hsiehpinghan.botservice.operator;
 
 import idv.hsiehpinghan.botservice.enumeration.Dollar;
 import idv.hsiehpinghan.botservice.webelement.ExchangeRateDownloadTable;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
+import idv.hsiehpinghan.datetimeutility.utility.CalendarUtility;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select.Option;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.List;
 
 import org.apache.commons.collections.ListUtils;
@@ -31,10 +33,7 @@ public class ExchangeRateDownloader implements InitializingBean {
 	@Autowired
 	private Environment environment;
 	@Autowired
-	private HtmlUnitBrowser browser;
-
-	// @Autowired
-	// private FirefoxBrowser browser;
+	private HtmlUnitFirefoxVersionBrowser browser;
 
 	/**
 	 * Download exchange rate.
@@ -44,12 +43,13 @@ public class ExchangeRateDownloader implements InitializingBean {
 	 */
 	public File downloadExchangeRate(List<Dollar> targetDallars) {
 		moveToTargetPage();
+		clickPeriodType();
 		List<Option> yearOpts = getYearSelect().getOptions();
-		for (int iYear = 0, yearSize = yearOpts.size(); iYear < yearSize; ++iYear) {
+		for (int iYear = yearOpts.size() - 1; iYear >= 0; --iYear) {
 			Option yearOpt = yearOpts.get(iYear);
 			yearOpt.click();
 			List<Option> monOpts = getMonthSelect().getOptions();
-			for (int iMon = monOpts.size() - 1; iMon >= 0; --iMon) {
+			for (int iMon = 0, size = monOpts.size(); iMon < size; ++iMon) {
 				Option monOpt = monOpts.get(iMon);
 				monOpt.click();
 				clickItemType();
@@ -70,20 +70,46 @@ public class ExchangeRateDownloader implements InitializingBean {
 						}
 						String year = yearOpt.getValue();
 						String month = monOpt.getValue();
-						if (isDownloaded(year, month, dollar)) {
+						if (isAfterCurrentMonth(year, month)) {
+							continue;
+						}
+						if (isBeforePreviousMonth(year, month)
+								&& isDownloaded(year, month, dollar)) {
 							logger.info(getTargetFile(year, month, dollar)
 									.getAbsolutePath() + " downloaded before.");
 							continue;
 						}
 						clickExchangeType();
+						browser.cacheCurrentPage();
 						clickQueryButton();
 						repeatTryDownload(year, month, dollar);
-						browser.back();
+						browser.restorePage();
 					}
 				}
 			}
 		}
 		return downloadDir;
+	}
+
+	private boolean isAfterCurrentMonth(String year, String month) {
+		int dataYyyyMm = Integer.valueOf(year + month);
+		Calendar cal = Calendar.getInstance();
+		int curMonthYyyyMm = CalendarUtility.getYyyyMm(cal);
+		if (curMonthYyyyMm < dataYyyyMm) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isBeforePreviousMonth(String year, String month) {
+		int dataYyyyMm = Integer.valueOf(year + month);
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.MONTH, -1);
+		int preMonthYyyyMm = CalendarUtility.getYyyyMm(cal);
+		if (dataYyyyMm < preMonthYyyyMm) {
+			return true;
+		}
+		return false;
 	}
 
 	private boolean isDownloaded(String year, String month, String dollar) {
@@ -102,6 +128,10 @@ public class ExchangeRateDownloader implements InitializingBean {
 			throw new RuntimeException(dStr + " not set !!!");
 		}
 		downloadDir = new File(dProp + "/exchange_rate");
+	}
+
+	private void clickPeriodType() {
+		browser.getRadio(By.id("view1_7")).click();
 	}
 
 	private void clickItemType() {
@@ -163,14 +193,15 @@ public class ExchangeRateDownloader implements InitializingBean {
 			sb.append("\n");
 		}
 		File targetFile = getTargetFile(year, month, dollar);
-		FileUtils.writeStringToFile(targetFile, sb.toString(), Charsets.UTF_8);
+		FileUtils.writeStringToFile(targetFile, sb.toString(), Charsets.UTF_8,
+				false);
 	}
 
 	private ExchangeRateDownloadTable getTargetTable() {
 		ExchangeRateDownloadTable tab;
 		tab = new ExchangeRateDownloadTable(
 				browser.getTable(By
-						.cssSelector(".middle > center:nth-child(1) > table:nth-child(5)")));
+						.cssSelector(".middle > center:nth-child(1) > table:nth-child(6)")));
 		checkTableTitle(tab);
 		return tab;
 	}

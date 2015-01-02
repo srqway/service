@@ -46,7 +46,7 @@ public class ExchangeRateDownloadTable extends Table {
 	public List<String> getTargetRow0Texts() {
 		if (targetRow0Texts == null) {
 			targetRow0Texts = new ArrayList<String>(4);
-			targetRow0Texts.add("時間");
+			targetRow0Texts.add("掛牌日期");
 			targetRow0Texts.add("幣別");
 			targetRow0Texts.add("現金匯率");
 			targetRow0Texts.add("即期匯率");

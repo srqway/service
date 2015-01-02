@@ -17,6 +17,8 @@
 		<spring.version>4.1.2.RELEASE</spring.version>
 		<selenium-assistant.version>1.0.0</selenium-assistant.version>
 		<hbase-assistant.version>1.0.0</hbase-assistant.version>
+		<collection-utility.version>1.0.0</collection-utility.version>
+		<datetime-utility.version>1.0.0</datetime-utility.version>
 		<package-utility.version>1.0.0</package-utility.version>
 	</properties>
 
@@ -56,7 +58,22 @@
 			<artifactId>hbase-assistant</artifactId>
 			<version>${hbase-assistant.version}</version>
 		</dependency>
-		
+
+		<!-- collection-utility -->
+		<dependency>
+			<groupId>idv.hsiehpinghan</groupId>
+			<artifactId>collection-utility</artifactId>
+			<version>${collection-utility.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- datetime-utility -->
+		<dependency>
+			<groupId>idv.hsiehpinghan</groupId>
+			<artifactId>datetime-utility</artifactId>
+			<version>${datetime-utility.version}</version>
+		</dependency>
+
 		<!-- package-utility -->
 		<dependency>
 			<groupId>idv.hsiehpinghan</groupId>
@@ -64,6 +81,5 @@
 			<version>${package-utility.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 	</dependencies>
 </project>

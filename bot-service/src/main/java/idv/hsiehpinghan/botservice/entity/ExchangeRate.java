@@ -1,24 +1,14 @@
 package idv.hsiehpinghan.botservice.entity;
 
 import idv.hsiehpinghan.botservice.enumeration.Dollar;
-import idv.hsiehpinghan.datatypeutility.utility.ArrayUtility;
-import idv.hsiehpinghan.datatypeutility.utility.IntegerUtility;
+import idv.hsiehpinghan.collectionutility.utility.ArrayUtility;
 import idv.hsiehpinghan.datatypeutility.utility.LongUtility;
-import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnFamily;
-import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnQualifier;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseRowKey;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseTable;
-import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseValue;
 
-import java.math.BigDecimal;
 import java.util.Date;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**

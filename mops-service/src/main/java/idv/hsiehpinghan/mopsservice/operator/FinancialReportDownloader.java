@@ -3,7 +3,7 @@ package idv.hsiehpinghan.mopsservice.operator;
 import idv.hsiehpinghan.mopsservice.utility.MopsAjaxWaitUtility;
 import idv.hsiehpinghan.mopsservice.webelement.XbrlDownloadTable;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitWithJavascriptBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Button;
 import idv.hsiehpinghan.seleniumassistant.webelement.Font;
@@ -38,7 +38,7 @@ public class FinancialReportDownloader implements InitializingBean {
 	@Autowired
 	private Environment environment;
 	@Autowired
-	private HtmlUnitBrowser browser;
+	private HtmlUnitWithJavascriptBrowser browser;
 	@Autowired
 	private FinancialReportUnzipper unzipper;
 
