@@ -66,7 +66,7 @@
 			<artifactId>xbrl-assistant</artifactId>
 			<version>${xbrl-assistant.version}</version>
 		</dependency>
-		
+
 		<!-- compress-utility -->
 		<dependency>
 			<groupId>idv.hsiehpinghan</groupId>

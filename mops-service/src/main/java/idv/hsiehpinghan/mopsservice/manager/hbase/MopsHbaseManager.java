@@ -46,4 +46,9 @@ public class MopsHbaseManager implements IMopsManager {
 		}
 
 	}
+
+	@Override
+	public boolean saveFinancialReportToHdfs(File xbrlDirectory) {
+		return false;
+	}
 }
