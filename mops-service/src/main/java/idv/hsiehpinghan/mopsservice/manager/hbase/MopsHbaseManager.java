@@ -1,5 +1,6 @@
 package idv.hsiehpinghan.mopsservice.manager.hbase;
 
+import idv.hsiehpinghan.hdfsassistant.utility.HdfsAssistant;
 import idv.hsiehpinghan.mopsservice.manager.IMopsManager;
 import idv.hsiehpinghan.mopsservice.operator.FinancialReportDownloader;
 
@@ -12,15 +13,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class MopsHbaseManager implements IMopsManager {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-
+	private String hdfsDir = "hdfs://localhost/user/centos/mops/xbrl";
+	
 	@Autowired
 	private FinancialReportDownloader downloader;
-
+	@Autowired
+	private HdfsAssistant hdfsAssistant;
+	
 	@Override
 	public File downloadFinancialReport() {
 		try {
 			File xbrlDir = downloader.downloadFinancialReport();
 			logger.info(xbrlDir.getAbsolutePath() + " download finish.");
+			hdfsAssistant.writeHdfsDirectory(hdfsDir, xbrlDir);
+			logger.info(hdfsDir + " save finish.");
 			return xbrlDir;
 		} catch (Exception e) {
 			logger.error("Download fail !!!");

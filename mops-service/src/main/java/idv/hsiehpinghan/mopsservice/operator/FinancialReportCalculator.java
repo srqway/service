@@ -1,6 +1,5 @@
 package idv.hsiehpinghan.mopsservice.operator;
 
-import idv.hsiehpinghan.xbrlassistant.assistant.XbrlAssistant;
 import idv.hsiehpinghan.xbrlassistant.xbrl.Presentation;
 
 import java.io.File;
@@ -21,8 +20,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Service
 public class FinancialReportCalculator {
 	private List<String> presentIds;
-	@Autowired
-	private XbrlAssistant xbrlAssistant;
 	@Autowired
 	private ObjectMapper objectMapper;
 
@@ -45,12 +42,12 @@ public class FinancialReportCalculator {
 	public ObjectNode getJsonFinancialReport(File instanceFile, Date date)
 			throws Exception {
 		ObjectNode resultNode = objectMapper.createObjectNode();
-		for (String presentId : presentIds) {
-			ObjectNode presentNode = xbrlAssistant.getPresentationJson(
-					instanceFile, presentId);
-			ObjectNode subResultNode = convertToTwDallar(presentNode, date);
-			resultNode.set(presentId, subResultNode);
-		}
+//		for (String presentId : presentIds) {
+//			ObjectNode presentNode = xbrlAssistant.getPresentationJson(
+//					instanceFile, presentId);
+//			ObjectNode subResultNode = convertToTwDallar(presentNode, date);
+//			resultNode.set(presentId, subResultNode);
+//		}
 		return resultNode;
 	}
 

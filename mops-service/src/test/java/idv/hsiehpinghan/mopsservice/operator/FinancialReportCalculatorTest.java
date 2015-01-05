@@ -2,7 +2,6 @@ package idv.hsiehpinghan.mopsservice.operator;
 
 import idv.hsiehpinghan.mopsservice.suit.TestngSuitSetting;
 import idv.hsiehpinghan.resourceutility.utility.ResourceUtility;
-import idv.hsiehpinghan.xbrlassistant.assistant.XbrlAssistant;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +18,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class FinancialReportCalculatorTest {
 	private FinancialReportCalculator calculator;
-	private XbrlAssistant xbrlAssistant;
+//	private XbrlAssistant xbrlAssistant;
 	private File instanceFile;
 	private ObjectMapper objectMapper;
 	private ObjectNode presentNode;
@@ -31,8 +30,8 @@ public class FinancialReportCalculatorTest {
 				.getApplicationContext();
 		calculator = applicationContext
 				.getBean(FinancialReportCalculator.class);
-		xbrlAssistant = applicationContext
-				.getBean(XbrlAssistant.class);
+//		xbrlAssistant = applicationContext
+//				.getBean(XbrlAssistant.class);
 		objectMapper = applicationContext.getBean(ObjectMapper.class);
 		
 		String instancePath = "xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml";

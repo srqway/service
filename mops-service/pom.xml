@@ -19,6 +19,7 @@
 		<!-- <resource-utility.version>1.0.0</resource-utility.version> -->
 		<selenium-assistant.version>1.0.0</selenium-assistant.version>
 		<xbrl-assistant.version>1.0.0</xbrl-assistant.version>
+		<hdfs-assistant.version>1.0.0</hdfs-assistant.version>
 		<package-utility.version>1.0.0</package-utility.version>
 		<compress-utility.version>1.0.0</compress-utility.version>
 	</properties>
@@ -65,6 +66,13 @@
 			<groupId>idv.hsiehpinghan</groupId>
 			<artifactId>xbrl-assistant</artifactId>
 			<version>${xbrl-assistant.version}</version>
+		</dependency>
+
+		<!-- hdfs-assistant -->
+		<dependency>
+			<groupId>idv.hsiehpinghan</groupId>
+			<artifactId>hdfs-assistant</artifactId>
+			<version>${hdfs-assistant.version}</version>
 		</dependency>
 
 		<!-- compress-utility -->

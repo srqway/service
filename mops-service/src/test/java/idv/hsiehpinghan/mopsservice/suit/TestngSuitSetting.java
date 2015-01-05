@@ -1,6 +1,5 @@
 package idv.hsiehpinghan.mopsservice.suit;
 
-import idv.hsiehpinghan.mopsservice.utility.PrintUtility;
 import idv.hsiehpinghan.packageutility.utility.PackageUtility;
 
 import java.io.IOException;

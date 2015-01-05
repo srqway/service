@@ -25,6 +25,11 @@ public class MopsHbaseManagerTest {
 	}
 
 	@Test
+	public void downloadFinancialReport() {
+		mopsManager.downloadFinancialReport();
+	}
+	
+	@Test
 	public void saveFinancialReportToDatabase() {
 		String eProp = env.getProperty("mops-service.extract_dir");
 		File xbrlDirectory = new File(eProp);
