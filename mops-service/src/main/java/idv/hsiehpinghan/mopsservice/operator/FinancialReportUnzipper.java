@@ -21,6 +21,7 @@ public class FinancialReportUnzipper implements InitializingBean {
 
 	/**
 	 * Repeat try unzip.
+	 * 
 	 * @param file
 	 * @return
 	 */
@@ -53,19 +54,23 @@ public class FinancialReportUnzipper implements InitializingBean {
 		}
 	}
 
+	/**
+	 * Get extract directory.
+	 * 
+	 * @return
+	 */
 	public File getExtractDir() {
 		return extractDir;
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-
 		String eStr = "mops-service.extract_dir";
 		String eProp = environment.getProperty(eStr);
 		if (eProp == null) {
 			throw new RuntimeException(eStr + " not set !!!");
 		}
-		extractDir = new File(eProp);
+		extractDir = new File(eProp, "xbrl");
 	}
 
 	private void sleep(int seconds) {

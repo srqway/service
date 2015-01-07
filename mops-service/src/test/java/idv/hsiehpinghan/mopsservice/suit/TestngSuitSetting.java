@@ -1,6 +1,5 @@
 package idv.hsiehpinghan.mopsservice.suit;
 
-import idv.hsiehpinghan.mopsservice.utility.PrintUtility;
 import idv.hsiehpinghan.packageutility.utility.PackageUtility;
 
 import java.io.IOException;
@@ -16,8 +15,6 @@ public class TestngSuitSetting {
 	public void beforeSuite() throws IOException {
 		String[] pkgs = PackageUtility.getSpringConfigurationPackages();
 		applicationContext = new AnnotationConfigApplicationContext(pkgs);
-		String[] profiles = applicationContext.getEnvironment().getActiveProfiles();
-		PrintUtility.print(profiles);
 	}
 
 	public static ApplicationContext getApplicationContext() {

@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
@@ -37,7 +38,6 @@ public class FinancialReportDownloader implements InitializingBean {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
 	private File controlFile;
-	private List<String> downloadedList;
 
 	@Autowired
 	private Environment environment;
@@ -86,7 +86,7 @@ public class FinancialReportDownloader implements InitializingBean {
 							Option repOpt = reportTypeOpts.get(iRep);
 							String downloadInfo = getDownloadInfo(mkOpt,
 									indOpt, yearOpt, seasonOpt, repOpt);
-							if (downloadedList.contains(downloadInfo)) {
+							if (isDownloaded(downloadInfo)) {
 								continue;
 							}
 							// ex : 2013-01-otc-02-C.zip
@@ -96,13 +96,27 @@ public class FinancialReportDownloader implements InitializingBean {
 							repeatTryDownload(reportTypeOpts, iRep,
 									repSize - 1, targetFileNamePrefix);
 							logger.info(downloadInfo + " processed success.");
-							FileUtils.write(controlFile, downloadInfo, true);
+							writeToControlFile(downloadInfo);
 						}
 					}
 				}
 			}
 		}
 		return unzipper.getExtractDir();
+	}
+
+	private boolean isDownloaded(String downloadInfo) throws IOException {
+		List<String> downloadedList = FileUtils.readLines(controlFile);
+		if (downloadedList.contains(downloadInfo)) {
+			logger.info(downloadInfo + " downloaded before.");
+			return true;
+		}
+		return false;
+	}
+
+	private void writeToControlFile(String downloadInfo) throws IOException {
+		String infoLine = downloadInfo + System.lineSeparator();
+		FileUtils.write(controlFile, infoLine, Charsets.UTF_8, true);
 	}
 
 	@Override
@@ -112,9 +126,14 @@ public class FinancialReportDownloader implements InitializingBean {
 		if (dProp == null) {
 			throw new RuntimeException(dStr + " not set !!!");
 		}
-		downloadDir = new File(dProp + "/xbrl");
-		controlFile = new File(downloadDir, "control_file");
-		downloadedList = FileUtils.readLines(controlFile);
+		downloadDir = new File(dProp, "xbrl");
+
+		if (controlFile == null) {
+			controlFile = new File(downloadDir, "control_file");
+			if (controlFile.exists() == false) {
+				FileUtils.touch(controlFile);
+			}
+		}
 	}
 
 	Select getMarketTypeSelect() {
