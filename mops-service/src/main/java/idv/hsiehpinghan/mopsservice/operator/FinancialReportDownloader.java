@@ -105,20 +105,6 @@ public class FinancialReportDownloader implements InitializingBean {
 		return unzipper.getExtractDir();
 	}
 
-	private boolean isDownloaded(String downloadInfo) throws IOException {
-		List<String> downloadedList = FileUtils.readLines(controlFile);
-		if (downloadedList.contains(downloadInfo)) {
-			logger.info(downloadInfo + " downloaded before.");
-			return true;
-		}
-		return false;
-	}
-
-	private void writeToControlFile(String downloadInfo) throws IOException {
-		String infoLine = downloadInfo + System.lineSeparator();
-		FileUtils.write(controlFile, infoLine, Charsets.UTF_8, true);
-	}
-
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		String dStr = "mops-service.download_dir";
@@ -309,5 +295,19 @@ public class FinancialReportDownloader implements InitializingBean {
 		return mkOpt.getText() + "/" + indOpt.getText() + "/"
 				+ yearOpt.getText() + "/" + seasonOpt.getText() + "/"
 				+ repOpt.getText();
+	}
+
+	private boolean isDownloaded(String downloadInfo) throws IOException {
+		List<String> downloadedList = FileUtils.readLines(controlFile);
+		if (downloadedList.contains(downloadInfo)) {
+			logger.info(downloadInfo + " downloaded before.");
+			return true;
+		}
+		return false;
+	}
+
+	private void writeToControlFile(String downloadInfo) throws IOException {
+		String infoLine = downloadInfo + System.lineSeparator();
+		FileUtils.write(controlFile, infoLine, Charsets.UTF_8, true);
 	}
 }
