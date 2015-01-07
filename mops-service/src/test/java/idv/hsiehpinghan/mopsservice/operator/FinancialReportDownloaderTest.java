@@ -40,7 +40,7 @@ public class FinancialReportDownloaderTest {
 	}
 
 	@Test(dependsOnMethods = { "getMarketTypeSelect" })
-	public void downloadFinancialReport() {
+	public void downloadFinancialReport() throws IOException {
 		File f = downloader.downloadFinancialReport();
 		Assert.assertNotNull(f);
 	}

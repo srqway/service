@@ -1,2 +1,2 @@
-mops-service.download_dir=/home/hsiehpinghan/Desktop/mops/download
-mops-service.extract_dir=/home/hsiehpinghan/Desktop/mops/extract
+mops-service.download_dir=/home/centos/Desktop/mops/xbrl/download
+mops-service.extract_dir=/home/centos/Desktop/mops/xbrl/extract

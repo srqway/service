@@ -11,8 +11,10 @@ import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select.Option;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
@@ -34,6 +36,8 @@ public class FinancialReportDownloader implements InitializingBean {
 	private final int MAX_TRY_AMOUNT = 3;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
+	private File controlFile;
+	private List<String> downloadedList;
 
 	@Autowired
 	private Environment environment;
@@ -49,8 +53,9 @@ public class FinancialReportDownloader implements InitializingBean {
 	 * Download financial report.
 	 * 
 	 * @return
+	 * @throws IOException
 	 */
-	public File downloadFinancialReport() {
+	public File downloadFinancialReport() throws IOException {
 		moveToTargetPage();
 		List<Option> mkOpts = getMarketTypeSelect().getOptions();
 		for (int iMk = mkOpts.size() - 1; iMk >= 0; --iMk) {
@@ -79,16 +84,19 @@ public class FinancialReportDownloader implements InitializingBean {
 								.getOptions();
 						for (int iRep = 0, repSize = reportTypeOpts.size(); iRep < repSize; ++iRep) {
 							Option repOpt = reportTypeOpts.get(iRep);
-
+							String downloadInfo = getDownloadInfo(mkOpt,
+									indOpt, yearOpt, seasonOpt, repOpt);
+							if (downloadedList.contains(downloadInfo)) {
+								continue;
+							}
 							// ex : 2013-01-otc-02-C.zip
 							String targetFileNamePrefix = getTargetFileNameRegex(
 									yearOpt, seasonOpt, mkOpt, repOpt);
-							String downloadInfo = getDownloadInfo(mkOpt,
-									indOpt, yearOpt, seasonOpt, repOpt);
 							logger.info(downloadInfo + " process start.");
 							repeatTryDownload(reportTypeOpts, iRep,
 									repSize - 1, targetFileNamePrefix);
 							logger.info(downloadInfo + " processed success.");
+							FileUtils.write(controlFile, downloadInfo, true);
 						}
 					}
 				}
@@ -104,7 +112,9 @@ public class FinancialReportDownloader implements InitializingBean {
 		if (dProp == null) {
 			throw new RuntimeException(dStr + " not set !!!");
 		}
-		downloadDir = new File(dProp);
+		downloadDir = new File(dProp + "/xbrl");
+		controlFile = new File(downloadDir, "control_file");
+		downloadedList = FileUtils.readLines(controlFile);
 	}
 
 	Select getMarketTypeSelect() {

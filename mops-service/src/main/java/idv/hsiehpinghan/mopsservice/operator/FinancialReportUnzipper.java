@@ -29,7 +29,7 @@ public class FinancialReportUnzipper implements InitializingBean {
 		while (true) {
 			File dir = null;
 			try {
-				dir = CompressUtility.unzip(file, extractDir);
+				dir = CompressUtility.unzip(file, extractDir, true);
 				logger.info("Unzipp to " + dir + " success.");
 				return dir;
 			} catch (Exception e) {
