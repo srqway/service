@@ -1,5 +1,6 @@
 package idv.hsiehpinghan.mopsservice.operator;
 
+import idv.hsiehpinghan.mopsservice.property.MopsServiceProperty;
 import idv.hsiehpinghan.mopsservice.utility.MopsAjaxWaitUtility;
 import idv.hsiehpinghan.mopsservice.webelement.XbrlDownloadTable;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
@@ -21,7 +22,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 /**
@@ -40,14 +40,17 @@ public class FinancialReportDownloader implements InitializingBean {
 	private File controlFile;
 
 	@Autowired
-	private Environment environment;
-	@Autowired
 	private HtmlUnitWithJavascriptBrowser browser;
 	@Autowired
 	private FinancialReportUnzipper unzipper;
+	@Autowired
+	private MopsServiceProperty mopsServiceProperty;
 
-	// @Autowired
-	// private FirefoxBrowser browser;
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		downloadDir = new File(mopsServiceProperty.getDownloadDir(), "xbrl");
+		generateControlFile();
+	}
 
 	/**
 	 * Download financial report.
@@ -105,23 +108,6 @@ public class FinancialReportDownloader implements InitializingBean {
 		return unzipper.getExtractDir();
 	}
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		String dStr = "mops-service.download_dir";
-		String dProp = environment.getProperty(dStr);
-		if (dProp == null) {
-			throw new RuntimeException(dStr + " not set !!!");
-		}
-		downloadDir = new File(dProp, "xbrl");
-
-		if (controlFile == null) {
-			controlFile = new File(downloadDir, "control_file");
-			if (controlFile.exists() == false) {
-				FileUtils.touch(controlFile);
-			}
-		}
-	}
-
 	Select getMarketTypeSelect() {
 		return browser.getSelect(By.id("MAR_KIND"));
 	}
@@ -135,6 +121,15 @@ public class FinancialReportDownloader implements InitializingBean {
 		return browser;
 	}
 
+	private void generateControlFile() throws IOException {
+		if (controlFile == null) {
+			controlFile = new File(downloadDir, "control_file");
+			if (controlFile.exists() == false) {
+				FileUtils.touch(controlFile);
+			}
+		}
+	}
+	
 	private boolean isTargetMarketType(String text) {
 		if ("上市".equals(text) == true) {
 			return true;

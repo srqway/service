@@ -8,17 +8,21 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class BotHbaseManager implements IBotManager, InitializingBean {
-//	private Logger logger = Logger.getLogger(this.getClass().getName());
+public class BotHbaseManager implements IBotManager {
+	// private Logger logger = Logger.getLogger(this.getClass().getName());
 	private List<Dollar> targetDallars;
+	
 	@Autowired
 	private ExchangeRateDownloader downloader;
+
+	public BotHbaseManager() {
+		targetDallars = new ArrayList<Dollar>(1);
+		targetDallars.add(Dollar.USD);
+	}
 
 	public File downloadExchangeRate() {
 		return downloader.downloadExchangeRate(targetDallars);
@@ -28,11 +32,4 @@ public class BotHbaseManager implements IBotManager, InitializingBean {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		targetDallars = new ArrayList<Dollar>(1);
-		targetDallars.add(Dollar.USD);
-	}
-
 }

@@ -3,6 +3,7 @@ package idv.hsiehpinghan.mopsservice.manager.hbase;
 import idv.hsiehpinghan.hdfsassistant.utility.HdfsAssistant;
 import idv.hsiehpinghan.mopsservice.manager.IMopsManager;
 import idv.hsiehpinghan.mopsservice.operator.FinancialReportDownloader;
+import idv.hsiehpinghan.mopsservice.property.MopsServiceProperty;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +11,6 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,19 +19,15 @@ public class MopsHbaseManager implements IMopsManager, InitializingBean {
 	private String hdfsXbrlDir;
 
 	@Autowired
-	private Environment env;
-	@Autowired
 	private FinancialReportDownloader downloader;
 	@Autowired
 	private HdfsAssistant hdfsAssistant;
+	@Autowired
+	private MopsServiceProperty mopsServiceProperty;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		String pStr = "mops-service.hdfs_xbrl_dir";
-		hdfsXbrlDir = env.getProperty(pStr);
-		if (hdfsXbrlDir == null) {
-			throw new RuntimeException(pStr + " not set !!!");
-		}
+		hdfsXbrlDir = mopsServiceProperty.getHdfsXbrlDir();
 	}
 
 	@Override

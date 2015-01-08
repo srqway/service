@@ -1,6 +1,7 @@
 package idv.hsiehpinghan.botservice.operator;
 
 import idv.hsiehpinghan.botservice.enumeration.Dollar;
+import idv.hsiehpinghan.botservice.property.BotServiceProperty;
 import idv.hsiehpinghan.botservice.webelement.ExchangeRateDownloadTable;
 import idv.hsiehpinghan.datetimeutility.utility.CalendarUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
@@ -19,7 +20,6 @@ import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Charsets;
@@ -31,9 +31,15 @@ public class ExchangeRateDownloader implements InitializingBean {
 	private File downloadDir;
 
 	@Autowired
-	private Environment environment;
-	@Autowired
 	private HtmlUnitFirefoxVersionBrowser browser;
+	@Autowired
+	private BotServiceProperty botServiceProperty;
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		downloadDir = new File(botServiceProperty.getDownloadDir()
+				+ "/exchange_rate");
+	}
 
 	/**
 	 * Download exchange rate.
@@ -118,16 +124,6 @@ public class ExchangeRateDownloader implements InitializingBean {
 			return true;
 		}
 		return false;
-	}
-
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		String dStr = "bot-service.download_dir";
-		String dProp = environment.getProperty(dStr);
-		if (dProp == null) {
-			throw new RuntimeException(dStr + " not set !!!");
-		}
-		downloadDir = new File(dProp + "/exchange_rate");
 	}
 
 	private void clickPeriodType() {

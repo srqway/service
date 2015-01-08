@@ -8,5 +8,4 @@ public interface IMopsManager {
 	 * @return
 	 */
 	File downloadFinancialReport();
-//	boolean saveFinancialReportToDatabase(File xbrlDirectory);
 }

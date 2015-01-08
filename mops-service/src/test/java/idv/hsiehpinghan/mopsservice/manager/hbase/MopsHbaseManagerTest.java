@@ -26,12 +26,6 @@ public class MopsHbaseManagerTest {
 		hdfsAssistant = applicationContext.getBean(HdfsAssistant.class);
 	}
 	
-	@Test
-	public void saveFinancialReportToHdfs() throws IOException {
-		String hdfsDir = mopsManager.saveFinancialReportToHdfs(getXbrlDir());
-		System.err.println(hdfsDir);
-	}
-	
 	private File getXbrlDir() {
 		String eProp = env.getProperty("mops-service.extract_dir");
 		return new File(eProp, "xbrl");

@@ -1,13 +1,13 @@
 package idv.hsiehpinghan.mopsservice.operator;
 
 import idv.hsiehpinghan.compressutility.utility.CompressUtility;
+import idv.hsiehpinghan.mopsservice.property.MopsServiceProperty;
 
 import java.io.File;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,7 +17,12 @@ public class FinancialReportUnzipper implements InitializingBean {
 	private File extractDir;
 
 	@Autowired
-	private Environment environment;
+	private MopsServiceProperty mopsServiceProperty;
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		extractDir = new File(mopsServiceProperty.getExtractDir(), "xbrl");
+	}
 
 	/**
 	 * Repeat try unzip.
@@ -61,16 +66,6 @@ public class FinancialReportUnzipper implements InitializingBean {
 	 */
 	public File getExtractDir() {
 		return extractDir;
-	}
-
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		String eStr = "mops-service.extract_dir";
-		String eProp = environment.getProperty(eStr);
-		if (eProp == null) {
-			throw new RuntimeException(eStr + " not set !!!");
-		}
-		extractDir = new File(eProp, "xbrl");
 	}
 
 	private void sleep(int seconds) {
