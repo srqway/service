@@ -12,24 +12,21 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class MopsHbaseManagerTest {
-	private Environment env;
 	private MopsHbaseManager mopsManager;
-	private HdfsAssistant hdfsAssistant;
-	
+
 	@BeforeClass
 	public void beforeClass() throws IOException {
 		ApplicationContext applicationContext = TestngSuitSetting
 				.getApplicationContext();
-		env = applicationContext.getBean(Environment.class);
 		mopsManager = applicationContext
 				.getBean(MopsHbaseManager.class);
-		hdfsAssistant = applicationContext.getBean(HdfsAssistant.class);
+	}
+
+	@Test
+	public void updateFinancialReportPresentation() {
+		mopsManager.updateFinancialReportPresentation();
 	}
 	
-	private File getXbrlDir() {
-		String eProp = env.getProperty("mops-service.extract_dir");
-		return new File(eProp, "xbrl");
-	}
 //	@Test
 //	public void saveFinancialReportToDatabase() {
 //		String eProp = env.getProperty("mops-service.extract_dir");

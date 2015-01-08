@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MopsServiceProperty implements InitializingBean {
-	private String hdfsXbrlDir;
+//	private String hdfsXbrlDir;
 	private String downloadDir;
 	private String extractDir;
 
@@ -16,7 +16,7 @@ public class MopsServiceProperty implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		processHdfsXbrlDir();
+//		processHdfsXbrlDir();
 		processDownloadDir();
 		processExtractDir();
 	}
@@ -25,21 +25,21 @@ public class MopsServiceProperty implements InitializingBean {
 		return downloadDir;
 	}
 
-	public String getHdfsXbrlDir() {
-		return hdfsXbrlDir;
-	}
+//	public String getHdfsXbrlDir() {
+//		return hdfsXbrlDir;
+//	}
 
 	public String getExtractDir() {
 		return extractDir;
 	}
 
-	private void processHdfsXbrlDir() {
-		String pHdfsXbrlDir = "mops-service.hdfs_xbrl_dir";
-		hdfsXbrlDir = environment.getProperty(pHdfsXbrlDir);
-		if (hdfsXbrlDir == null) {
-			throw new RuntimeException(pHdfsXbrlDir + " not set !!!");
-		}
-	}
+//	private void processHdfsXbrlDir() {
+//		String pHdfsXbrlDir = "mops-service.hdfs_xbrl_dir";
+//		hdfsXbrlDir = environment.getProperty(pHdfsXbrlDir);
+//		if (hdfsXbrlDir == null) {
+//			throw new RuntimeException(pHdfsXbrlDir + " not set !!!");
+//		}
+//	}
 
 	private void processDownloadDir() {
 		String pDownloadDir = "mops-service.download_dir";
