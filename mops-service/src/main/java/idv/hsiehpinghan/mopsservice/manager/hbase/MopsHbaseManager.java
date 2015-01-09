@@ -5,6 +5,7 @@ import idv.hsiehpinghan.mopsdao.repository.FinancialReportPresentationRepository
 import idv.hsiehpinghan.mopsservice.manager.IMopsManager;
 import idv.hsiehpinghan.mopsservice.operator.FinancialReportDownloader;
 import idv.hsiehpinghan.mopsservice.property.MopsServiceProperty;
+import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
 import idv.hsiehpinghan.xbrlassistant.assistant.TaxonomyAssistant;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 import idv.hsiehpinghan.xbrlassistant.xbrl.Presentation;
@@ -34,6 +35,8 @@ public class MopsHbaseManager implements IMopsManager {
 	@Autowired
 	private TaxonomyAssistant taxonomyAssistant;
 	@Autowired
+	private InstanceAssistant instanceAssistant;
+	@Autowired
 	private FinancialReportPresentationRepository repository;
 
 	public MopsHbaseManager() {
@@ -49,10 +52,11 @@ public class MopsHbaseManager implements IMopsManager {
 		XbrlTaxonomyVersion[] versions = XbrlTaxonomyVersion.values();
 		XbrlTaxonomyVersion version = null;
 		try {
-			for(int i = 0, size = versions.length; i < size; ++i) {
+			for (int i = 0, size = versions.length; i < size; ++i) {
 				version = versions[i];
-				ObjectNode presentNode = taxonomyAssistant.getPresentationJson(version, presentIds);
-				if(repository.exists(version)) {
+				ObjectNode presentNode = taxonomyAssistant.getPresentationJson(
+						version, presentIds);
+				if (repository.exists(version)) {
 					logger.info(version + " exists.");
 					continue;
 				}
@@ -69,44 +73,53 @@ public class MopsHbaseManager implements IMopsManager {
 	}
 
 	@Override
-	public boolean updateFinancialReport() {
-		File xbrlDir = downloadFinancialReport();
+	public boolean updateFinancialReportInstance() {
+		File xbrlDir = downloadFinancialReportInstance();
 		if (xbrlDir == null) {
 			return false;
 		}
-		if (saveFinancialReportToDatabase(xbrlDir) == false) {
+		try {
+			int processFilesAmt = saveFinancialReportToHBase(xbrlDir);
+			logger.info("Saved " + processFilesAmt + " xbrl files to hbase.");
+		} catch (Exception e) {
+			logger.error("Save financial report to hbase fail !!!");
+			e.printStackTrace();
 			return false;
 		}
 		return true;
 	}
 
-	File downloadFinancialReport() {
+	File downloadFinancialReportInstance() {
 		try {
 			File xbrlDir = downloader.downloadFinancialReport();
 			logger.info(xbrlDir.getAbsolutePath() + " download finish.");
 			return xbrlDir;
 		} catch (Exception e) {
-			logger.error("Download fail !!!");
+			logger.error("Download financial report fail !!!");
 			return null;
 		}
 	}
 
-	boolean saveFinancialReportToDatabase(File xbrlDir) {
-		// processSubFiles(xbrlDir);
-		return false;
+	int saveFinancialReportToHBase(File xbrlDir) throws Exception {
+		return processXbrlFiles(xbrlDir);
 	}
 
-	// private void processSubFiles(File file) {
-	// if (file.isDirectory()) {
-	// File[] fs = file.listFiles();
-	// for (File f : fs) {
-	// processSubFiles(f);
-	// }
-	// } else {
-	// // xbrlAssistant.get
-	// System.err.println(file.getAbsolutePath());
-	// }
-	//
-	// }
+	private int processXbrlFiles(File file) throws Exception {
+		int count = 0;
+		if (file.isDirectory()) {
+			File[] fs = file.listFiles();
+			for (File f : fs) {
+				count += processXbrlFiles(f);
+			}
+		} else {
+			ObjectNode objNode = instanceAssistant.getInstanceJson(file, presentIds);
+			XbrlTaxonomyVersion ver = taxonomyAssistant.getXbrlTaxonomyVersion(file);
+			// TODO
+			
+			logger.info(file.getName() + " saved to hbase.");
+			++count;
+		}
+		return count;
+	}
 
 }
