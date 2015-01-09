@@ -34,12 +34,12 @@ public class ExchangeRate extends HBaseTable {
 		private Dollar dollar;
 		private Date date;
 
-		public Key() {
-			super();
+		public Key(HBaseTable table) {
+			super(table);
 		}
-
-		public Key(Dollar dollar, Date date) {
-			super();
+		
+		public Key(Dollar dollar, Date date, HBaseTable table) {
+			super(table);
 			this.dollar = dollar;
 			this.date = date;
 		}
