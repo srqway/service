@@ -52,10 +52,12 @@ public class MopsHbaseManager implements IMopsManager {
 			for(int i = 0, size = versions.length; i < size; ++i) {
 				version = versions[i];
 				ObjectNode presentNode = taxonomyAssistant.getPresentationJson(version, presentIds);
-				repository.save(version, presentIds, presentNode);
+				if(repository.exists(version)) {
+					logger.info(version + " exists.");
+					continue;
+				}
+				repository.put(version, presentIds, presentNode);
 				logger.info(version + " updated.");
-				
-				return true;
 			}
 			logger.info("Update financial report presentation finished.");
 		} catch (Exception e) {
