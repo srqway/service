@@ -23,8 +23,9 @@
 		<selenium-assistant.version>1.0.0</selenium-assistant.version>
 		<xbrl-assistant.version>1.0.0</xbrl-assistant.version>
 		<hdfs-assistant.version>1.0.0</hdfs-assistant.version>
-		<package-utility.version>1.0.0</package-utility.version>
 		<compress-utility.version>1.0.0</compress-utility.version>
+		<package-utility.version>1.0.0</package-utility.version>
+		<test-utility.version>1.0.0</test-utility.version>
 	</properties>
 
 	<dependencies>
@@ -107,5 +108,12 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- test-utility -->
+		<dependency>
+			<groupId>idv.hsiehpinghan</groupId>
+			<artifactId>test-utility</artifactId>
+			<version>${test-utility.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

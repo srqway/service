@@ -1,7 +1,7 @@
 package idv.hsiehpinghan.mopsservice.operator;
 
 import idv.hsiehpinghan.mopsservice.suit.TestngSuitSetting;
-import idv.hsiehpinghan.mopsservice.utility.ResourceUtility;
+import idv.hsiehpinghan.testutility.utility.SystemResourceUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +35,7 @@ public class FinancialReportCalculatorTest {
 		objectMapper = applicationContext.getBean(ObjectMapper.class);
 
 		String instancePath = "xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml";
-		instanceFile = ResourceUtility.getFileResource(instancePath);
+		instanceFile = SystemResourceUtility.getFileResource(instancePath);
 	}
 
 	// @Test
@@ -44,7 +44,7 @@ public class FinancialReportCalculatorTest {
 	// instanceFile, Presentation.Id.BalanceSheet);
 	// JsonNode valuesNode = calculator.getValueObjectNode(presentNode);
 	// JsonNode valuesNodeSample = objectMapper
-	// .readTree(ResourceUtility
+	// .readTree(SystemResourceUtility
 	// .getFileResource("sample/values.json"));
 	// Assert.assertEquals(valuesNode.toString(), valuesNodeSample.toString());
 	// }
