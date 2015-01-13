@@ -30,7 +30,7 @@ public class MopsHbaseManagerTest {
 				.getBean(MopsServiceProperty.class);
 	}
 
-	// @Test
+	@Test
 	public void updateFinancialReportPresentation()
 			throws NoSuchFieldException, SecurityException,
 			IllegalArgumentException, IllegalAccessException,
@@ -51,12 +51,13 @@ public class MopsHbaseManagerTest {
 		}
 	}
 
-	@Test
+	// @Test
 	public void saveFinancialReportToHBase() throws Exception {
 		File xbrlDirectory = new File(mopsServiceProperty.getExtractDir());
-		int processFilesAmt = mopsManager.saveFinancialReportToHBase(xbrlDirectory);
-		
-//		Assert.assertEquals(7136, processFilesAmt);
-//		System.err.println(processFilesAmt);
+		int processFilesAmt = mopsManager
+				.saveFinancialReportToHBase(xbrlDirectory);
+
+		// Assert.assertEquals(7136, processFilesAmt);
+		// System.err.println(processFilesAmt);
 	}
 }
