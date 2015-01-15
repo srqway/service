@@ -1,6 +1,8 @@
 package idv.hsiehpinghan.mopsservice.manager.hbase;
 
 import idv.hsiehpinghan.hdfsassistant.utility.HdfsAssistant;
+import idv.hsiehpinghan.mopsdao.enumeration.ReportType;
+import idv.hsiehpinghan.mopsdao.repository.FinancialReportInstanceRepository;
 import idv.hsiehpinghan.mopsdao.repository.FinancialReportPresentationRepository;
 import idv.hsiehpinghan.mopsservice.manager.IMopsManager;
 import idv.hsiehpinghan.mopsservice.operator.FinancialReportDownloader;
@@ -18,7 +20,6 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
@@ -37,7 +38,9 @@ public class MopsHbaseManager implements IMopsManager {
 	@Autowired
 	private InstanceAssistant instanceAssistant;
 	@Autowired
-	private FinancialReportPresentationRepository repository;
+	private FinancialReportPresentationRepository presentRepo;
+	@Autowired
+	private FinancialReportInstanceRepository instantRepo;
 
 	public MopsHbaseManager() {
 		presentIds = new ArrayList<String>(4);
@@ -56,11 +59,11 @@ public class MopsHbaseManager implements IMopsManager {
 				version = versions[i];
 				ObjectNode presentNode = taxonomyAssistant.getPresentationJson(
 						version, presentIds);
-				if (repository.exists(version)) {
+				if (presentRepo.exists(version)) {
 					logger.info(version + " exists.");
 					continue;
 				}
-				repository.put(version, presentIds, presentNode);
+				presentRepo.put(version, presentIds, presentNode);
 				logger.info(version + " updated.");
 			}
 			logger.info("Update financial report presentation finished.");
@@ -104,7 +107,7 @@ public class MopsHbaseManager implements IMopsManager {
 		return processXbrlFiles(xbrlDir);
 	}
 
-	private int processXbrlFiles(File file) throws Exception {
+	int processXbrlFiles(File file) throws Exception {
 		int count = 0;
 		if (file.isDirectory()) {
 			File[] fs = file.listFiles();
@@ -112,14 +115,24 @@ public class MopsHbaseManager implements IMopsManager {
 				count += processXbrlFiles(f);
 			}
 		} else {
-			ObjectNode objNode = instanceAssistant.getInstanceJson(file, presentIds);
-			XbrlTaxonomyVersion ver = taxonomyAssistant.getXbrlTaxonomyVersion(file);
-			// TODO
-			
-			logger.info(file.getName() + " saved to hbase.");
-			++count;
+			// ex. tifrs-fr0-m1-ci-cr-1101-2013Q1.xml
+			String[] strArr = file.getName().split("-");
+			String stockCode = strArr[5];
+			ReportType reportType = ReportType.getReportType(strArr[4]);
+			int year = Integer.valueOf(strArr[6].substring(0, 4));
+			int season = Integer.valueOf(strArr[6].substring(5, 6));
+			ObjectNode objNode = instanceAssistant.getInstanceJson(file,
+					presentIds);
+			if (instantRepo.exists(stockCode, reportType, year, season) == false) {
+				instantRepo.put(stockCode, reportType, year, season, objNode,
+						presentIds);
+				logger.info(file.getName() + " saved to hbase.");
+				++count;
+			} else {
+				logger.debug(file.getName() + " already exists in hbase.");
+			}
+
 		}
 		return count;
 	}
-
 }
