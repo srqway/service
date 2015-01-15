@@ -129,7 +129,7 @@ public class FinancialReportDownloader implements InitializingBean {
 			}
 		}
 	}
-	
+
 	private boolean isTargetMarketType(String text) {
 		if ("上市".equals(text) == true) {
 			return true;

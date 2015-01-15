@@ -94,11 +94,11 @@
 		</dependency>
 
 		<!-- resource-utility -->
-		<!-- <dependency> -->
-		<!-- <groupId>idv.hsiehpinghan</groupId> -->
-		<!-- <artifactId>resource-utility</artifactId> -->
-		<!-- <version>${resource-utility.version}</version> -->
-		<!-- </dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>idv.hsiehpinghan</groupId> -->
+<!-- 			<artifactId>resource-utility</artifactId> -->
+<!-- 			<version>${resource-utility.version}</version> -->
+<!-- 		</dependency> -->
 
 		<!-- package-utility -->
 		<dependency>
