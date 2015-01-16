@@ -18,15 +18,23 @@ import org.apache.hadoop.hbase.util.Bytes;
  *
  */
 public class ExchangeRate extends HBaseTable {
-	
+	private RowKey rowKey;
+
 	public ExchangeRate() {
 		super();
 	}
-	public ExchangeRate(HBaseRowKey key) {
-		super(key);
+
+	@Override
+	public HBaseRowKey getRowKey() {
+		return rowKey;
 	}
-	
-	public class Key extends HBaseRowKey {
+
+	@Override
+	public void setRowKey(HBaseRowKey rowKey) {
+		this.rowKey = (RowKey) rowKey;
+	}
+
+	public class RowKey extends HBaseRowKey {
 		private final int DOLLAR_BEGIN = 0;
 		private final int DOLLAR_END = DOLLAR_BEGIN + 3;
 		private final int DATE_BEGIN = DOLLAR_END;
@@ -34,16 +42,16 @@ public class ExchangeRate extends HBaseTable {
 		private Dollar dollar;
 		private Date date;
 
-		public Key(HBaseTable table) {
+		public RowKey(HBaseTable table) {
 			super(table);
 		}
-		
-		public Key(Dollar dollar, Date date, HBaseTable table) {
+
+		public RowKey(Dollar dollar, Date date, HBaseTable table) {
 			super(table);
 			this.dollar = dollar;
 			this.date = date;
 		}
-		
+
 		@Override
 		public byte[] toBytes() {
 			byte[] dollarArr = Bytes.toBytes(dollar.name());
@@ -83,7 +91,6 @@ public class ExchangeRate extends HBaseTable {
 			return "Key [dollar=" + dollar + ", date=" + date + "]";
 		}
 
-		
 	}
 
 }

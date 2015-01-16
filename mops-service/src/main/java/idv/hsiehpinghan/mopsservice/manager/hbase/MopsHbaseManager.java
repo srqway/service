@@ -129,7 +129,7 @@ public class MopsHbaseManager implements IMopsManager {
 				logger.info(file.getName() + " saved to hbase.");
 				++count;
 			} else {
-				logger.debug(file.getName() + " already exists in hbase.");
+				logger.info(file.getName() + " already saved to hbase.");
 			}
 
 		}
