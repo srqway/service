@@ -33,7 +33,7 @@ public class MopsHbaseManagerTest {
 	private String allSeason = MopsDownloadInfo.SeasonFamily.SeasonQualifier.ALL;
 	private MopsHbaseManager mopsManager;
 	private FinancialReportPresentationRepository presentRepo;
-	private FinancialReportInstanceRepository instantRepo;
+	private FinancialReportInstanceRepository instanceRepo;
 	private MopsDownloadInfoRepository mopsDownloadInfoRepo;
 	private MopsServiceProperty mopsServiceProperty;
 
@@ -44,7 +44,7 @@ public class MopsHbaseManagerTest {
 		mopsManager = applicationContext.getBean(MopsHbaseManager.class);
 		presentRepo = applicationContext
 				.getBean(FinancialReportPresentationRepository.class);
-		instantRepo = applicationContext
+		instanceRepo = applicationContext
 				.getBean(FinancialReportInstanceRepository.class);
 		mopsServiceProperty = applicationContext
 				.getBean(MopsServiceProperty.class);
@@ -86,8 +86,8 @@ public class MopsHbaseManagerTest {
 		ReportType reportType = ReportType.getReportType(strArr[4]);
 		int year = Integer.valueOf(strArr[6].substring(0, 4));
 		int season = Integer.valueOf(strArr[6].substring(5, 6));
-		FinancialReportInstance entity = instantRepo.get(stockCode, reportType,
-				year, season);
+		FinancialReportInstance entity = instanceRepo.get(stockCode,
+				reportType, year, season);
 		// Test version.
 		String version = entity.getInfoFamily()
 				.getValue(InstanceAssistant.VERSION).getInfoContent();
@@ -114,18 +114,36 @@ public class MopsHbaseManagerTest {
 	}
 
 	// @Test(dependsOnMethods = { "processXbrlFiles" })
-	@Test
 	public void saveFinancialReportToHBase() throws Exception {
 		MopsDownloadInfo downloadInfo = mopsManager.getDownloadInfoEntity();
 		File xbrlDirectory = new File(mopsServiceProperty.getExtractDir());
 		int processFilesAmt = mopsManager.saveFinancialReportToHBase(
 				xbrlDirectory, downloadInfo);
-		Assert.assertEquals(7136, processFilesAmt);
+		int fileAmt = getSubFilesAmt(xbrlDirectory);
+		Assert.assertEquals(processFilesAmt, fileAmt);
+	}
+
+	// @Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+	@Test
+	public void calculateFinancialReport() throws Exception {
+		mopsManager.calculateFinancialReport();
 	}
 
 	private void dropTable() throws Exception {
 		// HbaseEntityTestUtility.dropTargetTable(presentRepo);
 		// HbaseEntityTestUtility.dropTargetTable(instantRepo);
 		// HbaseEntityTestUtility.dropTargetTable(mopsDownloadInfoRepo);
+	}
+
+	private int getSubFilesAmt(File file) {
+		int count = 0;
+		if (file.isDirectory()) {
+			for (File f : file.listFiles()) {
+				count += getSubFilesAmt(f);
+			}
+		} else {
+			++count;
+		}
+		return count;
 	}
 }

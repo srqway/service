@@ -9,4 +9,8 @@ public interface IMopsManager {
 	boolean updateFinancialReportInstance() throws IllegalAccessException,
 			NoSuchMethodException, SecurityException, InstantiationException,
 			IllegalArgumentException, InvocationTargetException, IOException;
+
+	boolean calculateFinancialReport() throws IllegalAccessException,
+			NoSuchMethodException, SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException;
 }

@@ -7,6 +7,7 @@ import idv.hsiehpinghan.mopsdao.repository.FinancialReportInstanceRepository;
 import idv.hsiehpinghan.mopsdao.repository.FinancialReportPresentationRepository;
 import idv.hsiehpinghan.mopsdao.repository.MopsDownloadInfoRepository;
 import idv.hsiehpinghan.mopsservice.manager.IMopsManager;
+import idv.hsiehpinghan.mopsservice.operator.FinancialReportCalculator;
 import idv.hsiehpinghan.mopsservice.operator.FinancialReportDownloader;
 import idv.hsiehpinghan.mopsservice.property.MopsServiceProperty;
 import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
@@ -36,6 +37,8 @@ public class MopsHbaseManager implements IMopsManager {
 	@Autowired
 	private FinancialReportDownloader downloader;
 	@Autowired
+	private FinancialReportCalculator calculator;
+	@Autowired
 	private HdfsAssistant hdfsAssistant;
 	@Autowired
 	private MopsServiceProperty mopsServiceProperty;
@@ -46,7 +49,7 @@ public class MopsHbaseManager implements IMopsManager {
 	@Autowired
 	private FinancialReportPresentationRepository presentRepo;
 	@Autowired
-	private FinancialReportInstanceRepository instantRepo;
+	private FinancialReportInstanceRepository instanceRepo;
 	@Autowired
 	private MopsDownloadInfoRepository infoRepo;
 
@@ -106,10 +109,26 @@ public class MopsHbaseManager implements IMopsManager {
 		return true;
 	}
 
+	@Override
+	public boolean calculateFinancialReport() throws IllegalAccessException,
+			NoSuchMethodException, SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException {
+		MopsDownloadInfo downloadInfo = infoRepo.get(instanceRepo
+				.getTargetTableName());
+		try {
+			calculator.calculate(downloadInfo);
+		} catch (NoSuchFieldException e) {
+			logger.error("Calculate financial report fail !!!");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
 	MopsDownloadInfo getDownloadInfoEntity() throws IllegalAccessException,
 			NoSuchMethodException, SecurityException, InstantiationException,
 			IllegalArgumentException, InvocationTargetException, IOException {
-		String tableName = infoRepo.getTargetTableName();
+		String tableName = instanceRepo.getTargetTableName();
 		MopsDownloadInfo entity = infoRepo.get(tableName);
 		if (entity == null) {
 			entity = new MopsDownloadInfo();
@@ -151,16 +170,16 @@ public class MopsHbaseManager implements IMopsManager {
 			int season = Integer.valueOf(strArr[6].substring(5, 6));
 			ObjectNode objNode = instanceAssistant.getInstanceJson(file,
 					presentIds);
-			if (instantRepo.exists(stockCode, reportType, year, season) == false) {
-				instantRepo.put(stockCode, reportType, year, season, objNode,
+			if (instanceRepo.exists(stockCode, reportType, year, season) == false) {
+				instanceRepo.put(stockCode, reportType, year, season, objNode,
 						presentIds);
 				logger.info(file.getName() + " saved to hbase.");
-				++count;
 			} else {
 				logger.info(file.getName() + " already saved to hbase.");
 			}
 			addToDownloadInfoEntity(downloadInfo, stockCode, reportType, year,
 					season);
+			++count;
 		}
 		return count;
 	}
