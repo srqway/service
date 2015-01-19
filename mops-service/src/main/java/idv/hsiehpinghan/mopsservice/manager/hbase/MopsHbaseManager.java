@@ -1,9 +1,11 @@
 package idv.hsiehpinghan.mopsservice.manager.hbase;
 
 import idv.hsiehpinghan.hdfsassistant.utility.HdfsAssistant;
+import idv.hsiehpinghan.mopsdao.entity.MopsDownloadInfo;
 import idv.hsiehpinghan.mopsdao.enumeration.ReportType;
 import idv.hsiehpinghan.mopsdao.repository.FinancialReportInstanceRepository;
 import idv.hsiehpinghan.mopsdao.repository.FinancialReportPresentationRepository;
+import idv.hsiehpinghan.mopsdao.repository.MopsDownloadInfoRepository;
 import idv.hsiehpinghan.mopsservice.manager.IMopsManager;
 import idv.hsiehpinghan.mopsservice.operator.FinancialReportDownloader;
 import idv.hsiehpinghan.mopsservice.property.MopsServiceProperty;
@@ -13,7 +15,11 @@ import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 import idv.hsiehpinghan.xbrlassistant.xbrl.Presentation;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -41,6 +47,8 @@ public class MopsHbaseManager implements IMopsManager {
 	private FinancialReportPresentationRepository presentRepo;
 	@Autowired
 	private FinancialReportInstanceRepository instantRepo;
+	@Autowired
+	private MopsDownloadInfoRepository infoRepo;
 
 	public MopsHbaseManager() {
 		presentIds = new ArrayList<String>(4);
@@ -76,13 +84,19 @@ public class MopsHbaseManager implements IMopsManager {
 	}
 
 	@Override
-	public boolean updateFinancialReportInstance() {
+	public boolean updateFinancialReportInstance()
+			throws IllegalAccessException, NoSuchMethodException,
+			SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException {
 		File xbrlDir = downloadFinancialReportInstance();
 		if (xbrlDir == null) {
 			return false;
 		}
+		MopsDownloadInfo downloadInfo = getDownloadInfoEntity();
 		try {
-			int processFilesAmt = saveFinancialReportToHBase(xbrlDir);
+			int processFilesAmt = saveFinancialReportToHBase(xbrlDir,
+					downloadInfo);
+			infoRepo.put(downloadInfo);
 			logger.info("Saved " + processFilesAmt + " xbrl files to hbase.");
 		} catch (Exception e) {
 			logger.error("Save financial report to hbase fail !!!");
@@ -90,6 +104,18 @@ public class MopsHbaseManager implements IMopsManager {
 			return false;
 		}
 		return true;
+	}
+
+	MopsDownloadInfo getDownloadInfoEntity() throws IllegalAccessException,
+			NoSuchMethodException, SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException {
+		String tableName = infoRepo.getTargetTableName();
+		MopsDownloadInfo entity = infoRepo.get(tableName);
+		if (entity == null) {
+			entity = new MopsDownloadInfo();
+			entity.new RowKey(tableName, entity);
+		}
+		return entity;
 	}
 
 	File downloadFinancialReportInstance() {
@@ -103,16 +129,18 @@ public class MopsHbaseManager implements IMopsManager {
 		}
 	}
 
-	int saveFinancialReportToHBase(File xbrlDir) throws Exception {
-		return processXbrlFiles(xbrlDir);
+	int saveFinancialReportToHBase(File xbrlDir, MopsDownloadInfo downloadInfo)
+			throws Exception {
+		return processXbrlFiles(xbrlDir, downloadInfo);
 	}
 
-	int processXbrlFiles(File file) throws Exception {
+	int processXbrlFiles(File file, MopsDownloadInfo downloadInfo)
+			throws Exception {
 		int count = 0;
 		if (file.isDirectory()) {
 			File[] fs = file.listFiles();
 			for (File f : fs) {
-				count += processXbrlFiles(f);
+				count += processXbrlFiles(f, downloadInfo);
 			}
 		} else {
 			// ex. tifrs-fr0-m1-ci-cr-1101-2013Q1.xml
@@ -131,8 +159,41 @@ public class MopsHbaseManager implements IMopsManager {
 			} else {
 				logger.info(file.getName() + " already saved to hbase.");
 			}
-
+			addToDownloadInfoEntity(downloadInfo, stockCode, reportType, year,
+					season);
 		}
 		return count;
+	}
+
+	private void addToDownloadInfoEntity(MopsDownloadInfo downloadInfo,
+			String stockCode, ReportType reportType, int year, int season)
+			throws IllegalAccessException {
+		Date date = Calendar.getInstance().getTime();
+		addStockCode(downloadInfo, date, stockCode);
+		addReportType(downloadInfo, date, reportType);
+		addYear(downloadInfo, date, year);
+		addSeason(downloadInfo, date, season);
+	}
+
+	private void addStockCode(MopsDownloadInfo downloadInfo, Date date,
+			String stockCode) {
+		String all = MopsDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;
+		downloadInfo.getStockCodeFamily().addStockCode(all, date, stockCode);
+	}
+
+	private void addReportType(MopsDownloadInfo downloadInfo, Date date,
+			ReportType reportType) {
+		String all = MopsDownloadInfo.ReportTypeFamily.ReportTypeQualifier.ALL;
+		downloadInfo.getReportTypeFamily().addReportType(all, date, reportType);
+	}
+
+	private void addYear(MopsDownloadInfo downloadInfo, Date date, int year) {
+		String all = MopsDownloadInfo.YearFamily.YearQualifier.ALL;
+		downloadInfo.getYearFamily().addYear(all, date, year);
+	}
+
+	private void addSeason(MopsDownloadInfo downloadInfo, Date date, int season) {
+		String all = MopsDownloadInfo.SeasonFamily.SeasonQualifier.ALL;
+		downloadInfo.getSeasonFamily().addSeason(all, date, season);
 	}
 }
