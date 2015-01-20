@@ -173,9 +173,9 @@ public class MopsHbaseManager implements IMopsManager {
 			if (instanceRepo.exists(stockCode, reportType, year, season) == false) {
 				instanceRepo.put(stockCode, reportType, year, season, objNode,
 						presentIds);
-				logger.info(file.getName() + " saved to hbase.");
+				logger.info(file.getName() + " saved to " + instanceRepo.getTargetTableName() + ".");
 			} else {
-				logger.info(file.getName() + " already saved to hbase.");
+				logger.info(file.getName() + " already saved to " + instanceRepo.getTargetTableName() + ".");
 			}
 			addToDownloadInfoEntity(downloadInfo, stockCode, reportType, year,
 					season);
