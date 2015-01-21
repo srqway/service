@@ -120,6 +120,17 @@ public class MopsHbaseManager implements IMopsManager {
 		return true;
 	}
 
+	@Override
+	public MopsDownloadInfo getFinancialReportDownloadInfo() {
+		try {
+			return infoRepo.get(instanceRepo.getTargetTableName());
+		} catch (Exception e) {
+			logger.error("Get download info fail !!!");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	MopsDownloadInfo getDownloadInfoEntity() throws IllegalAccessException,
 			NoSuchMethodException, SecurityException, InstantiationException,
 			IllegalArgumentException, InvocationTargetException, IOException {
