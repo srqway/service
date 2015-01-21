@@ -5,7 +5,7 @@
 		<classes>
 			<class name="idv.hsiehpinghan.mopsservice.suit.TestngSuitSetting" />
 <!-- 			<class name="idv.hsiehpinghan.mopsservice.operator.FinancialReportDownloaderTest" /> -->
-			<class name="idv.hsiehpinghan.mopsservice.manager.hbase.MopsHbaseManagerTest" />
+<!-- 			<class name="idv.hsiehpinghan.mopsservice.manager.hbase.MopsHbaseManagerTest" /> -->
 <!-- 			<class name="idv.hsiehpinghan.mopsservice.operator.FinancialReportCalculatorTest" /> -->
 		</classes>
 	</test>

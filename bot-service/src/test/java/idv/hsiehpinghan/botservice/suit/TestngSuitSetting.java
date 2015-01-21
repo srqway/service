@@ -1,6 +1,6 @@
 package idv.hsiehpinghan.botservice.suit;
 
-import idv.hsiehpinghan.classutility.utility.ClassUtility;
+import idv.hsiehpinghan.objectutility.utility.ClassUtility;
 
 import java.io.IOException;
 

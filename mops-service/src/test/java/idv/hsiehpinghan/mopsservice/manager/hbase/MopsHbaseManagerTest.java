@@ -54,7 +54,7 @@ public class MopsHbaseManagerTest {
 		dropTable();
 	}
 
-	// @Test
+	@Test
 	public void updateFinancialReportPresentation()
 			throws NoSuchFieldException, SecurityException,
 			IllegalArgumentException, IllegalAccessException,
@@ -75,7 +75,7 @@ public class MopsHbaseManagerTest {
 		}
 	}
 
-	// @Test
+	@Test
 	public void processXbrlFiles() throws Exception {
 		MopsDownloadInfo downloadInfo = mopsManager.getDownloadInfoEntity();
 		File instanceFile = SystemResourceUtility
@@ -113,7 +113,7 @@ public class MopsHbaseManagerTest {
 				.getLatestValue(allSeason).getSeasons().contains(1));
 	}
 
-	// @Test(dependsOnMethods = { "processXbrlFiles" })
+	@Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
 		MopsDownloadInfo downloadInfo = mopsManager.getDownloadInfoEntity();
 		File xbrlDirectory = new File(mopsServiceProperty.getExtractDir());
@@ -123,8 +123,7 @@ public class MopsHbaseManagerTest {
 		Assert.assertEquals(processFilesAmt, fileAmt);
 	}
 
-	// @Test(dependsOnMethods = { "saveFinancialReportToHBase" })
-	@Test
+	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
 	public void calculateFinancialReport() throws Exception {
 		mopsManager.calculateFinancialReport();
 	}

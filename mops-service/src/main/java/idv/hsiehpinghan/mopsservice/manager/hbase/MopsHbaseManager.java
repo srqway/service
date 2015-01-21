@@ -87,16 +87,13 @@ public class MopsHbaseManager implements IMopsManager {
 	}
 
 	@Override
-	public boolean updateFinancialReportInstance()
-			throws IllegalAccessException, NoSuchMethodException,
-			SecurityException, InstantiationException,
-			IllegalArgumentException, InvocationTargetException, IOException {
+	public boolean updateFinancialReportInstance() {
 		File xbrlDir = downloadFinancialReportInstance();
 		if (xbrlDir == null) {
 			return false;
 		}
-		MopsDownloadInfo downloadInfo = getDownloadInfoEntity();
 		try {
+			MopsDownloadInfo downloadInfo = getDownloadInfoEntity();
 			int processFilesAmt = saveFinancialReportToHBase(xbrlDir,
 					downloadInfo);
 			infoRepo.put(downloadInfo);
@@ -110,14 +107,12 @@ public class MopsHbaseManager implements IMopsManager {
 	}
 
 	@Override
-	public boolean calculateFinancialReport() throws IllegalAccessException,
-			NoSuchMethodException, SecurityException, InstantiationException,
-			IllegalArgumentException, InvocationTargetException, IOException {
-		MopsDownloadInfo downloadInfo = infoRepo.get(instanceRepo
-				.getTargetTableName());
+	public boolean calculateFinancialReport() {
 		try {
+			MopsDownloadInfo downloadInfo = infoRepo.get(instanceRepo
+					.getTargetTableName());
 			calculator.calculate(downloadInfo);
-		} catch (NoSuchFieldException e) {
+		} catch (Exception e) {
 			logger.error("Calculate financial report fail !!!");
 			e.printStackTrace();
 			return false;
@@ -173,9 +168,11 @@ public class MopsHbaseManager implements IMopsManager {
 			if (instanceRepo.exists(stockCode, reportType, year, season) == false) {
 				instanceRepo.put(stockCode, reportType, year, season, objNode,
 						presentIds);
-				logger.info(file.getName() + " saved to " + instanceRepo.getTargetTableName() + ".");
+				logger.info(file.getName() + " saved to "
+						+ instanceRepo.getTargetTableName() + ".");
 			} else {
-				logger.info(file.getName() + " already saved to " + instanceRepo.getTargetTableName() + ".");
+				logger.info(file.getName() + " already saved to "
+						+ instanceRepo.getTargetTableName() + ".");
 			}
 			addToDownloadInfoEntity(downloadInfo, stockCode, reportType, year,
 					season);

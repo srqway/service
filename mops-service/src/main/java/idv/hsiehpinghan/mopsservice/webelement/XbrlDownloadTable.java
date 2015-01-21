@@ -1,6 +1,5 @@
 package idv.hsiehpinghan.mopsservice.webelement;
 
-
 import idv.hsiehpinghan.seleniumassistant.webelement.Table;
 
 import java.util.ArrayList;
@@ -16,8 +15,7 @@ public class XbrlDownloadTable extends Table {
 	}
 
 	/**
-	 * Get download file name.
-	 * If return null means no file could be downloaded.
+	 * Get download file name. If return null means no file could be downloaded.
 	 * 
 	 * @param rowIndex
 	 * @return
@@ -46,6 +44,7 @@ public class XbrlDownloadTable extends Table {
 
 	/**
 	 * Get expected row texts.
+	 * 
 	 * @return
 	 */
 	public List<String> getTargetRowTexts() {
@@ -57,7 +56,7 @@ public class XbrlDownloadTable extends Table {
 		}
 		return targetRowTexts;
 	}
-	
+
 	private String getFileName(String attrValue) {
 		int idxBegin = attrValue.indexOf("'") + 1;
 		int idxEnd = attrValue.indexOf("'", idxBegin);
