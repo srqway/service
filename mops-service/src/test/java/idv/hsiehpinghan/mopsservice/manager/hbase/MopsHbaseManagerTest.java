@@ -54,7 +54,7 @@ public class MopsHbaseManagerTest {
 		dropTable();
 	}
 
-	@Test
+	// @Test
 	public void updateFinancialReportPresentation()
 			throws NoSuchFieldException, SecurityException,
 			IllegalArgumentException, IllegalAccessException,
@@ -75,7 +75,7 @@ public class MopsHbaseManagerTest {
 		}
 	}
 
-	@Test
+	// @Test
 	public void processXbrlFiles() throws Exception {
 		MopsDownloadInfo downloadInfo = mopsManager.getDownloadInfoEntity();
 		File instanceFile = SystemResourceUtility
@@ -90,7 +90,7 @@ public class MopsHbaseManagerTest {
 				reportType, year, season);
 		// Test version.
 		String version = entity.getInfoFamily()
-				.getValue(InstanceAssistant.VERSION).getInfoContent();
+				.getLatestValue(InstanceAssistant.VERSION).getInfoContent();
 		Assert.assertEquals(version, "TIFRS_CI_CR_2013_03_31");
 		// Test instance.
 		String elementId = "tifrs-SCF_DecreaseIncreaseInFinancialAssetsHeldForTrading";
@@ -113,7 +113,8 @@ public class MopsHbaseManagerTest {
 				.getLatestValue(allSeason).getSeasons().contains(1));
 	}
 
-	@Test(dependsOnMethods = { "processXbrlFiles" })
+	// @Test(dependsOnMethods = { "processXbrlFiles" })
+	@Test
 	public void saveFinancialReportToHBase() throws Exception {
 		MopsDownloadInfo downloadInfo = mopsManager.getDownloadInfoEntity();
 		File xbrlDirectory = new File(mopsServiceProperty.getExtractDir());
@@ -123,7 +124,7 @@ public class MopsHbaseManagerTest {
 		Assert.assertEquals(processFilesAmt, fileAmt);
 	}
 
-	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+	// @Test(dependsOnMethods = { "saveFinancialReportToHBase" })
 	public void calculateFinancialReport() throws Exception {
 		mopsManager.calculateFinancialReport();
 	}

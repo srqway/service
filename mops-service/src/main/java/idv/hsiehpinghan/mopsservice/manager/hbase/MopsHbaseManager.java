@@ -1,6 +1,7 @@
 package idv.hsiehpinghan.mopsservice.manager.hbase;
 
 import idv.hsiehpinghan.hdfsassistant.utility.HdfsAssistant;
+import idv.hsiehpinghan.mopsdao.entity.FinancialReportInstance;
 import idv.hsiehpinghan.mopsdao.entity.MopsDownloadInfo;
 import idv.hsiehpinghan.mopsdao.enumeration.ReportType;
 import idv.hsiehpinghan.mopsdao.repository.FinancialReportInstanceRepository;
@@ -9,6 +10,7 @@ import idv.hsiehpinghan.mopsdao.repository.MopsDownloadInfoRepository;
 import idv.hsiehpinghan.mopsservice.manager.IMopsManager;
 import idv.hsiehpinghan.mopsservice.operator.FinancialReportCalculator;
 import idv.hsiehpinghan.mopsservice.operator.FinancialReportDownloader;
+import idv.hsiehpinghan.mopsservice.operator.FinancialReportJsonMaker;
 import idv.hsiehpinghan.mopsservice.property.MopsServiceProperty;
 import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
 import idv.hsiehpinghan.xbrlassistant.assistant.TaxonomyAssistant;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,8 @@ public class MopsHbaseManager implements IMopsManager {
 	private FinancialReportDownloader downloader;
 	@Autowired
 	private FinancialReportCalculator calculator;
+	@Autowired
+	private FinancialReportJsonMaker jsonMaker;
 	@Autowired
 	private HdfsAssistant hdfsAssistant;
 	@Autowired
@@ -126,6 +131,31 @@ public class MopsHbaseManager implements IMopsManager {
 			return infoRepo.get(instanceRepo.getTargetTableName());
 		} catch (Exception e) {
 			logger.error("Get download info fail !!!");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	@Override
+	public FinancialReportInstance getFinancialReportInstance(String stockCode,
+			ReportType reportType, Integer year, Integer season) {
+		try {
+			return instanceRepo.get(stockCode, reportType, year, season);
+		} catch (Exception e) {
+			logger.error("Get financial report instance fail !!!");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	@Override
+	public Map<String, ObjectNode> getPresentationJsonMap(
+			XbrlTaxonomyVersion taxonomyVersion) {
+		try {
+			return jsonMaker
+					.getPresentationJsonMap(presentIds, taxonomyVersion);
+		} catch (Exception e) {
+			logger.error("Get presentation json map fail !!!");
 			e.printStackTrace();
 			return null;
 		}
