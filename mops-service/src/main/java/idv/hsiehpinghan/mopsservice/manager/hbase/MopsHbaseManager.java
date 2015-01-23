@@ -125,18 +125,6 @@ public class MopsHbaseManager implements IMopsManager {
 		return true;
 	}
 
-	// @Override
-	// public String[] getBalanceSheetPeriods(String stockCode,
-	// ReportType reportType, Integer year, Integer season) {
-	// FinancialReportInstance instance = mopsHbaseManager
-	// .getFinancialReportInstance(stockCode, reportType, year, season);
-	// String periods = instance
-	// .getInfoFamily()
-	// .getLatestValue(Presentation.Id.BalanceSheet,
-	// Instance.Attribute.INSTANT).getInfoContent();
-	// return periods.split(",");
-	// }
-
 	@Override
 	public MopsDownloadInfo getFinancialReportDownloadInfo() {
 		try {
@@ -147,19 +135,6 @@ public class MopsHbaseManager implements IMopsManager {
 			return null;
 		}
 	}
-
-	// @Override
-	// public FinancialReportInstance getFinancialReportInstance(String
-	// stockCode,
-	// ReportType reportType, Integer year, Integer season) {
-	// try {
-	// return instanceRepo.get(stockCode, reportType, year, season);
-	// } catch (Exception e) {
-	// logger.error("Get financial report instance fail !!!");
-	// e.printStackTrace();
-	// return null;
-	// }
-	// }
 
 	@Override
 	public Map<String, ObjectNode> getFinancialReportDetailJsonMap(

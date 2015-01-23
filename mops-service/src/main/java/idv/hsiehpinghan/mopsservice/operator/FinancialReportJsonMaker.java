@@ -71,15 +71,27 @@ public class FinancialReportJsonMaker {
 						Instance.Attribute.INSTANT);
 				objNode = generateJsonObject(presentId, jsonStr,
 						Instance.Attribute.INSTANT, periods, dateEntity);
+			} else if (Presentation.Id.StatementOfComprehensiveIncome
+					.equals(presentId)) {
+				String[] periods = getPeriods(infoFam, presentId,
+						Instance.Attribute.DURATION);
+				objNode = generateJsonObject(presentId, jsonStr,
+						Instance.Attribute.DURATION, periods, dateEntity);
+			} else if (Presentation.Id.StatementOfCashFlows.equals(presentId)) {
+				String[] periods = getPeriods(infoFam, presentId,
+						Instance.Attribute.DURATION);
+				objNode = generateJsonObject(presentId, jsonStr,
+						Instance.Attribute.DURATION, periods, dateEntity);
+			} else if (Presentation.Id.StatementOfChangesInEquity
+					.equals(presentId)) {
+				String[] periods = getPeriods(infoFam, presentId,
+						Instance.Attribute.DURATION);
+				objNode = generateJsonObject(presentId, jsonStr,
+						Instance.Attribute.DURATION, periods, dateEntity);
+			} else {
+				throw new RuntimeException("Presentation id(" + presentId
+						+ ") not implements !!!");
 			}
-
-			// else {
-			// throw new RuntimeException("Presentation id(" + presentId
-			// + ") not implements !!!");
-			// }
-
-			System.err.println(objNode);
-
 			map.put(presentId, objNode);
 		}
 		return map;
@@ -87,8 +99,7 @@ public class FinancialReportJsonMaker {
 
 	private String[] getPeriods(InfoFamily infoFamily, String presentationId,
 			String periodType) {
-		String periods = infoFamily.getLatestValue(
-				Presentation.Id.BalanceSheet, Instance.Attribute.INSTANT)
+		String periods = infoFamily.getLatestValue(presentationId, periodType)
 				.getInfoContent();
 		return periods.split(",");
 	}
@@ -140,10 +151,17 @@ public class FinancialReportJsonMaker {
 				String chineseLabel = node.get(CHINESE_LABEL).asText();
 				if (Instance.Attribute.INSTANT.equals(periodType)) {
 					for (String period : periods) {
-						Date instant = DateUtils.parseDate(period, YYYYMMDD);
-						ItemValue itemValue = dateEntity.getItemFamily()
-								.getLatestValue(key,
-										Instance.Attribute.INSTANT, instant);
+						ItemValue itemValue = getInstantItemValue(key, period,
+								dateEntity);
+						if (itemValue == null) {
+							continue;
+						}
+						valuesNode.add(itemValue.getValue());
+					}
+				} else if (Instance.Attribute.DURATION.equals(periodType)) {
+					for (String period : periods) {
+						ItemValue itemValue = getDurationItemValue(key, period,
+								dateEntity);
 						if (itemValue == null) {
 							continue;
 						}
@@ -160,24 +178,21 @@ public class FinancialReportJsonMaker {
 						periodType, periods, dateEntity, deep);
 			}
 		}
+	}
 
-		// Iterator<JsonNode> iter = srcNode.elements();
-		// while (iter.hasNext()) {
-		// JsonNode node = iter.next();
-		// if (node.isValueNode()) {
-		// // System.err.println(node.asText());
-		// } else if (node.isObject()) {
-		// String chineseLabel = node.get("chinese_label").asText();
-		//
-		// System.err.println(chineseLabel);
-		// // ObjectNode objNode = (ObjectNode)node;
-		// // objNode.get(fieldName);
-		// generateSubNodeContent((ObjectNode) node, targetNode);
-		// } else {
-		// throw new RuntimeException("Type(" + node.getNodeType()
-		// + ") of JsonNode not implement !!!");
-		// }
-		// }
+	private ItemValue getInstantItemValue(String elementId, String period,
+			FinancialReportData dateEntity) throws ParseException {
+		Date instant = DateUtils.parseDate(period, YYYYMMDD);
+		return dateEntity.getItemFamily().getLatestValue(elementId,
+				Instance.Attribute.INSTANT, instant);
+	}
 
+	private ItemValue getDurationItemValue(String elementId, String period,
+			FinancialReportData dateEntity) throws ParseException {
+		String[] dates = period.split("~");
+		Date startDate = DateUtils.parseDate(dates[0], YYYYMMDD);
+		Date endDate = DateUtils.parseDate(dates[1], YYYYMMDD);
+		return dateEntity.getItemFamily().getLatestValue(elementId,
+				Instance.Attribute.DURATION, startDate, endDate);
 	}
 }
