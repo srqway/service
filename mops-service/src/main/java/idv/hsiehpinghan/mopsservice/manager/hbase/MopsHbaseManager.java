@@ -1,7 +1,6 @@
 package idv.hsiehpinghan.mopsservice.manager.hbase;
 
 import idv.hsiehpinghan.hdfsassistant.utility.HdfsAssistant;
-import idv.hsiehpinghan.mopsdao.entity.FinancialReportInstance;
 import idv.hsiehpinghan.mopsdao.entity.MopsDownloadInfo;
 import idv.hsiehpinghan.mopsdao.enumeration.ReportType;
 import idv.hsiehpinghan.mopsdao.repository.FinancialReportInstanceRepository;
@@ -102,7 +101,8 @@ public class MopsHbaseManager implements IMopsManager {
 			int processFilesAmt = saveFinancialReportToHBase(xbrlDir,
 					downloadInfo);
 			infoRepo.put(downloadInfo);
-			logger.info("Saved " + processFilesAmt + " xbrl files to hbase.");
+			logger.info("Saved " + processFilesAmt + " xbrl files to "
+					+ instanceRepo.getTargetTableName() + ".");
 		} catch (Exception e) {
 			logger.error("Save financial report to hbase fail !!!");
 			e.printStackTrace();
@@ -125,6 +125,18 @@ public class MopsHbaseManager implements IMopsManager {
 		return true;
 	}
 
+	// @Override
+	// public String[] getBalanceSheetPeriods(String stockCode,
+	// ReportType reportType, Integer year, Integer season) {
+	// FinancialReportInstance instance = mopsHbaseManager
+	// .getFinancialReportInstance(stockCode, reportType, year, season);
+	// String periods = instance
+	// .getInfoFamily()
+	// .getLatestValue(Presentation.Id.BalanceSheet,
+	// Instance.Attribute.INSTANT).getInfoContent();
+	// return periods.split(",");
+	// }
+
 	@Override
 	public MopsDownloadInfo getFinancialReportDownloadInfo() {
 		try {
@@ -136,24 +148,26 @@ public class MopsHbaseManager implements IMopsManager {
 		}
 	}
 
-	@Override
-	public FinancialReportInstance getFinancialReportInstance(String stockCode,
-			ReportType reportType, Integer year, Integer season) {
-		try {
-			return instanceRepo.get(stockCode, reportType, year, season);
-		} catch (Exception e) {
-			logger.error("Get financial report instance fail !!!");
-			e.printStackTrace();
-			return null;
-		}
-	}
+	// @Override
+	// public FinancialReportInstance getFinancialReportInstance(String
+	// stockCode,
+	// ReportType reportType, Integer year, Integer season) {
+	// try {
+	// return instanceRepo.get(stockCode, reportType, year, season);
+	// } catch (Exception e) {
+	// logger.error("Get financial report instance fail !!!");
+	// e.printStackTrace();
+	// return null;
+	// }
+	// }
 
 	@Override
-	public Map<String, ObjectNode> getPresentationJsonMap(
-			XbrlTaxonomyVersion taxonomyVersion) {
+	public Map<String, ObjectNode> getFinancialReportDetailJsonMap(
+			String stockCode, ReportType reportType, Integer year,
+			Integer season) {
 		try {
-			return jsonMaker
-					.getPresentationJsonMap(presentIds, taxonomyVersion);
+			return jsonMaker.getPresentationJsonMap(presentIds, stockCode,
+					reportType, year, season);
 		} catch (Exception e) {
 			logger.error("Get presentation json map fail !!!");
 			e.printStackTrace();

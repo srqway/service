@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 
@@ -54,7 +55,6 @@ public class FinancialReportCalculator {
 		String allReportType = MopsDownloadInfo.ReportTypeFamily.ReportTypeQualifier.ALL;
 		String allYear = MopsDownloadInfo.YearFamily.YearQualifier.ALL;
 		String allSeason = MopsDownloadInfo.SeasonFamily.SeasonQualifier.ALL;
-
 		StockCodeValue stockCodeValue = mopsDownloadInfo.getStockCodeFamily()
 				.getLatestValue(allStockCode);
 		ReportTypeValue reportTypeValue = mopsDownloadInfo
@@ -64,6 +64,7 @@ public class FinancialReportCalculator {
 		SeasonValue seasonValue = mopsDownloadInfo.getSeasonFamily()
 				.getLatestValue(allSeason);
 
+		int precessAmt = 0;
 		for (String stockCode : stockCodeValue.getStockCodes()) {
 			for (ReportType reportType : reportTypeValue.getReportTypes()) {
 				for (Integer year : yearValue.getYears()) {
@@ -74,11 +75,14 @@ public class FinancialReportCalculator {
 						FinancialReportData entity = generateEntity(stockCode,
 								reportType, year, season);
 						dataRepo.put(entity);
+						++precessAmt;
 						logSaveMsg(stockCode, reportType, year, season, entity);
 					}
 				}
 			}
 		}
+		logger.info("Saved " + precessAmt + " xbrl files to "
+				+ dataRepo.getTargetTableName() + ".");
 	}
 
 	private boolean process(String stockCode, ReportType reportType,

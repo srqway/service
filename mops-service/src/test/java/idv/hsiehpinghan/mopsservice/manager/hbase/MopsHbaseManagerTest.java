@@ -1,9 +1,12 @@
 package idv.hsiehpinghan.mopsservice.manager.hbase;
 
+import idv.hsiehpinghan.hbaseassistant.assistant.HbaseAssistant;
+import idv.hsiehpinghan.hbaseassistant.utility.HbaseEntityTestUtility;
 import idv.hsiehpinghan.mopsdao.entity.FinancialReportInstance;
 import idv.hsiehpinghan.mopsdao.entity.FinancialReportInstance.InstanceFamily.InstanceValue;
 import idv.hsiehpinghan.mopsdao.entity.MopsDownloadInfo;
 import idv.hsiehpinghan.mopsdao.enumeration.ReportType;
+import idv.hsiehpinghan.mopsdao.repository.FinancialReportDataRepository;
 import idv.hsiehpinghan.mopsdao.repository.FinancialReportInstanceRepository;
 import idv.hsiehpinghan.mopsdao.repository.FinancialReportPresentationRepository;
 import idv.hsiehpinghan.mopsdao.repository.MopsDownloadInfoRepository;
@@ -15,8 +18,6 @@ import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 import idv.hsiehpinghan.xbrlassistant.xbrl.Instance;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -34,8 +35,10 @@ public class MopsHbaseManagerTest {
 	private MopsHbaseManager mopsManager;
 	private FinancialReportPresentationRepository presentRepo;
 	private FinancialReportInstanceRepository instanceRepo;
-	private MopsDownloadInfoRepository mopsDownloadInfoRepo;
+	private MopsDownloadInfoRepository infoRepo;
+	private FinancialReportDataRepository dataRepo;
 	private MopsServiceProperty mopsServiceProperty;
+	private HbaseAssistant hbaseAssistant;
 
 	@BeforeClass
 	public void beforeClass() throws Exception {
@@ -48,18 +51,16 @@ public class MopsHbaseManagerTest {
 				.getBean(FinancialReportInstanceRepository.class);
 		mopsServiceProperty = applicationContext
 				.getBean(MopsServiceProperty.class);
-		mopsDownloadInfoRepo = applicationContext
-				.getBean(MopsDownloadInfoRepository.class);
+		infoRepo = applicationContext.getBean(MopsDownloadInfoRepository.class);
+		dataRepo = applicationContext
+				.getBean(FinancialReportDataRepository.class);
+		hbaseAssistant = applicationContext.getBean(HbaseAssistant.class);
 
 		dropTable();
 	}
 
-	// @Test
-	public void updateFinancialReportPresentation()
-			throws NoSuchFieldException, SecurityException,
-			IllegalArgumentException, IllegalAccessException,
-			NoSuchMethodException, InvocationTargetException,
-			InstantiationException, IOException {
+	@Test
+	public void updateFinancialReportPresentation() throws Exception {
 		String tableName = presentRepo.getTargetTableName();
 		if (presentRepo.isTableExists(tableName)) {
 			presentRepo.dropTable(tableName);
@@ -75,7 +76,7 @@ public class MopsHbaseManagerTest {
 		}
 	}
 
-	// @Test
+	@Test
 	public void processXbrlFiles() throws Exception {
 		MopsDownloadInfo downloadInfo = mopsManager.getDownloadInfoEntity();
 		File instanceFile = SystemResourceUtility
@@ -97,8 +98,8 @@ public class MopsHbaseManagerTest {
 		String periodType = Instance.Attribute.DURATION;
 		Date startDate = DateUtils.parseDate("20130101", DATE_PATTERN);
 		Date endDate = DateUtils.parseDate("20130331", DATE_PATTERN);
-		InstanceValue val = entity.getInstanceFamily().getValue(elementId,
-				periodType, startDate, endDate);
+		InstanceValue val = entity.getInstanceFamily().getLatestValue(
+				elementId, periodType, startDate, endDate);
 		Assert.assertEquals(val.getUnit(), "TWD");
 		Assert.assertEquals(val.getValue().toString(), "-120107000");
 		// Test downloadInfo.
@@ -111,10 +112,11 @@ public class MopsHbaseManagerTest {
 				.getYears().contains(2013));
 		Assert.assertTrue(downloadInfo.getSeasonFamily()
 				.getLatestValue(allSeason).getSeasons().contains(1));
+
+		HbaseEntityTestUtility.dropAndCreateTargetTable(instanceRepo);
 	}
 
-	// @Test(dependsOnMethods = { "processXbrlFiles" })
-	@Test
+	@Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
 		MopsDownloadInfo downloadInfo = mopsManager.getDownloadInfoEntity();
 		File xbrlDirectory = new File(mopsServiceProperty.getExtractDir());
@@ -124,15 +126,36 @@ public class MopsHbaseManagerTest {
 		Assert.assertEquals(processFilesAmt, fileAmt);
 	}
 
-	// @Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+	public void updateFinancialReportInstance() throws Exception {
+		mopsManager.updateFinancialReportInstance();
+		MopsDownloadInfo infoEntity = infoRepo.get(instanceRepo
+				.getTargetTableName());
+		Assert.assertTrue(infoEntity.getStockCodeFamily()
+				.getQualifierVersionValueSet().size() > 0);
+		Assert.assertTrue(infoEntity.getReportTypeFamily()
+				.getQualifierVersionValueSet().size() > 0);
+		Assert.assertTrue(infoEntity.getYearFamily()
+				.getQualifierVersionValueSet().size() > 0);
+		Assert.assertTrue(infoEntity.getSeasonFamily()
+				.getQualifierVersionValueSet().size() > 0);
+	}
+
+	@Test(dependsOnMethods = { "updateFinancialReportInstance" })
 	public void calculateFinancialReport() throws Exception {
 		mopsManager.calculateFinancialReport();
+		int actual = hbaseAssistant
+				.getRowAmount(dataRepo.getTargetTableClass());
+		int expected = hbaseAssistant.getRowAmount(instanceRepo
+				.getTargetTableClass());
+		Assert.assertEquals(expected, actual);
 	}
 
 	private void dropTable() throws Exception {
-		// HbaseEntityTestUtility.dropTargetTable(presentRepo);
-		// HbaseEntityTestUtility.dropTargetTable(instantRepo);
-		// HbaseEntityTestUtility.dropTargetTable(mopsDownloadInfoRepo);
+		HbaseEntityTestUtility.dropAndCreateTargetTable(presentRepo);
+		HbaseEntityTestUtility.dropAndCreateTargetTable(instanceRepo);
+		HbaseEntityTestUtility.dropAndCreateTargetTable(infoRepo);
+		HbaseEntityTestUtility.dropAndCreateTargetTable(dataRepo);
 	}
 
 	private int getSubFilesAmt(File file) {
