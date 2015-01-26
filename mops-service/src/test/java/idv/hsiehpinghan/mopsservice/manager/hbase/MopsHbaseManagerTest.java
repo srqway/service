@@ -56,10 +56,10 @@ public class MopsHbaseManagerTest {
 				.getBean(FinancialReportDataRepository.class);
 		hbaseAssistant = applicationContext.getBean(HbaseAssistant.class);
 
-		dropTable();
+//		dropTable();
 	}
 
-	@Test
+//	@Test
 	public void updateFinancialReportPresentation() throws Exception {
 		String tableName = presentRepo.getTargetTableName();
 		if (presentRepo.isTableExists(tableName)) {
@@ -76,7 +76,7 @@ public class MopsHbaseManagerTest {
 		}
 	}
 
-	@Test
+//	@Test
 	public void processXbrlFiles() throws Exception {
 		MopsDownloadInfo downloadInfo = mopsManager.getDownloadInfoEntity();
 		File instanceFile = SystemResourceUtility
@@ -116,7 +116,7 @@ public class MopsHbaseManagerTest {
 		HbaseEntityTestUtility.dropAndCreateTargetTable(instanceRepo);
 	}
 
-	@Test(dependsOnMethods = { "processXbrlFiles" })
+//	@Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
 		MopsDownloadInfo downloadInfo = mopsManager.getDownloadInfoEntity();
 		File xbrlDirectory = new File(mopsServiceProperty.getExtractDir());
@@ -126,7 +126,8 @@ public class MopsHbaseManagerTest {
 		Assert.assertEquals(processFilesAmt, fileAmt);
 	}
 
-	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+//	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+	@Test
 	public void updateFinancialReportInstance() throws Exception {
 		mopsManager.updateFinancialReportInstance();
 		MopsDownloadInfo infoEntity = infoRepo.get(instanceRepo
@@ -141,7 +142,7 @@ public class MopsHbaseManagerTest {
 				.getQualifierVersionValueSet().size() > 0);
 	}
 
-	@Test(dependsOnMethods = { "updateFinancialReportInstance" })
+//	@Test(dependsOnMethods = { "updateFinancialReportInstance" })
 	public void calculateFinancialReport() throws Exception {
 		mopsManager.calculateFinancialReport();
 		int actual = hbaseAssistant
