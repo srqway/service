@@ -56,6 +56,9 @@ public class FinancialReportJsonMaker {
 			NoSuchMethodException, SecurityException, InstantiationException,
 			IllegalArgumentException, InvocationTargetException, IOException,
 			NoSuchFieldException, ParseException {
+		if (instanceRepo.exists(stockCode, reportType, year, season) == false) {
+			return null;
+		}
 		InfoFamily infoFam = instanceRepo.get(stockCode, reportType, year,
 				season).getInfoFamily();
 		FinancialReportPresentation present = presentRepo
@@ -207,8 +210,8 @@ public class FinancialReportJsonMaker {
 				hasContent |= generateContentNode((ObjectNode) node,
 						targetNode, presentId, periodType, periods, dateEntity,
 						deep + 1);
-				if(hasContent == false) {
-					targetNode.remove(key);	
+				if (hasContent == false) {
+					targetNode.remove(key);
 				}
 			}
 		}
