@@ -45,4 +45,11 @@ public class FinancialReportDownloaderTest {
 		Assert.assertNotNull(f);
 	}
 
+	@Test
+	public void getFileName() {
+		String str = "attachment; filename=\"2013-01-otc-02-C.zip\"";
+		String result = downloader.getFileName(str);
+		Assert.assertEquals("2013-01-otc-02-C.zip", result);
+	}
+
 }

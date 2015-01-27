@@ -1,6 +1,5 @@
 package idv.hsiehpinghan.mopsservice.manager.hbase;
 
-import idv.hsiehpinghan.hdfsassistant.utility.HdfsAssistant;
 import idv.hsiehpinghan.mopsdao.entity.MopsDownloadInfo;
 import idv.hsiehpinghan.mopsdao.enumeration.ReportType;
 import idv.hsiehpinghan.mopsdao.repository.FinancialReportInstanceRepository;
@@ -42,8 +41,6 @@ public class MopsHbaseManager implements IMopsManager {
 	private FinancialReportCalculator calculator;
 	@Autowired
 	private FinancialReportJsonMaker jsonMaker;
-	@Autowired
-	private HdfsAssistant hdfsAssistant;
 	@Autowired
 	private MopsServiceProperty mopsServiceProperty;
 	@Autowired

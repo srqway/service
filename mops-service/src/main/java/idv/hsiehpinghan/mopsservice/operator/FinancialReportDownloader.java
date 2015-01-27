@@ -121,6 +121,12 @@ public class FinancialReportDownloader implements InitializingBean {
 		return browser;
 	}
 
+	String getFileName(String str) {
+		int idxBegin = str.indexOf("\"") + 1;
+		int idxEnd = str.lastIndexOf("\"");
+		return str.substring(idxBegin, idxEnd);
+	}
+
 	private void generateControlFile() throws IOException {
 		if (controlFile == null) {
 			controlFile = new File(downloadDir, "control_file");
@@ -183,7 +189,7 @@ public class FinancialReportDownloader implements InitializingBean {
 			browser.cacheCurrentPage();
 			try {
 				table.clickDownloadButton(i);
-				String fileName = browser.getDownloadFileName();
+				String fileName = getFileName(browser.getAttachment());
 				File f = browser.download(downloadDir.getAbsolutePath() + "/"
 						+ fileName);
 				logger.info(f.getAbsolutePath() + " downloaded.");

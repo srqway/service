@@ -32,10 +32,8 @@
 		<spring.version>4.1.2.RELEASE</spring.version>
 		<jackson.version>2.4.4</jackson.version>
 		<mops-dao.version>1.0.0</mops-dao.version>
-		<!-- <resource-utility.version>1.0.0</resource-utility.version> -->
 		<selenium-assistant.version>1.0.0</selenium-assistant.version>
 		<xbrl-assistant.version>1.0.0</xbrl-assistant.version>
-		<hdfs-assistant.version>1.0.0</hdfs-assistant.version>
 		<compress-utility.version>1.0.0</compress-utility.version>
 		<test-utility.version>1.0.0</test-utility.version>
 	</properties>
@@ -91,26 +89,12 @@
 			<version>${xbrl-assistant.version}</version>
 		</dependency>
 
-		<!-- hdfs-assistant -->
-		<dependency>
-			<groupId>idv.hsiehpinghan</groupId>
-			<artifactId>hdfs-assistant</artifactId>
-			<version>${hdfs-assistant.version}</version>
-		</dependency>
-
 		<!-- compress-utility -->
 		<dependency>
 			<groupId>idv.hsiehpinghan</groupId>
 			<artifactId>compress-utility</artifactId>
 			<version>${compress-utility.version}</version>
 		</dependency>
-
-		<!-- resource-utility -->
-		<!-- <dependency> -->
-		<!-- <groupId>idv.hsiehpinghan</groupId> -->
-		<!-- <artifactId>resource-utility</artifactId> -->
-		<!-- <version>${resource-utility.version}</version> -->
-		<!-- </dependency> -->
 
 		<!-- test-utility -->
 		<dependency>
