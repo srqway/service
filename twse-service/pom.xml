@@ -33,6 +33,7 @@
 		<spring.version>4.1.2.RELEASE</spring.version>
 		<selenium-assistant.version>1.0.0</selenium-assistant.version>
 		<datetime-utility.version>1.0.0</datetime-utility.version>
+		<thread-utility.version>1.0.0</thread-utility.version>
 		<object-utility.version>1.0.0</object-utility.version>
 		<test-utility.version>1.0.0</test-utility.version>
 	</properties>
@@ -72,6 +73,13 @@
 			<groupId>idv.hsiehpinghan</groupId>
 			<artifactId>datetime-utility</artifactId>
 			<version>${datetime-utility.version}</version>
+		</dependency>
+
+		<!-- thread-utility -->
+		<dependency>
+			<groupId>idv.hsiehpinghan</groupId>
+			<artifactId>thread-utility</artifactId>
+			<version>${thread-utility.version}</version>
 		</dependency>
 
 		<!-- object-utility -->

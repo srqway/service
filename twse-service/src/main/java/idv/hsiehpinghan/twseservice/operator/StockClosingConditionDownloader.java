@@ -7,14 +7,18 @@ import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
+import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 import idv.hsiehpinghan.twseservice.property.TwseServiceProperty;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
@@ -24,6 +28,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class StockClosingConditionDownloader implements InitializingBean {
+	private final String YYYYMMDD = "yyyyMMdd";
+	private final String ALL = "全部";
+	private final int MAX_TRY_AMOUNT = 3;
 	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
@@ -43,22 +50,21 @@ public class StockClosingConditionDownloader implements InitializingBean {
 		generateControlFile();
 	}
 
-	public File downloadStockClosingCondition() {
+	public File downloadStockClosingCondition() throws IOException {
 		moveToTargetPage();
 		Date now = Calendar.getInstance().getTime();
 		Date targetDate = BEGIN_DATA_DATE;
 		while (targetDate.getTime() < now.getTime()) {
-			inputDataDate(targetDate);
-			selectType("全部");
-			downloadCsv();
-			// query();
-
+			String downloadInfo = getDownloadInfo(targetDate);
+			if (isDownloaded(downloadInfo) == false) {
+				inputDataDate(targetDate);
+				selectType(ALL);
+				repeatTryDownload(targetDate);
+				writeToControlFile(downloadInfo);
+			}
 			targetDate = DateUtils.addDays(targetDate, 1);
-
-			return null;
 		}
-
-		return null;
+		return downloadDir;
 	}
 
 	void moveToTargetPage() {
@@ -80,21 +86,36 @@ public class StockClosingConditionDownloader implements InitializingBean {
 		dataDateInput.inputText(dateStr);
 	}
 
-	// void query() {
-	// browser.getButton(By
-	// .cssSelector("input.board")).click();
-	// }
-
 	void selectType(String text) {
 		Select typeSel = browser.getSelect(By
 				.cssSelector("#main-content > form > select"));
-
-		System.err.println(typeSel.getText());
-
 		typeSel.selectByText(text);
 	}
 
-	void downloadCsv() {
+	void repeatTryDownload(Date targetDate) {
+		int tryAmount = 0;
+		while (true) {
+			try {
+				downloadCsv(targetDate);
+				break;
+			} catch (Exception e) {
+				++tryAmount;
+				logger.warn("Download fail " + tryAmount + " times !!!");
+				logger.warn(browser.getWebDriver().getPageSource());
+				if (tryAmount >= MAX_TRY_AMOUNT) {
+					throw new RuntimeException(e);
+				}
+				ThreadUtility.sleep(tryAmount * 10);
+			}
+		}
+	}
+
+	String getFileName(String str) {
+		int idxBegin = str.indexOf("=") + 1;
+		return str.substring(idxBegin);
+	}
+
+	private void downloadCsv(Date targetDate) {
 		browser.cacheCurrentPage();
 		try {
 			browser.getButton(By.cssSelector(".dl-csv")).click();
@@ -110,11 +131,6 @@ public class StockClosingConditionDownloader implements InitializingBean {
 		}
 	}
 
-	String getFileName(String str) {
-		int idxBegin = str.indexOf("=") + 1;
-		return str.substring(idxBegin);
-	}
-	
 	private Date generateBeginDataDate() {
 		return DateUtility.getDate(2013, 1, 1);
 	}
@@ -128,4 +144,21 @@ public class StockClosingConditionDownloader implements InitializingBean {
 		}
 	}
 
+	private String getDownloadInfo(Date date) {
+		return DateFormatUtils.format(date, YYYYMMDD);
+	}
+
+	private boolean isDownloaded(String downloadInfo) throws IOException {
+		List<String> downloadedList = FileUtils.readLines(controlFile);
+		if (downloadedList.contains(downloadInfo)) {
+			logger.info(downloadInfo + " downloaded before.");
+			return true;
+		}
+		return false;
+	}
+
+	private void writeToControlFile(String downloadInfo) throws IOException {
+		String infoLine = downloadInfo + System.lineSeparator();
+		FileUtils.write(controlFile, infoLine, Charsets.UTF_8, true);
+	}
 }
