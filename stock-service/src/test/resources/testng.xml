@@ -1,0 +1,34 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="suite" verbose="1">
+	<test name="financialReport">
+		<classes>
+			<class name="idv.hsiehpinghan.stockservice.suit.TestngSuitSetting" />
+			<!-- Test operator -->
+			<!-- <class name="idv.hsiehpinghan.stockservice.operator.FinancialReportDownloaderTest" 
+				/> -->
+
+			<!-- Test manager -->
+			<class
+				name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" />
+		</classes>
+	</test>
+	<test name="stockClosingCondition">
+		<classes>
+			<!-- Test operator -->
+			<class
+				name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionDownloaderTest" />
+
+			<!-- Test manager -->
+		</classes>
+	</test>
+	<test name="exchangeRate">
+		<classes>
+			<!-- Test operator -->
+			<class
+				name="idv.hsiehpinghan.stockservice.operator.ExchangeRateDownloaderTest" />
+
+			<!-- Test manager -->
+		</classes>
+	</test>
+</suite>
