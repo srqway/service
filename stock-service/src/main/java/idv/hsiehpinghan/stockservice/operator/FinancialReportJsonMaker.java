@@ -5,9 +5,9 @@ import idv.hsiehpinghan.stockdao.entity.FinancialReportData.ItemFamily.ItemValue
 import idv.hsiehpinghan.stockdao.entity.FinancialReportInstance.InfoFamily;
 import idv.hsiehpinghan.stockdao.entity.FinancialReportPresentation;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
-import idv.hsiehpinghan.stockdao.repository.FinancialReportDataRepository;
-import idv.hsiehpinghan.stockdao.repository.FinancialReportInstanceRepository;
-import idv.hsiehpinghan.stockdao.repository.FinancialReportPresentationRepository;
+import idv.hsiehpinghan.stockdao.repository.IFinancialReportDataRepository;
+import idv.hsiehpinghan.stockdao.repository.IFinancialReportInstanceRepository;
+import idv.hsiehpinghan.stockdao.repository.IFinancialReportPresentationRepository;
 import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 import idv.hsiehpinghan.xbrlassistant.xbrl.Instance;
@@ -41,14 +41,15 @@ public class FinancialReportJsonMaker {
 	private static final String LABEL = "label";
 	private static final String CHINESE_LABEL = "chinese_label";
 	public static final String TITLE = "title";
-	@Autowired
-	private FinancialReportPresentationRepository presentRepo;
+
 	@Autowired
 	private ObjectMapper objectMapper;
 	@Autowired
-	private FinancialReportInstanceRepository instanceRepo;
+	private IFinancialReportPresentationRepository presentRepo;
 	@Autowired
-	private FinancialReportDataRepository dataRepo;
+	private IFinancialReportInstanceRepository instanceRepo;
+	@Autowired
+	private IFinancialReportDataRepository dataRepo;
 
 	public Map<String, ObjectNode> getPresentationJsonMap(
 			List<String> presentIds, String stockCode, ReportType reportType,

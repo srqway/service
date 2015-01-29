@@ -17,8 +17,8 @@ import idv.hsiehpinghan.stockdao.entity.StockDownloadInfo.SeasonFamily.SeasonVal
 import idv.hsiehpinghan.stockdao.entity.StockDownloadInfo.StockCodeFamily.StockCodeValue;
 import idv.hsiehpinghan.stockdao.entity.StockDownloadInfo.YearFamily.YearValue;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
-import idv.hsiehpinghan.stockdao.repository.FinancialReportDataRepository;
-import idv.hsiehpinghan.stockdao.repository.FinancialReportInstanceRepository;
+import idv.hsiehpinghan.stockdao.repository.IFinancialReportDataRepository;
+import idv.hsiehpinghan.stockdao.repository.IFinancialReportInstanceRepository;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -41,9 +41,9 @@ public class FinancialReportCalculator {
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	@Autowired
-	private FinancialReportDataRepository dataRepo;
+	private IFinancialReportDataRepository dataRepo;
 	@Autowired
-	private FinancialReportInstanceRepository instanceRepo;
+	private IFinancialReportInstanceRepository instanceRepo;
 
 	public void calculate(StockDownloadInfo stockDownloadInfo)
 			throws NoSuchFieldException, SecurityException,

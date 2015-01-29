@@ -3,9 +3,9 @@ package idv.hsiehpinghan.stockservice.manager.hbase;
 import idv.hsiehpinghan.stockdao.entity.StockDownloadInfo;
 import idv.hsiehpinghan.stockdao.enumeration.Dollar;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
-import idv.hsiehpinghan.stockdao.repository.FinancialReportInstanceRepository;
-import idv.hsiehpinghan.stockdao.repository.FinancialReportPresentationRepository;
-import idv.hsiehpinghan.stockdao.repository.StockDownloadInfoRepository;
+import idv.hsiehpinghan.stockdao.repository.IFinancialReportInstanceRepository;
+import idv.hsiehpinghan.stockdao.repository.IFinancialReportPresentationRepository;
+import idv.hsiehpinghan.stockdao.repository.IStockDownloadInfoRepository;
 import idv.hsiehpinghan.stockservice.manager.IFinancialReportManager;
 import idv.hsiehpinghan.stockservice.operator.ExchangeRateDownloader;
 import idv.hsiehpinghan.stockservice.operator.FinancialReportCalculator;
@@ -53,11 +53,11 @@ public class FinancialReportHbaseManager implements IFinancialReportManager {
 	@Autowired
 	private InstanceAssistant instanceAssistant;
 	@Autowired
-	private FinancialReportPresentationRepository presentRepo;
+	private IFinancialReportPresentationRepository presentRepo;
 	@Autowired
-	private FinancialReportInstanceRepository instanceRepo;
+	private IFinancialReportInstanceRepository instanceRepo;
 	@Autowired
-	private StockDownloadInfoRepository infoRepo;
+	private IStockDownloadInfoRepository infoRepo;
 
 	public FinancialReportHbaseManager() {
 		presentIds = new ArrayList<String>(4);

@@ -2,6 +2,7 @@ package idv.hsiehpinghan.stockservice.operator;
 
 import idv.hsiehpinghan.compressutility.utility.CompressUtility;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
+import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
 
@@ -54,7 +55,7 @@ public class FinancialReportUnzipper implements InitializingBean {
 									: " failed !!!"));
 					throw new RuntimeException(e);
 				}
-				sleep(tryAmount * 60);
+				ThreadUtility.sleep(tryAmount * 60);
 			}
 		}
 	}
@@ -66,13 +67,5 @@ public class FinancialReportUnzipper implements InitializingBean {
 	 */
 	public File getExtractDir() {
 		return extractDir;
-	}
-
-	private void sleep(int seconds) {
-		try {
-			Thread.sleep(seconds * 1000);
-		} catch (InterruptedException e) {
-			logger.warn("Exception : ", e);
-		}
 	}
 }

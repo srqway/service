@@ -7,6 +7,7 @@ import idv.hsiehpinghan.seleniumassistant.webelement.Select.Option;
 import idv.hsiehpinghan.stockdao.enumeration.Dollar;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.webelement.ExchangeRateDownloadTable;
+import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -233,16 +234,8 @@ public class ExchangeRateDownloader implements InitializingBean {
 				if (tryAmount >= MAX_TRY_AMOUNT) {
 					throw new RuntimeException(e);
 				}
-				sleep(tryAmount * 60);
+				ThreadUtility.sleep(tryAmount * 60);
 			}
-		}
-	}
-
-	private void sleep(int seconds) {
-		try {
-			Thread.sleep(seconds * 1000);
-		} catch (InterruptedException e) {
-			logger.warn("Exception : ", e);
 		}
 	}
 }
