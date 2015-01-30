@@ -58,10 +58,10 @@ public class FinancialReportHbaseManagerTest {
 				.getBean(FinancialReportDataRepository.class);
 		hbaseAssistant = applicationContext.getBean(HbaseAssistant.class);
 
-		// dropTable();
+//		dropTable();
 	}
 
-	// @Test
+	@Test
 	public void updateFinancialReportPresentation() throws Exception {
 		String tableName = presentRepo.getTargetTableName();
 		if (presentRepo.isTableExists(tableName)) {
@@ -78,7 +78,7 @@ public class FinancialReportHbaseManagerTest {
 		}
 	}
 
-	// @Test
+	@Test
 	public void processXbrlFiles() throws Exception {
 		StockDownloadInfo downloadInfo = reportManager.getDownloadInfoEntity();
 		File instanceFile = SystemResourceUtility
@@ -118,7 +118,7 @@ public class FinancialReportHbaseManagerTest {
 		HbaseEntityTestUtility.dropAndCreateTargetTable(instanceRepo);
 	}
 
-	// @Test(dependsOnMethods = { "processXbrlFiles" })
+	@Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
 		StockDownloadInfo downloadInfo = reportManager.getDownloadInfoEntity();
 		File xbrlDirectory = new File(stockServiceProperty.getExtractDir());
@@ -128,8 +128,7 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(processFilesAmt, fileAmt);
 	}
 
-	// @Test(dependsOnMethods = { "saveFinancialReportToHBase" })
-	@Test
+	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
 	public void updateFinancialReportInstance() throws Exception {
 		reportManager.updateFinancialReportInstance();
 		StockDownloadInfo infoEntity = infoRepo.get(instanceRepo
@@ -144,7 +143,7 @@ public class FinancialReportHbaseManagerTest {
 				.getQualifierVersionValueSet().size() > 0);
 	}
 
-	// @Test(dependsOnMethods = { "updateFinancialReportInstance" })
+	@Test(dependsOnMethods = { "updateFinancialReportInstance" })
 	public void calculateFinancialReport() throws Exception {
 		reportManager.calculateFinancialReport();
 		int actual = hbaseAssistant

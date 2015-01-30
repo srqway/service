@@ -68,7 +68,7 @@ public class StockClosingConditionDownloader implements InitializingBean {
 	}
 
 	void moveToTargetPage() {
-		final String STOCK_CLOSING_CONDITION_PAGE_URL = "http://www.stock.com.tw/ch/trading/exchange/MI_INDEX/MI_INDEX.php";
+		final String STOCK_CLOSING_CONDITION_PAGE_URL = "http://www.twse.com.tw/ch/trading/exchange/MI_INDEX/MI_INDEX.php";
 		browser.browse(STOCK_CLOSING_CONDITION_PAGE_URL);
 		Div div = browser.getDiv(By.id("breadcrumbs"));
 		AjaxWaitUtility.waitUntilDivTextStartWith(div,

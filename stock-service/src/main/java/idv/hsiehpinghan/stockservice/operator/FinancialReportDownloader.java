@@ -1,15 +1,15 @@
 package idv.hsiehpinghan.stockservice.operator;
 
-import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
-import idv.hsiehpinghan.stockservice.utility.StockAjaxWaitUtility;
-import idv.hsiehpinghan.stockservice.webelement.XbrlDownloadTable;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitWithJavascriptBrowser;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Button;
 import idv.hsiehpinghan.seleniumassistant.webelement.Font;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select.Option;
+import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
+import idv.hsiehpinghan.stockservice.utility.StockAjaxWaitUtility;
+import idv.hsiehpinghan.stockservice.webelement.XbrlDownloadTable;
 import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
@@ -41,7 +41,7 @@ public class FinancialReportDownloader implements InitializingBean {
 	private File controlFile;
 
 	@Autowired
-	private HtmlUnitWithJavascriptBrowser browser;
+	private HtmlUnitFirefoxVersionBrowser browser;
 	@Autowired
 	private FinancialReportUnzipper unzipper;
 	@Autowired
@@ -114,7 +114,7 @@ public class FinancialReportDownloader implements InitializingBean {
 	}
 
 	void moveToTargetPage() {
-		final String FINANCIAL_REPORT_PAGE_URL = "http://stock.twse.com.tw/stock/web/t164sb02";
+		final String FINANCIAL_REPORT_PAGE_URL = "http://mops.twse.com.tw/mops/web/t164sb02";
 		browser.browse(FINANCIAL_REPORT_PAGE_URL);
 	}
 
