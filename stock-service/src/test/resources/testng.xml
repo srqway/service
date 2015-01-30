@@ -5,28 +5,34 @@
 		<classes>
 			<class name="idv.hsiehpinghan.stockservice.suit.TestngSuitSetting" />
 			<!-- Test operator -->
-<!-- 			<class -->
-<!-- 				name="idv.hsiehpinghan.stockservice.operator.FinancialReportDownloaderTest" /> -->
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.operator.FinancialReportDownloaderTest" 
+				/> -->
 
 			<!-- Test manager -->
-<!-- 			<class -->
-<!-- 				name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" /> -->
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" 
+				/> -->
 		</classes>
 	</test>
 	<test name="stockClosingCondition">
 		<classes>
 			<!-- Test operator -->
-			<class
-				name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionDownloaderTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionDownloaderTest" 
+				/> -->
 
 			<!-- Test manager -->
+			<class
+				name="idv.hsiehpinghan.stockservice.manager.hbase.StockClosingConditionHbaseManagerTest" />
 		</classes>
 	</test>
 	<test name="exchangeRate">
 		<classes>
 			<!-- Test operator -->
-<!-- 			<class -->
-<!-- 				name="idv.hsiehpinghan.stockservice.operator.ExchangeRateDownloaderTest" /> -->
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.operator.ExchangeRateDownloaderTest" 
+				/> -->
 
 			<!-- Test manager -->
 		</classes>

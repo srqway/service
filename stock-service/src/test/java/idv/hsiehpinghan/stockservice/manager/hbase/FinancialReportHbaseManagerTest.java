@@ -121,7 +121,7 @@ public class FinancialReportHbaseManagerTest {
 	@Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
 		StockDownloadInfo downloadInfo = reportManager.getDownloadInfoEntity();
-		File xbrlDirectory = new File(stockServiceProperty.getExtractDir());
+		File xbrlDirectory = new File(stockServiceProperty.getExtractDir(), "xbrl");
 		int processFilesAmt = reportManager.saveFinancialReportToHBase(
 				xbrlDirectory, downloadInfo);
 		int fileAmt = getSubFilesAmt(xbrlDirectory);
