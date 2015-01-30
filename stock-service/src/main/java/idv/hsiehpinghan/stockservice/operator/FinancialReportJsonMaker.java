@@ -70,7 +70,7 @@ public class FinancialReportJsonMaker {
 		Map<String, ObjectNode> map = new HashMap<String, ObjectNode>(
 				presentIds.size());
 		for (String presentId : presentIds) {
-			String jsonStr = present.getJsonFamily().getValue(presentId)
+			String jsonStr = present.getJsonFamily().getLatestValue(presentId)
 					.getJson();
 			ObjectNode objNode = null;
 			if (Presentation.Id.BalanceSheet.equals(presentId)) {
