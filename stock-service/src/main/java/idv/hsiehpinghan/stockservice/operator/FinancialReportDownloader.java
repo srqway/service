@@ -38,7 +38,8 @@ public class FinancialReportDownloader implements InitializingBean {
 	private final int MAX_TRY_AMOUNT = 3;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
-	private File controlFile;
+	private File downloadedLog;
+	private List<String> downloadedList;
 
 	@Autowired
 	private HtmlUnitFirefoxVersionBrowser browser;
@@ -49,8 +50,8 @@ public class FinancialReportDownloader implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		downloadDir = new File(stockServiceProperty.getDownloadDir(), "xbrl");
-		generateControlFile();
+		downloadDir = stockServiceProperty.getFinancialReportDownloadDir();
+		generateDownloadedLogFile();
 	}
 
 	/**
@@ -61,6 +62,7 @@ public class FinancialReportDownloader implements InitializingBean {
 	 */
 	public File downloadFinancialReport() throws IOException {
 		moveToTargetPage();
+		downloadedList = FileUtils.readLines(downloadedLog);
 		List<Option> mkOpts = getMarketTypeSelect().getOptions();
 		for (int iMk = mkOpts.size() - 1; iMk >= 0; --iMk) {
 			Option mkOpt = mkOpts.get(iMk);
@@ -100,7 +102,7 @@ public class FinancialReportDownloader implements InitializingBean {
 							repeatTryDownload(reportTypeOpts, iRep,
 									repSize - 1, targetFileNamePrefix);
 							logger.info(downloadInfo + " processed success.");
-							writeToControlFile(downloadInfo);
+							writeToDownloadedFile(downloadInfo);
 						}
 					}
 				}
@@ -128,11 +130,11 @@ public class FinancialReportDownloader implements InitializingBean {
 		return str.substring(idxBegin, idxEnd);
 	}
 
-	private void generateControlFile() throws IOException {
-		if (controlFile == null) {
-			controlFile = new File(downloadDir, "control_file");
-			if (controlFile.exists() == false) {
-				FileUtils.touch(controlFile);
+	private void generateDownloadedLogFile() throws IOException {
+		if (downloadedLog == null) {
+			downloadedLog = new File(downloadDir, "downloaded.log");
+			if (downloadedLog.exists() == false) {
+				FileUtils.touch(downloadedLog);
 			}
 		}
 	}
@@ -292,7 +294,6 @@ public class FinancialReportDownloader implements InitializingBean {
 	}
 
 	private boolean isDownloaded(String downloadInfo) throws IOException {
-		List<String> downloadedList = FileUtils.readLines(controlFile);
 		if (downloadedList.contains(downloadInfo)) {
 			logger.info(downloadInfo + " downloaded before.");
 			return true;
@@ -300,8 +301,8 @@ public class FinancialReportDownloader implements InitializingBean {
 		return false;
 	}
 
-	private void writeToControlFile(String downloadInfo) throws IOException {
+	private void writeToDownloadedFile(String downloadInfo) throws IOException {
 		String infoLine = downloadInfo + System.lineSeparator();
-		FileUtils.write(controlFile, infoLine, Charsets.UTF_8, true);
+		FileUtils.write(downloadedLog, infoLine, Charsets.UTF_8, true);
 	}
 }

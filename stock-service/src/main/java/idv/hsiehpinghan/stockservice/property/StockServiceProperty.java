@@ -1,5 +1,7 @@
 package idv.hsiehpinghan.stockservice.property;
 
+import java.io.File;
+
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -7,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class StockServiceProperty implements InitializingBean {
+	private final String EXCHANGE_RATE = "exchange-rate";
+	private final String FINANCIAL_REPORT = "financial-report";
+	private final String STOCK_CLOSING_CONDITION = "stock-closing-condition";
 	private String downloadDir;
 	private String extractDir;
 
@@ -19,12 +24,20 @@ public class StockServiceProperty implements InitializingBean {
 		processExtractDir();
 	}
 
-	public String getDownloadDir() {
-		return downloadDir;
+	public File getStockClosingConditionDownloadDir() {
+		return new File(downloadDir, STOCK_CLOSING_CONDITION);
 	}
 
-	public String getExtractDir() {
-		return extractDir;
+	public File getExchangeRateDownloadDir() {
+		return new File(downloadDir, EXCHANGE_RATE);
+	}
+
+	public File getFinancialReportDownloadDir() {
+		return new File(downloadDir, FINANCIAL_REPORT);
+	}
+
+	public File getFinancialReportExtractDir() {
+		return new File(extractDir, FINANCIAL_REPORT);
 	}
 
 	private void processDownloadDir() {

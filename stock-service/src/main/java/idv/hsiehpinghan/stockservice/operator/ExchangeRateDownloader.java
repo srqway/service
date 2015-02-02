@@ -38,8 +38,7 @@ public class ExchangeRateDownloader implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		downloadDir = new File(stockServiceProperty.getDownloadDir()
-				+ "/exchange_rate");
+		downloadDir = stockServiceProperty.getExchangeRateDownloadDir();
 	}
 
 	/**

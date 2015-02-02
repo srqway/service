@@ -58,7 +58,7 @@ public class FinancialReportHbaseManagerTest {
 				.getBean(FinancialReportDataRepository.class);
 		hbaseAssistant = applicationContext.getBean(HbaseAssistant.class);
 
-//		dropTable();
+		// dropAndCreateTable();
 	}
 
 	@Test
@@ -121,7 +121,8 @@ public class FinancialReportHbaseManagerTest {
 	@Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
 		StockDownloadInfo downloadInfo = reportManager.getDownloadInfoEntity();
-		File xbrlDirectory = new File(stockServiceProperty.getExtractDir(), "xbrl");
+		File xbrlDirectory = stockServiceProperty
+				.getFinancialReportExtractDir();
 		int processFilesAmt = reportManager.saveFinancialReportToHBase(
 				xbrlDirectory, downloadInfo);
 		int fileAmt = getSubFilesAmt(xbrlDirectory);
@@ -153,7 +154,7 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(expected, actual);
 	}
 
-	private void dropTable() throws Exception {
+	private void dropAndCreateTable() throws Exception {
 		HbaseEntityTestUtility.dropAndCreateTargetTable(presentRepo);
 		HbaseEntityTestUtility.dropAndCreateTargetTable(instanceRepo);
 		HbaseEntityTestUtility.dropAndCreateTargetTable(infoRepo);

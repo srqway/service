@@ -22,7 +22,7 @@ public class FinancialReportUnzipper implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		extractDir = new File(stockServiceProperty.getExtractDir(), "xbrl");
+		extractDir = stockServiceProperty.getFinancialReportExtractDir();
 	}
 
 	/**

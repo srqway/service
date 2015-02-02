@@ -2,38 +2,69 @@ package idv.hsiehpinghan.stockservice.manager.hbase;
 
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.stockdao.entity.StockClosingCondition;
+import idv.hsiehpinghan.stockdao.entity.StockClosingCondition.PriceFamily;
+import idv.hsiehpinghan.stockdao.entity.StockClosingCondition.PriceFamily.PriceQualifier;
+import idv.hsiehpinghan.stockdao.entity.StockClosingCondition.VolumeFamily;
+import idv.hsiehpinghan.stockdao.entity.StockClosingCondition.VolumeFamily.VolumeQualifier;
 import idv.hsiehpinghan.stockdao.repository.IStockClosingConditionRepository;
 import idv.hsiehpinghan.stockservice.manager.IStockClosingConditionManager;
 import idv.hsiehpinghan.stockservice.operator.StockClosingConditionDownloader;
+import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class StockClosingConditionHbaseManager implements
-		IStockClosingConditionManager {
+		IStockClosingConditionManager, InitializingBean {
+	private final String[] EXTENSIONS = { "csv" };
 	private final String BIG5 = "big5";
 	private final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private final String EMPTY_STRING = StringUtility.EMPTY_STRING;
 	private final String DOUBLE_UOTATION_STRING = StringUtility.DOUBLE_UOTATION_STRING;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private File downloadDir;
+	private File processedLog;;
+	private List<String> processedList;
 
+	@Autowired
+	private StockServiceProperty stockServiceProperty;
 	@Autowired
 	private StockClosingConditionDownloader downloader;
 	@Autowired
 	private IStockClosingConditionRepository condRepo;
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		downloadDir = stockServiceProperty
+				.getStockClosingConditionDownloadDir();
+		generateProcessedLogFile();
+	}
+
+	private void generateProcessedLogFile() throws IOException {
+		if (processedLog == null) {
+			processedLog = new File(downloadDir, "processed.log");
+			if (processedLog.exists() == false) {
+				FileUtils.touch(processedLog);
+			}
+		}
+	}
 
 	@Override
 	public boolean updateStockClosingCondition() {
@@ -57,8 +88,9 @@ public class StockClosingConditionHbaseManager implements
 			throws IOException {
 		String targetDateStr = DateFormatUtils.format(date, "yyyy年MM月dd日");
 		for (String line : lines) {
-			if (targetDateStr.startsWith(line)) {
-				if (line.endsWith("查無資料")) {
+			String trimmedLine = line.trim();
+			if (trimmedLine.startsWith(targetDateStr)) {
+				if (trimmedLine.endsWith("查無資料")) {
 					return false;
 				}
 				return true;
@@ -68,14 +100,15 @@ public class StockClosingConditionHbaseManager implements
 				+ ") has wrong date !!!");
 	}
 
-	private int getStartRow(List<String> lines) {
+	private int getStartRow(File file, List<String> lines) {
 		String targetStr = "\"證券代號\",\"證券名稱\",\"成交股數\",\"成交筆數\",\"成交金額\",\"開盤價\",\"最高價\",\"最低價\",\"收盤價\",\"漲跌(+/-)\",\"漲跌價差\",\"最後揭示買價\",\"最後揭示買量\",\"最後揭示賣價\",\"最後揭示賣量\",\"本益比\"";
 		for (int i = 0, size = lines.size(); i < size; ++i) {
 			if (targetStr.equals(lines.get(i))) {
 				return i + 1;
 			}
 		}
-		throw new RuntimeException("Cannot find line(" + targetStr + ") !!!");
+		throw new RuntimeException("File(" + file.getAbsolutePath()
+				+ ") cannot find line(" + targetStr + ") !!!");
 	}
 
 	private BigDecimal getBigDecimal(String sign, String val) {
@@ -106,20 +139,42 @@ public class StockClosingConditionHbaseManager implements
 		return str.trim();
 	}
 
+	private boolean isProcessed(File file) throws IOException {
+		String processedInfo = generateProcessedInfo(file);
+		if (processedList.contains(processedInfo)) {
+			logger.info(processedInfo + " processed before.");
+			return true;
+		}
+		return false;
+	}
+
+	private String generateProcessedInfo(File file) {
+		return file.getName();
+	}
+
 	int saveStockClosingConditionToHBase(File dir) throws ParseException,
-			IOException {
+			IOException, NoSuchFieldException, SecurityException,
+			IllegalArgumentException, IllegalAccessException,
+			NoSuchMethodException, InvocationTargetException,
+			InstantiationException {
 		int count = 0;
 		Date now = new Date();
-		for (File file : dir.listFiles()) {
+		processedList = FileUtils.readLines(processedLog);
+		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
 			// ex. A11220130107ALL.csv
 			Date date = DateUtils.parseDate(file.getName().substring(4, 12),
 					"yyyyMMdd");
+			if (isProcessed(file)) {
+				continue;
+			}
 			List<String> lines = FileUtils.readLines(file, BIG5);
 			if (hasData(file, date, lines) == false) {
 				continue;
 			}
-			int startRow = getStartRow(lines);
-			for (int i = startRow, size = lines.size(); i < size; ++i) {
+			int startRow = getStartRow(file, lines);
+			int size = lines.size();
+			List<StockClosingCondition> entities = new ArrayList<StockClosingCondition>(size - startRow);
+			for (int i = startRow; i < size; ++i) {
 				String line = lines.get(i).replace(DOUBLE_UOTATION_STRING,
 						EMPTY_STRING);
 				String[] strArr = line.split(COMMA_STRING);
@@ -127,54 +182,68 @@ public class StockClosingConditionHbaseManager implements
 				if (stockCode.equals(EMPTY_STRING)) {
 					break;
 				}
-				BigDecimal openingPrice = getBigDecimal(strArr[5]);
-				BigDecimal closingPrice = getBigDecimal(strArr[8]);
-				BigDecimal change = getBigDecimal(strArr[9], strArr[10]);
-				BigDecimal highestPrice = getBigDecimal(strArr[6]);
-				BigDecimal lowestPrice = getBigDecimal(strArr[7]);
-				BigDecimal finalPurchasePrice = getBigDecimal(strArr[11]);
-				BigDecimal finalSellingPrice = getBigDecimal(strArr[13]);
-				BigInteger stockAmount = getBigInteger(strArr[2]);
-				BigInteger moneyAmount = getBigInteger(strArr[4]);
-				BigInteger transactionAmount = getBigInteger(strArr[3]);
-
-				// public static final String OPENING_PRICE = "openingPrice";
-				// public static final String CLOSING_PRICE = "closingPrice";
-				// public static final String CHANGE = "change";
-				// public static final String HIGHEST_PRICE = "highestPrice";
-				// public static final String LOWEST_PRICE = "lowestPrice";
-				// public static final String FINAL_PURCHASE_PRICE =
-				// "finalPurchasePrice";
-				// public static final String FINAL_SELLING_PRICE =
-				// "finalSellingPrice";
-				// public static final String STOCK_AMOUNT = "stockAmount";
-				// public static final String MONEY_AMOUNT = "moneyAmount";
-				// public static final String TRANSACTION_AMOUNT =
-				// "transactionAmount";
-
-				StockClosingCondition entity = new StockClosingCondition();
-				entity.new RowKey(stockCode, date, entity);
-				
-//				entity.getPriceFamily().add(qualifier, date, value);
-
+				if (condRepo.exists(stockCode, date)) {
+					continue;
+				}
+				StockClosingCondition entity = generateEntity(stockCode, date,
+						strArr, now);
+				entities.add(entity);
 			}
-
-//			if (instanceRepo.exists(stockCode, reportType, year, season) == false) {
-//				instanceRepo.put(stockCode, reportType, year, season, objNode,
-//						presentIds);
-//				logger.info(file.getName() + " saved to "
-//						+ instanceRepo.getTargetTableName() + ".");
-//			} else {
-//				logger.info(file.getName() + " already saved to "
-//						+ instanceRepo.getTargetTableName() + ".");
-//			}
-//			addToDownloadInfoEntity(downloadInfo, stockCode, reportType, year,
-//					season);
+			condRepo.put(entities);
+			writeToProcessedFile(file);
+			logger.info(file.getName() + " saved to "
+					+ condRepo.getTargetTableName() + ".");
 			++count;
-
-			return 0;
 		}
 		return count;
+	}
+
+	private void writeToProcessedFile(File file) throws IOException {
+		String infoLine = generateProcessedInfo(file) + System.lineSeparator();
+		FileUtils.write(processedLog, infoLine, Charsets.UTF_8, true);
+	}
+
+	private StockClosingCondition generateEntity(String stockCode, Date date,
+			String[] strArr, Date now) {
+		StockClosingCondition entity = new StockClosingCondition();
+		entity.new RowKey(stockCode, date, entity);
+		generatePriceFamilyContent(entity, strArr, now);
+		generateVolumeFamilyContent(entity, strArr, now);
+		return entity;
+	}
+
+	private void generateVolumeFamilyContent(StockClosingCondition entity,
+			String[] strArr, Date now) {
+		BigInteger stockAmount = getBigInteger(strArr[2]);
+		BigInteger moneyAmount = getBigInteger(strArr[4]);
+		BigInteger transactionAmount = getBigInteger(strArr[3]);
+		VolumeFamily volumeFamily = entity.getVolumeFamily();
+		volumeFamily.add(VolumeQualifier.STOCK_AMOUNT, now, stockAmount);
+		volumeFamily.add(VolumeQualifier.MONEY_AMOUNT, now, moneyAmount);
+		volumeFamily.add(VolumeQualifier.TRANSACTION_AMOUNT, now,
+				transactionAmount);
+	}
+
+	private void generatePriceFamilyContent(StockClosingCondition entity,
+			String[] strArr, Date now) {
+		BigDecimal openingPrice = getBigDecimal(strArr[5]);
+		BigDecimal closingPrice = getBigDecimal(strArr[8]);
+		BigDecimal change = getBigDecimal(strArr[9], strArr[10]);
+		BigDecimal highestPrice = getBigDecimal(strArr[6]);
+		BigDecimal lowestPrice = getBigDecimal(strArr[7]);
+		BigDecimal finalPurchasePrice = getBigDecimal(strArr[11]);
+		BigDecimal finalSellingPrice = getBigDecimal(strArr[13]);
+		PriceFamily priceFamily = entity.getPriceFamily();
+		priceFamily.add(PriceQualifier.OPENING_PRICE, now, openingPrice);
+		priceFamily.add(PriceQualifier.CLOSING_PRICE, now, closingPrice);
+		priceFamily.add(PriceQualifier.CHANGE, now, change);
+		priceFamily.add(PriceQualifier.HIGHEST_PRICE, now, highestPrice);
+		priceFamily.add(PriceQualifier.LOWEST_PRICE, now, lowestPrice);
+		priceFamily.add(PriceQualifier.FINAL_PURCHASE_PRICE, now,
+				finalPurchasePrice);
+		priceFamily.add(PriceQualifier.FINAL_SELLING_PRICE, now,
+				finalSellingPrice);
+
 	}
 
 	private File downloadStockClosingCondition() {

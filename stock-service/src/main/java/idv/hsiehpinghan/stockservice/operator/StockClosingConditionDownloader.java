@@ -7,8 +7,8 @@ import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
-import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
+import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +34,8 @@ public class StockClosingConditionDownloader implements InitializingBean {
 	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
-	private File controlFile;
+	private File downloadedLog;
+	private List<String> downloadedList;
 
 	@Autowired
 	private HtmlUnitFirefoxVersionBrowser browser;
@@ -45,13 +46,14 @@ public class StockClosingConditionDownloader implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		downloadDir = new File(stockServiceProperty.getDownloadDir(),
-				"closing-condition");
-		generateControlFile();
+		downloadDir = stockServiceProperty
+				.getStockClosingConditionDownloadDir();
+		generateDownloadedLogFile();
 	}
 
 	public File downloadStockClosingCondition() throws IOException {
 		moveToTargetPage();
+		downloadedList = FileUtils.readLines(downloadedLog);
 		Date now = Calendar.getInstance().getTime();
 		Date targetDate = BEGIN_DATA_DATE;
 		while (targetDate.getTime() < now.getTime()) {
@@ -60,7 +62,7 @@ public class StockClosingConditionDownloader implements InitializingBean {
 				inputDataDate(targetDate);
 				selectType(ALL);
 				repeatTryDownload(targetDate);
-				writeToControlFile(downloadInfo);
+				writeToDownloadedFile(downloadInfo);
 			}
 			targetDate = DateUtils.addDays(targetDate, 1);
 		}
@@ -135,11 +137,11 @@ public class StockClosingConditionDownloader implements InitializingBean {
 		return DateUtility.getDate(2013, 1, 1);
 	}
 
-	private void generateControlFile() throws IOException {
-		if (controlFile == null) {
-			controlFile = new File(downloadDir, "control_file");
-			if (controlFile.exists() == false) {
-				FileUtils.touch(controlFile);
+	private void generateDownloadedLogFile() throws IOException {
+		if (downloadedLog == null) {
+			downloadedLog = new File(downloadDir, "downloaded.log");
+			if (downloadedLog.exists() == false) {
+				FileUtils.touch(downloadedLog);
 			}
 		}
 	}
@@ -149,7 +151,6 @@ public class StockClosingConditionDownloader implements InitializingBean {
 	}
 
 	private boolean isDownloaded(String downloadInfo) throws IOException {
-		List<String> downloadedList = FileUtils.readLines(controlFile);
 		if (downloadedList.contains(downloadInfo)) {
 			logger.info(downloadInfo + " downloaded before.");
 			return true;
@@ -157,8 +158,8 @@ public class StockClosingConditionDownloader implements InitializingBean {
 		return false;
 	}
 
-	private void writeToControlFile(String downloadInfo) throws IOException {
+	private void writeToDownloadedFile(String downloadInfo) throws IOException {
 		String infoLine = downloadInfo + System.lineSeparator();
-		FileUtils.write(controlFile, infoLine, Charsets.UTF_8, true);
+		FileUtils.write(downloadedLog, infoLine, Charsets.UTF_8, true);
 	}
 }
