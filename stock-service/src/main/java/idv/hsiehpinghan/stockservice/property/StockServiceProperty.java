@@ -12,6 +12,8 @@ public class StockServiceProperty implements InitializingBean {
 	private final String EXCHANGE_RATE = "exchange-rate";
 	private final String FINANCIAL_REPORT = "financial-report";
 	private final String STOCK_CLOSING_CONDITION = "stock-closing-condition";
+	private final String TWSE = "twse";
+	private final String GRETAI = "gretai";
 	private String downloadDir;
 	private String extractDir;
 
@@ -24,10 +26,16 @@ public class StockServiceProperty implements InitializingBean {
 		processExtractDir();
 	}
 
-	public File getStockClosingConditionDownloadDir() {
-		return new File(downloadDir, STOCK_CLOSING_CONDITION);
+	public File getStockClosingConditionDownloadDirOfTwse() {
+		File dir = new File(downloadDir, STOCK_CLOSING_CONDITION);
+		return new File(dir, TWSE);
 	}
 
+	public File getStockClosingConditionDownloadDirOfGretai() {
+		File dir = new File(downloadDir, STOCK_CLOSING_CONDITION);
+		return new File(dir, GRETAI);
+	}
+	
 	public File getExchangeRateDownloadDir() {
 		return new File(downloadDir, EXCHANGE_RATE);
 	}

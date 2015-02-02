@@ -33,9 +33,9 @@ public class StockClosingConditionHbaseManagerTest {
 	}
 
 	@Test
-	public void saveStockClosingConditionToHBase() throws Exception {
-		File dir = stockServiceProperty.getStockClosingConditionDownloadDir();
-		int processedAmt = manager.saveStockClosingConditionToHBase(dir);
+	public void saveStockClosingConditionOfTwseToHBase() throws Exception {
+		File dir = stockServiceProperty.getStockClosingConditionDownloadDirOfTwse();
+		int processedAmt = manager.saveStockClosingConditionOfTwseToHBase(dir);
 		Assert.assertTrue(processedAmt > 0);
 	}
 

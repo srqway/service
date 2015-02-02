@@ -8,7 +8,7 @@ import idv.hsiehpinghan.stockdao.entity.StockClosingCondition.VolumeFamily;
 import idv.hsiehpinghan.stockdao.entity.StockClosingCondition.VolumeFamily.VolumeQualifier;
 import idv.hsiehpinghan.stockdao.repository.IStockClosingConditionRepository;
 import idv.hsiehpinghan.stockservice.manager.IStockClosingConditionManager;
-import idv.hsiehpinghan.stockservice.operator.StockClosingConditionDownloader;
+import idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfTwseDownloader;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 
 import java.io.File;
@@ -38,53 +38,105 @@ public class StockClosingConditionHbaseManager implements
 	private final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private final String EMPTY_STRING = StringUtility.EMPTY_STRING;
 	private final String DOUBLE_UOTATION_STRING = StringUtility.DOUBLE_UOTATION_STRING;
+	private final String YYYYMMDD = "yyyyMMdd";
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	private File downloadDir;
-	private File processedLog;;
-	private List<String> processedList;
+	private File downloadDirOfTwse;
+	private File processedLogOfTwse;
+	private List<String> processedListOfTwse;
+	private File downloadDirOfGretai;
+	private File processedLogOfGretai;
+	private List<String> processedListOfGretai;
 
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 	@Autowired
-	private StockClosingConditionDownloader downloader;
+	private StockClosingConditionOfTwseDownloader downloaderOfTwse;
 	@Autowired
 	private IStockClosingConditionRepository condRepo;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		downloadDir = stockServiceProperty
-				.getStockClosingConditionDownloadDir();
+		downloadDirOfTwse = stockServiceProperty
+				.getStockClosingConditionDownloadDirOfTwse();
 		generateProcessedLogFile();
 	}
 
-	private void generateProcessedLogFile() throws IOException {
-		if (processedLog == null) {
-			processedLog = new File(downloadDir, "processed.log");
-			if (processedLog.exists() == false) {
-				FileUtils.touch(processedLog);
-			}
+	@Override
+	public synchronized boolean updateStockClosingCondition() {
+		boolean result = true;
+		try {
+			updateStockClosingConditionOfTwse();
+		} catch (Exception e) {
+			logger.error("Update Stock Closing Condition of Twse fail !!!");
+			e.printStackTrace();
+			result = false;
 		}
+		return result;
 	}
 
-	@Override
-	public boolean updateStockClosingCondition() {
-		File dir = downloadStockClosingCondition();
+	public boolean updateStockClosingConditionOfTwse()
+			throws NoSuchFieldException, SecurityException,
+			IllegalArgumentException, IllegalAccessException,
+			NoSuchMethodException, InvocationTargetException,
+			InstantiationException, ParseException, IOException {
+		File dir = downloadStockClosingConditionOfTwse();
 		if (dir == null) {
 			return false;
 		}
-		try {
-			int processFilesAmt = saveStockClosingConditionToHBase(dir);
-			logger.info("Saved " + processFilesAmt + " files to "
-					+ condRepo.getTargetTableName() + ".");
-		} catch (Exception e) {
-			logger.error("Save financial report to hbase fail !!!");
-			e.printStackTrace();
-			return false;
-		}
+		int processFilesAmt = saveStockClosingConditionOfTwseToHBase(dir);
+		logger.info("Saved " + processFilesAmt + " files to "
+				+ condRepo.getTargetTableName() + ".");
 		return true;
 	}
 
-	private boolean hasData(File file, Date date, List<String> lines)
+	int saveStockClosingConditionOfTwseToHBase(File dir) throws ParseException,
+			IOException, NoSuchFieldException, SecurityException,
+			IllegalArgumentException, IllegalAccessException,
+			NoSuchMethodException, InvocationTargetException,
+			InstantiationException {
+		int count = 0;
+		Date now = new Date();
+		processedListOfTwse = FileUtils.readLines(processedLogOfTwse);
+		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
+			// ex. A11220130104ALLBUT0999.csv
+			Date date = DateUtils.parseDate(file.getName().substring(4, 12),
+					YYYYMMDD);
+			if (isProcessedOfTwse(file)) {
+				continue;
+			}
+			List<String> lines = FileUtils.readLines(file, BIG5);
+			if (hasDataOfTwse(file, date, lines) == false) {
+				continue;
+			}
+			int startRow = getStartRowOfTwse(file, lines);
+			int size = lines.size();
+			List<StockClosingCondition> entities = new ArrayList<StockClosingCondition>(
+					size - startRow);
+			for (int i = startRow; i < size; ++i) {
+				String line = lines.get(i).replace(DOUBLE_UOTATION_STRING,
+						EMPTY_STRING);
+				String[] strArr = line.split(COMMA_STRING);
+				String stockCode = getString(strArr[0]);
+				if (stockCode.equals(EMPTY_STRING)) {
+					break;
+				}
+				if (condRepo.exists(stockCode, date)) {
+					continue;
+				}
+				StockClosingCondition entity = generateEntity(stockCode, date,
+						strArr, now);
+				entities.add(entity);
+			}
+			condRepo.put(entities);
+			writeToProcessedFileOfTwse(file);
+			logger.info(file.getName() + " saved to "
+					+ condRepo.getTargetTableName() + ".");
+			++count;
+		}
+		return count;
+	}
+
+	private boolean hasDataOfTwse(File file, Date date, List<String> lines)
 			throws IOException {
 		String targetDateStr = DateFormatUtils.format(date, "yyyy年MM月dd日");
 		for (String line : lines) {
@@ -100,7 +152,7 @@ public class StockClosingConditionHbaseManager implements
 				+ ") has wrong date !!!");
 	}
 
-	private int getStartRow(File file, List<String> lines) {
+	private int getStartRowOfTwse(File file, List<String> lines) {
 		String targetStr = "\"證券代號\",\"證券名稱\",\"成交股數\",\"成交筆數\",\"成交金額\",\"開盤價\",\"最高價\",\"最低價\",\"收盤價\",\"漲跌(+/-)\",\"漲跌價差\",\"最後揭示買價\",\"最後揭示買量\",\"最後揭示賣價\",\"最後揭示賣量\",\"本益比\"";
 		for (int i = 0, size = lines.size(); i < size; ++i) {
 			if (targetStr.equals(lines.get(i))) {
@@ -139,9 +191,9 @@ public class StockClosingConditionHbaseManager implements
 		return str.trim();
 	}
 
-	private boolean isProcessed(File file) throws IOException {
+	private boolean isProcessedOfTwse(File file) throws IOException {
 		String processedInfo = generateProcessedInfo(file);
-		if (processedList.contains(processedInfo)) {
+		if (processedListOfTwse.contains(processedInfo)) {
 			logger.info(processedInfo + " processed before.");
 			return true;
 		}
@@ -152,55 +204,9 @@ public class StockClosingConditionHbaseManager implements
 		return file.getName();
 	}
 
-	int saveStockClosingConditionToHBase(File dir) throws ParseException,
-			IOException, NoSuchFieldException, SecurityException,
-			IllegalArgumentException, IllegalAccessException,
-			NoSuchMethodException, InvocationTargetException,
-			InstantiationException {
-		int count = 0;
-		Date now = new Date();
-		processedList = FileUtils.readLines(processedLog);
-		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
-			// ex. A11220130107ALL.csv
-			Date date = DateUtils.parseDate(file.getName().substring(4, 12),
-					"yyyyMMdd");
-			if (isProcessed(file)) {
-				continue;
-			}
-			List<String> lines = FileUtils.readLines(file, BIG5);
-			if (hasData(file, date, lines) == false) {
-				continue;
-			}
-			int startRow = getStartRow(file, lines);
-			int size = lines.size();
-			List<StockClosingCondition> entities = new ArrayList<StockClosingCondition>(size - startRow);
-			for (int i = startRow; i < size; ++i) {
-				String line = lines.get(i).replace(DOUBLE_UOTATION_STRING,
-						EMPTY_STRING);
-				String[] strArr = line.split(COMMA_STRING);
-				String stockCode = getString(strArr[0]);
-				if (stockCode.equals(EMPTY_STRING)) {
-					break;
-				}
-				if (condRepo.exists(stockCode, date)) {
-					continue;
-				}
-				StockClosingCondition entity = generateEntity(stockCode, date,
-						strArr, now);
-				entities.add(entity);
-			}
-			condRepo.put(entities);
-			writeToProcessedFile(file);
-			logger.info(file.getName() + " saved to "
-					+ condRepo.getTargetTableName() + ".");
-			++count;
-		}
-		return count;
-	}
-
-	private void writeToProcessedFile(File file) throws IOException {
+	private void writeToProcessedFileOfTwse(File file) throws IOException {
 		String infoLine = generateProcessedInfo(file) + System.lineSeparator();
-		FileUtils.write(processedLog, infoLine, Charsets.UTF_8, true);
+		FileUtils.write(processedLogOfTwse, infoLine, Charsets.UTF_8, true);
 	}
 
 	private StockClosingCondition generateEntity(String stockCode, Date date,
@@ -246,9 +252,9 @@ public class StockClosingConditionHbaseManager implements
 
 	}
 
-	private File downloadStockClosingCondition() {
+	private File downloadStockClosingConditionOfTwse() {
 		try {
-			File dir = downloader.downloadStockClosingCondition();
+			File dir = downloaderOfTwse.downloadStockClosingCondition();
 			logger.info(dir.getAbsolutePath() + " download finish.");
 			return dir;
 		} catch (Exception e) {
@@ -257,4 +263,12 @@ public class StockClosingConditionHbaseManager implements
 		}
 	}
 
+	private void generateProcessedLogFile() throws IOException {
+		if (processedLogOfTwse == null) {
+			processedLogOfTwse = new File(downloadDirOfTwse, "processed.log");
+			if (processedLogOfTwse.exists() == false) {
+				FileUtils.touch(processedLogOfTwse);
+			}
+		}
+	}
 }

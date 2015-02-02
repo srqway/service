@@ -27,9 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class StockClosingConditionDownloader implements InitializingBean {
+public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 	private final String YYYYMMDD = "yyyyMMdd";
-	private final String ALL = "全部";
+	private final String ALL = "全部(不含權證、牛熊證、可展延牛熊證)";
 	private final int MAX_TRY_AMOUNT = 3;
 	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -47,7 +47,7 @@ public class StockClosingConditionDownloader implements InitializingBean {
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		downloadDir = stockServiceProperty
-				.getStockClosingConditionDownloadDir();
+				.getStockClosingConditionDownloadDirOfTwse();
 		generateDownloadedLogFile();
 	}
 

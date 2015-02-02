@@ -14,22 +14,22 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class StockClosingConditionDownloaderTest {
-	private StockClosingConditionDownloader downloader;
+public class StockClosingConditionOfTwseDownloaderTest {
+	private StockClosingConditionOfTwseDownloader downloaderOfTwse;
 	private Date date = DateUtility.getDate(2013, 1, 2);
 
 	@BeforeClass
 	public void beforeClass() throws IOException {
 		ApplicationContext applicationContext = TestngSuitSetting
 				.getApplicationContext();
-		downloader = applicationContext
-				.getBean(StockClosingConditionDownloader.class);
+		downloaderOfTwse = applicationContext
+				.getBean(StockClosingConditionOfTwseDownloader.class);
 	}
 
 	@Test
 	public void moveToTargetPage() {
-		downloader.moveToTargetPage();
-		String breadcrumbs = downloader.getBrowser()
+		downloaderOfTwse.moveToTargetPage();
+		String breadcrumbs = downloaderOfTwse.getBrowser()
 				.getDiv(By.cssSelector("#breadcrumbs")).getText();
 		Assert.assertTrue(breadcrumbs.trim().startsWith(
 				"首頁 > 交易資訊 > 盤後資訊 > 每日收盤行情"));
@@ -37,8 +37,8 @@ public class StockClosingConditionDownloaderTest {
 
 	@Test(dependsOnMethods = { "moveToTargetPage" })
 	public void inputDataDate() {
-		downloader.inputDataDate(date);
-		TextInput dataDateInput = downloader.getBrowser().getTextInput(
+		downloaderOfTwse.inputDataDate(date);
+		TextInput dataDateInput = downloaderOfTwse.getBrowser().getTextInput(
 				By.id("date-field"));
 		String actual = dataDateInput.getValue();
 		String expected = DateUtility.getRocDateString(date, "yyyy/MM/dd");
@@ -47,19 +47,20 @@ public class StockClosingConditionDownloaderTest {
 
 	@Test(dependsOnMethods = { "inputDataDate" })
 	public void repeatTryDownload() {
-		downloader.repeatTryDownload(date);
+		downloaderOfTwse.repeatTryDownload(date);
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })
 	public void downloadStockClosingCondition() throws Exception {
-		File dir = downloader.downloadStockClosingCondition();
+		File dir = downloaderOfTwse.downloadStockClosingCondition();
 		Assert.assertTrue(dir.list().length > 0);
 	}
 
 	@Test
 	public void getFileName() {
 		String str = "attachment; filename=A11220130102MS2.csv";
-		Assert.assertEquals(downloader.getFileName(str), "A11220130102MS2.csv");
+		Assert.assertEquals(downloaderOfTwse.getFileName(str),
+				"A11220130102MS2.csv");
 	}
 
 }
