@@ -2,6 +2,7 @@ package idv.hsiehpinghan.stockservice.operator;
 
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
+import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
 import java.io.File;
@@ -15,6 +16,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class StockClosingConditionOfTwseDownloaderTest {
+	private StockServiceProperty stockServiceProperty;
 	private StockClosingConditionOfTwseDownloader downloaderOfTwse;
 	private Date date = DateUtility.getDate(2013, 1, 2);
 
@@ -22,6 +24,8 @@ public class StockClosingConditionOfTwseDownloaderTest {
 	public void beforeClass() throws IOException {
 		ApplicationContext applicationContext = TestngSuitSetting
 				.getApplicationContext();
+		stockServiceProperty = applicationContext
+				.getBean(StockServiceProperty.class);
 		downloaderOfTwse = applicationContext
 				.getBean(StockClosingConditionOfTwseDownloader.class);
 	}
@@ -48,12 +52,14 @@ public class StockClosingConditionOfTwseDownloaderTest {
 	@Test(dependsOnMethods = { "inputDataDate" })
 	public void repeatTryDownload() {
 		downloaderOfTwse.repeatTryDownload(date);
+		File dir = stockServiceProperty.getStockClosingConditionDownloadDirOfTwse();
+		Assert.assertTrue(dir.list().length == 1);
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })
 	public void downloadStockClosingCondition() throws Exception {
 		File dir = downloaderOfTwse.downloadStockClosingCondition();
-		Assert.assertTrue(dir.list().length > 0);
+		Assert.assertTrue(dir.list().length > 1);
 	}
 
 	@Test

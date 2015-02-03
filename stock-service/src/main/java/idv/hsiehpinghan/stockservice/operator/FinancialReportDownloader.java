@@ -193,10 +193,10 @@ public class FinancialReportDownloader implements InitializingBean {
 			try {
 				table.clickDownloadButton(i);
 				String fileName = getFileName(browser.getAttachment());
-				File f = browser.download(downloadDir.getAbsolutePath() + "/"
-						+ fileName);
-				logger.info(f.getAbsolutePath() + " downloaded.");
-				unzipper.repeatTryUnzip(f);
+				File file = new File(downloadDir.getAbsolutePath(), fileName);
+				browser.download(file);
+				logger.info(file.getAbsolutePath() + " downloaded.");
+				unzipper.repeatTryUnzip(file);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			} finally {

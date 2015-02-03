@@ -1,5 +1,7 @@
 package idv.hsiehpinghan.stockservice.utility;
 
+import idv.hsiehpinghan.datatypeutility.utility.VoidUtility;
+import idv.hsiehpinghan.stockservice.webelement.GretaiDatePickerTable;
 import idv.hsiehpinghan.stockservice.webelement.XbrlDownloadTable;
 
 import java.util.concurrent.TimeUnit;
@@ -24,22 +26,11 @@ public class StockAjaxWaitUtility {
 	 */
 	public static boolean waitUntilAnyButtonOnclickAttributeLike(
 			final XbrlDownloadTable table, final String regex) {
-		// Object parameter is not used.
-		FluentWait<Object> fluentWait = new FluentWait<Object>(new Object());
-		fluentWait.pollingEvery(POLLING_MILLISECONDS, TimeUnit.MILLISECONDS);
-		fluentWait.withTimeout(TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS);
-		return fluentWait.until(new Function<Object, Boolean>() {
+		return wait(new Function<Void, Boolean>() {
 			@Override
-			public Boolean apply(Object obj) {
+			public Boolean apply(Void v) {
 				try {
-					// i = 0 is title.
-					for (int i = 1, size = table.getRowSize(); i < size; ++i) {
-						String fileName = table.getDownloadFileName(i);
-						if(fileName != null && fileName.matches(regex)) {
-							return true;
-						}
-					}
-					return false;
+					return table.isAnyButtonOnclickAttributeLike(regex);
 				} catch (Exception e) {
 					logger.trace("Exception : ", e);
 					return false;
@@ -48,4 +39,55 @@ public class StockAjaxWaitUtility {
 		});
 	}
 
+	/**
+	 * Wait untial all data year equal year.
+	 * 
+	 * @param table
+	 * @param year
+	 * @return
+	 */
+	public static boolean waitUntilAllDataYearEqual(
+			final GretaiDatePickerTable table, final int year) {
+		return wait(new Function<Void, Boolean>() {
+			@Override
+			public Boolean apply(Void v) {
+				try {
+					return table.isAllDataYearEquals(year);
+				} catch (Exception e) {
+					logger.trace("Exception : ", e);
+					return false;
+				}
+			}
+		});
+	}
+
+	/**
+	 * Wait untial all data year equal year and all data month equal month.
+	 * 
+	 * @param table
+	 * @param year
+	 * @param month
+	 * @return
+	 */
+	public static boolean waitUntilAllDataYearAndDataMonthEqual(
+			final GretaiDatePickerTable table, final int year, final int month) {
+		return wait(new Function<Void, Boolean>() {
+			@Override
+			public Boolean apply(Void v) {
+				try {
+					return table.isAllDataYearAndDataMonthEquals(year, month);
+				} catch (Exception e) {
+					logger.trace("Exception : ", e);
+					return false;
+				}
+			}
+		});
+	}
+
+	private static boolean wait(final Function<Void, Boolean> function) {
+		FluentWait<Void> fluentWait = new FluentWait<Void>(VoidUtility.VOID);
+		fluentWait.pollingEvery(POLLING_MILLISECONDS, TimeUnit.MILLISECONDS);
+		fluentWait.withTimeout(TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS);
+		return fluentWait.until(function);
+	}
 }

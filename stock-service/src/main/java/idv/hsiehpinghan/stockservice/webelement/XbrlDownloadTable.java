@@ -57,6 +57,22 @@ public class XbrlDownloadTable extends Table {
 		return targetRowTexts;
 	}
 
+	/**
+	 * Check is any button on click attribute like regex.
+	 * 
+	 * @param regex
+	 * @return
+	 */
+	public boolean isAnyButtonOnclickAttributeLike(String regex) {
+		for (int i = 1, size = getRowSize(); i < size; ++i) {
+			String fileName = getDownloadFileName(i);
+			if (fileName != null && fileName.matches(regex)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private String getFileName(String attrValue) {
 		int idxBegin = attrValue.indexOf("'") + 1;
 		int idxEnd = attrValue.indexOf("'", idxBegin);

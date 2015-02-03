@@ -8,6 +8,8 @@ import idv.hsiehpinghan.seleniumassistant.webelement.Div;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
+import idv.hsiehpinghan.stockservice.utility.StockAjaxWaitUtility;
+import idv.hsiehpinghan.stockservice.webelement.GretaiDatePickerTable;
 import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
@@ -27,9 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class StockClosingConditionOfTwseDownloader implements InitializingBean {
+public class StockClosingConditionOfGretaiDownloader implements
+		InitializingBean {
 	private final String YYYYMMDD = "yyyyMMdd";
-	private final String ALL = "全部(不含權證、牛熊證、可展延牛熊證)";
+	private final String ALL = "所有證券(不含權證、牛熊證)";
 	private final int MAX_TRY_AMOUNT = 3;
 	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -39,15 +42,15 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 
 	@Autowired
 	private HtmlUnitFirefoxVersionBrowser browser;
-	// private HtmlUnitWithJavascriptBrowser browser;
-	// private FirefoxBrowser browser;
+	// private FirefoxBrowser browser = new FirefoxBrowser();
+
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		downloadDir = stockServiceProperty
-				.getStockClosingConditionDownloadDirOfTwse();
+				.getStockClosingConditionDownloadDirOfGretai();
 		generateDownloadedLogFile();
 	}
 
@@ -59,9 +62,11 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 		while (targetDate.getTime() < now.getTime()) {
 			String downloadInfo = getDownloadInfo(targetDate);
 			if (isDownloaded(downloadInfo) == false) {
-				inputDataDate(targetDate);
 				selectType(ALL);
+				inputDataDate(targetDate);
+				logger.info(downloadInfo + " process start.");
 				repeatTryDownload(targetDate);
+				logger.info(downloadInfo + " processed success.");
 				writeToDownloadedFile(downloadInfo);
 			}
 			targetDate = DateUtils.addDays(targetDate, 1);
@@ -70,11 +75,12 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 	}
 
 	void moveToTargetPage() {
-		final String STOCK_CLOSING_CONDITION_PAGE_URL = "http://www.twse.com.tw/ch/trading/exchange/MI_INDEX/MI_INDEX.php";
+		final String STOCK_CLOSING_CONDITION_PAGE_URL = "http://www.gretai.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_wn1430.php?l=zh-tw";
 		browser.browse(STOCK_CLOSING_CONDITION_PAGE_URL);
-		Div div = browser.getDiv(By.id("breadcrumbs"));
-		AjaxWaitUtility.waitUntilTextStartWith(div,
-				"首頁 > 交易資訊 > 盤後資訊 > 每日收盤行情");
+		Div div = browser
+				.getDiv(By
+						.cssSelector("body > div:nth-child(1) > div.h-pnl.rpt-title-fullscreen"));
+		AjaxWaitUtility.waitUntilTextStartWith(div, "  上櫃股票每日收盤行情(不含定價)");
 	}
 
 	BrowserBase getBrowser() {
@@ -82,15 +88,16 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 	}
 
 	void inputDataDate(Date date) {
-		TextInput dataDateInput = browser.getTextInput(By.id("date-field"));
-		dataDateInput.clear();
-		String dateStr = DateUtility.getRocDateString(date, "yyyy/MM/dd");
-		dataDateInput.inputText(dateStr);
+		triggerDatepickerDisplay();
+		GretaiDatePickerTable table = new GretaiDatePickerTable(
+				browser.getTable(By.cssSelector("#ui-datepicker-div > table")));
+		selectYear(date, table);
+		selectMonth(date, table);
+		selectDayOfMonth(date, table);
 	}
 
 	void selectType(String text) {
-		Select typeSel = browser.getSelect(By
-				.cssSelector("#main-content > form > select"));
+		Select typeSel = browser.getSelect(By.cssSelector("#sect"));
 		typeSel.selectByText(text);
 	}
 
@@ -118,18 +125,23 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 	}
 
 	private void downloadCsv(Date targetDate) {
-		browser.cacheCurrentPage();
+		browser.closeAllChildWindow();
+		browser.getButton(
+				By.cssSelector("body > div:nth-child(1) > div.h-pnl-right.rpt-search-fullscreen > button.btn-download.ui-button.ui-widget.ui-state-default.ui-corner-all.ui-button-text-icon-primary"))
+				.click();
+		if (browser.hasChildWindow() == false) {
+			return;
+		}
+		AjaxWaitUtility.waitUntilFirstChildWindowAttachmentNotNull(browser);
+		browser.switchToFirstChildWindow();
 		try {
-			browser.getButton(By.cssSelector(".dl-csv")).click();
 			String fileName = getFileName(browser.getAttachment());
 			File file = new File(downloadDir.getAbsolutePath(), fileName);
 			browser.download(file);
 			logger.info(file.getAbsolutePath() + " downloaded.");
-			browser.restorePage();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
 		} finally {
-			browser.restorePage();
+			browser.switchToParentWindow();
+			browser.closeAllChildWindow();
 		}
 	}
 
@@ -161,5 +173,49 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 	private void writeToDownloadedFile(String downloadInfo) throws IOException {
 		String infoLine = downloadInfo + System.lineSeparator();
 		FileUtils.write(downloadedLog, infoLine, Charsets.UTF_8, true);
+	}
+
+	private void triggerDatepickerDisplay() {
+		TextInput dataDateInput = browser.getTextInput(By
+				.cssSelector("#input_date"));
+		dataDateInput.click();
+		Div datepickerDiv = browser
+				.getDiv(By.cssSelector("#ui-datepicker-div"));
+		AjaxWaitUtility.waitUntilDisplayed(datepickerDiv);
+	}
+
+	private void selectYear(Date date, GretaiDatePickerTable table) {
+		// Input year.
+		Select yearSel = browser
+				.getSelect(By
+						.cssSelector("#ui-datepicker-div > div > div > select.ui-datepicker-year"));
+		yearSel.click();
+		int year = DateUtility.getYear(date);
+		yearSel.selectByValue(String.valueOf(year));
+		StockAjaxWaitUtility.waitUntilAllDataYearEqual(table, year);
+	}
+
+	private void selectMonth(Date date, GretaiDatePickerTable table) {
+		// Input month.
+		Select monthSel = browser
+				.getSelect(By
+						.cssSelector("#ui-datepicker-div > div > div > select.ui-datepicker-month"));
+		monthSel.click();
+		int year = DateUtility.getYear(date);
+		// Month value begins from 0.
+		int month = DateUtility.getMonth(date) - 1;
+		monthSel.selectByValue(String.valueOf(month));
+		StockAjaxWaitUtility.waitUntilAllDataYearAndDataMonthEqual(table, year,
+				month);
+	}
+
+	private void selectDayOfMonth(Date date, GretaiDatePickerTable table) {
+		int dayOfMonth = DateUtility.getDayOfMonth(date);
+		// Input day of month.
+		table.clickDayOfMonth(dayOfMonth);
+		TextInput dateInput = browser.getTextInput(By
+				.cssSelector("#input_date"));
+		String targetDateStr = DateUtility.getRocDateString(date, "yyyy/MM/dd");
+		AjaxWaitUtility.waitUntilValueEqual(dateInput, targetDateStr);
 	}
 }
