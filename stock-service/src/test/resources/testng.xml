@@ -20,12 +20,12 @@
 			<!-- Test operator -->
 <!-- 			<class -->
 <!-- 				name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfTwseDownloaderTest" /> -->
-			<class
-				name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfGretaiDownloaderTest" />
+<!-- 			<class -->
+<!-- 				name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfGretaiDownloaderTest" /> -->
 			<!-- Test manager -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.StockClosingConditionHbaseManagerTest" 
-				/> -->
+			<class
+			name="idv.hsiehpinghan.stockservice.manager.hbase.StockClosingConditionHbaseManagerTest" 
+				/>
 		</classes>
 	</test>
 	<test name="exchangeRate">

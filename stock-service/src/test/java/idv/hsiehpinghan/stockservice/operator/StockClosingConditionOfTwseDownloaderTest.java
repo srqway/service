@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.openqa.selenium.By;
 import org.springframework.context.ApplicationContext;
 import org.testng.Assert;
@@ -51,15 +53,43 @@ public class StockClosingConditionOfTwseDownloaderTest {
 
 	@Test(dependsOnMethods = { "inputDataDate" })
 	public void repeatTryDownload() {
-		downloaderOfTwse.repeatTryDownload(date);
-		File dir = stockServiceProperty.getStockClosingConditionDownloadDirOfTwse();
-		Assert.assertTrue(dir.list().length == 1);
+		try {
+			downloaderOfTwse.repeatTryDownload(date);
+		} catch (Exception e) {
+			System.err.println(downloaderOfTwse.getBrowser().getWebDriver()
+					.getPageSource());
+			throw new RuntimeException(e);
+		}
+		String dateStr = DateFormatUtils.format(date, "yyyyMMdd");
+		File dir = stockServiceProperty
+				.getStockClosingConditionDownloadDirOfTwse();
+		String fileName = "A112" + dateStr + "ALLBUT0999.csv";
+		boolean result = ArrayUtils.contains(dir.list(), fileName);
+		if (result == false) {
+			System.err.println(downloaderOfTwse.getBrowser().getWebDriver()
+					.getPageSource());
+		}
+		Assert.assertTrue(result);
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })
 	public void downloadStockClosingCondition() throws Exception {
-		File dir = downloaderOfTwse.downloadStockClosingCondition();
-		Assert.assertTrue(dir.list().length > 1);
+		File dir = null;
+		try {
+			dir = downloaderOfTwse.downloadStockClosingCondition();
+		} catch (Exception e) {
+			System.err.println(downloaderOfTwse.getBrowser().getWebDriver()
+					.getPageSource());
+			throw new RuntimeException(e);
+		}
+		String dateStr = DateFormatUtils.format(date, "yyyyMMdd");
+		String fileName = "A112" + dateStr + "ALLBUT0999.csv";
+		boolean result = ArrayUtils.contains(dir.list(), fileName);
+		if (result == false) {
+			System.err.println(downloaderOfTwse.getBrowser().getWebDriver()
+					.getPageSource());
+		}
+		Assert.assertTrue(result);
 	}
 
 	@Test

@@ -32,13 +32,20 @@ public class StockClosingConditionHbaseManagerTest {
 		dropAndCreateTable();
 	}
 
-	@Test
+//	@Test
 	public void saveStockClosingConditionOfTwseToHBase() throws Exception {
 		File dir = stockServiceProperty.getStockClosingConditionDownloadDirOfTwse();
 		int processedAmt = manager.saveStockClosingConditionOfTwseToHBase(dir);
 		Assert.assertTrue(processedAmt > 0);
 	}
 
+	@Test
+	public void saveStockClosingConditionOfGretaiToHBase() throws Exception {
+		File dir = stockServiceProperty.getStockClosingConditionDownloadDirOfGretai();
+		int processedAmt = manager.saveStockClosingConditionOfGretaiToHBase(dir);
+		Assert.assertTrue(processedAmt > 0);
+	}
+	
 	private void dropAndCreateTable() throws Exception {
 		HbaseEntityTestUtility.dropAndCreateTargetTable(condRepo);
 	}
