@@ -22,15 +22,33 @@
 <!-- 				name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfTwseDownloaderTest" /> -->
 <!-- 			<class -->
 <!-- 				name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfGretaiDownloaderTest" /> -->
-<!-- 			<class -->
-<!-- 				name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" /> -->
-			<class
-				name="idv.hsiehpinghan.stockservice.operator.CompanyBasicInfoDownloaderTest" />
 
 			<!-- Test manager -->
 <!-- 			<class -->
 <!-- 			name="idv.hsiehpinghan.stockservice.manager.hbase.StockClosingConditionHbaseManagerTest"  -->
 <!-- 				/> -->
+		</classes>
+	</test>
+	<test name="monthlyOperatingIncome">
+		<classes>
+			<!-- Test operator -->
+<!-- 			<class -->
+<!-- 				name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" /> -->
+
+			<!-- Test manager -->
+
+		</classes>
+	</test>
+	<test name="companyBasicInfo">
+		<classes>
+			<!-- Test operator -->
+<!-- 			<class -->
+<!-- 				name="idv.hsiehpinghan.stockservice.operator.CompanyBasicInfoDownloaderTest" /> -->
+
+			<!-- Test manager -->
+			<class
+			name="idv.hsiehpinghan.stockservice.manager.hbase.CompanyBasicInfoHbaseManagerTest" 
+				/>
 		</classes>
 	</test>
 	<test name="exchangeRate">

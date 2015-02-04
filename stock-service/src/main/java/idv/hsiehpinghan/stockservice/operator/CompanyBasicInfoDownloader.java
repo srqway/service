@@ -27,19 +27,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CompanyBasicInfoDownloader implements InitializingBean {
-	// private final String YYYYMMDD = "yyyyMMdd";
-	// private final String ALL = "所有證券(不含權證、牛熊證)";
 	private final int MAX_TRY_AMOUNT = 3;
-	// private final Date BEGIN_DATA_DATE = generateBeginDataDate();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
 	private File downloadedLog;
 	private List<String> downloadedList;
-	//
 	@Autowired
 	private HtmlUnitFirefoxVersionBrowser browser;
-	// // private FirefoxBrowser browser = new FirefoxBrowser();
-
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 
@@ -95,18 +89,36 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 		return browser;
 	}
 
-	Select getMarketTypeSelect() {
+	String repeatTryDownload(String oldStockCode, String fileName) {
+		int tryAmount = 0;
+		while (true) {
+			try {
+				getSearchButton().click();
+				String newStockCode = waitAjaxTableReload(oldStockCode);
+				// Null means "查無資料！"
+				if (newStockCode == null) {
+					return "";
+				}
+				downLoad(fileName);
+				return newStockCode;
+			} catch (Exception e) {
+				++tryAmount;
+				logger.warn("Download fail " + tryAmount + " times !!!");
+				logger.warn(browser.getWebDriver().getPageSource());
+				if (tryAmount >= MAX_TRY_AMOUNT) {
+					throw new RuntimeException(e);
+				}
+				ThreadUtility.sleep(tryAmount * 60);
+			}
+		}
+	}
+
+	private Select getMarketTypeSelect() {
 		return browser
 				.getSelect(By
 						.cssSelector("#search > table > tbody > tr > td > select:nth-child(2)"));
 	}
 
-	// String getFileName(String str) {
-	// int idxBegin = str.indexOf("\"") + 1;
-	// int idxEnd = str.lastIndexOf("\"");
-	// return str.substring(idxBegin, idxEnd);
-	// }
-	//
 	private void generateDownloadedLogFile() throws IOException {
 		if (downloadedLog == null) {
 			downloadedLog = new File(downloadDir, "downloaded.log");
@@ -145,18 +157,6 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 						.cssSelector("#search > table > tbody > tr > td > select:nth-child(4)"));
 	}
 
-	// private Select getYearSelect() {
-	// return browser.getSelect(By.id("SYEAR"));
-	// }
-	//
-	// private Select getSeasonSelect() {
-	// return browser.getSelect(By.id("SSEASON"));
-	// }
-	//
-	// private Select getReportTypeSelect() {
-	// return browser.getSelect(By.id("REPORT_ID"));
-	// }
-
 	private Button getSearchButton() {
 		return browser.getButton(By
 				.cssSelector("#search_bar1 > div > input[type='button']"));
@@ -176,25 +176,6 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 		}
 	}
 
-	//
-	// private boolean isDownloaded(XbrlDownloadTable table, int rowIdx) {
-	// String fileName = table.getDownloadFileName(rowIdx);
-	// // Some industry type has no data.
-	// if (fileName == null) {
-	// return true;
-	// }
-	// String[] fns = downloadDir.list();
-	// if (fns == null) {
-	// return false;
-	// }
-	// for (String fn : fns) {
-	// if (fn.equals(fileName)) {
-	// return true;
-	// }
-	// }
-	// return false;
-	// }
-	//
 	private String waitAjaxTableReload(String oldStockCode) {
 		Td td = browser
 				.getTd(By
@@ -212,47 +193,8 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 		}
 	}
 
-	// private CompanyBasicInfoTable getTargetTable(String oldStockCode) {
-	// // reportTypeOpts.get(index).click();
-	// getSearchButton().click();
-	// try {
-	// waitAjaxTableReload(oldStockCode);
-	// } catch (TimeoutException e) {
-	// Font font = browser.getFont(By
-	// .cssSelector(NO_DATA_MSG_CSS_SELECTOR));
-	// if (NO_DATA_MSG.equals(font.getText())) {
-	// return null;
-	// }
-	// throw e;
-	// }
-	// }
-
 	private String getFileName(Option mkOpt, Option indOpt) {
 		return mkOpt.getValue() + "_" + indOpt.getValue() + ".csv";
-	}
-
-	String repeatTryDownload(String oldStockCode, String fileName) {
-		int tryAmount = 0;
-		while (true) {
-			try {
-				getSearchButton().click();
-				String newStockCode = waitAjaxTableReload(oldStockCode);
-				// Null means "查無資料！"
-				if (newStockCode == null) {
-					return "";
-				}
-				downLoad(fileName);
-				return newStockCode;
-			} catch (Exception e) {
-				++tryAmount;
-				logger.warn("Download fail " + tryAmount + " times !!!");
-				logger.warn(browser.getWebDriver().getPageSource());
-				if (tryAmount >= MAX_TRY_AMOUNT) {
-					throw new RuntimeException(e);
-				}
-				ThreadUtility.sleep(tryAmount * 60);
-			}
-		}
 	}
 
 	private String getDownloadInfo(Option mkOpt, Option indOpt) {

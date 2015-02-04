@@ -37,7 +37,7 @@ public class StockClosingConditionHbaseManager implements
 		IStockClosingConditionManager, InitializingBean {
 	private final String[] EXTENSIONS = { "csv" };
 	private final String BIG5 = "big5";
-	private final String SPACE_STRING = " ";
+	private final String SPACE_STRING =StringUtility.SPACE_STRING;
 	private final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private final String EMPTY_STRING = StringUtility.EMPTY_STRING;
 	private final String DOUBLE_UOTATION_STRING = StringUtility.DOUBLE_UOTATION_STRING;
@@ -124,13 +124,13 @@ public class StockClosingConditionHbaseManager implements
 		int count = 0;
 		Date now = new Date();
 		List<String> processedList = FileUtils.readLines(processedLogOfTwse);
+		// ex. A11220130104ALLBUT0999.csv
 		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
-			// ex. A11220130104ALLBUT0999.csv
-			Date date = DateUtils.parseDate(file.getName().substring(4, 12),
-					YYYYMMDD);
 			if (isProcessed(processedList, file)) {
 				continue;
 			}
+			Date date = DateUtils.parseDate(file.getName().substring(4, 12),
+					YYYYMMDD);
 			List<String> lines = FileUtils.readLines(file, BIG5);
 			if (hasDataOfTwse(file, date, lines) == false) {
 				continue;
@@ -183,13 +183,13 @@ public class StockClosingConditionHbaseManager implements
 		int count = 0;
 		Date now = new Date();
 		List<String> processedList = FileUtils.readLines(processedLogOfGretai);
+		// ex. SQUOTE_EW_1020107.csv
 		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
-			// ex. SQUOTE_EW_1020107.csv
-			Date date = DateUtility.parseRocDate(
-					file.getName().substring(10, 17), YYYYMMDD);
 			if (isProcessed(processedList, file)) {
 				continue;
 			}
+			Date date = DateUtility.parseRocDate(
+					file.getName().substring(10, 17), YYYYMMDD);
 			List<String> lines = FileUtils.readLines(file, BIG5);
 			if (hasDataOfGretai(file, date, lines) == false) {
 				continue;
@@ -308,7 +308,7 @@ public class StockClosingConditionHbaseManager implements
 
 	private BigDecimal getBigDecimalOfGretai(String str) {
 		String trimmedStr = str.trim();
-		if(trimmedStr.startsWith("---")) {
+		if (trimmedStr.startsWith("---")) {
 			return null;
 		}
 		return new BigDecimal(str);
@@ -353,7 +353,7 @@ public class StockClosingConditionHbaseManager implements
 		String infoLine = generateProcessedInfo(file) + System.lineSeparator();
 		FileUtils.write(processedLogOfGretai, infoLine, Charsets.UTF_8, true);
 	}
-	
+
 	private StockClosingCondition generateEntity(String stockCode, Date date,
 			Date now, BigDecimal openingPrice, BigDecimal closingPrice,
 			BigDecimal change, BigDecimal highestPrice, BigDecimal lowestPrice,
