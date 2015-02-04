@@ -100,7 +100,7 @@ public class FinancialReportDownloader implements InitializingBean {
 									yearOpt, seasonOpt, mkOpt, repOpt);
 							logger.info(downloadInfo + " process start.");
 							repeatTryDownload(reportTypeOpts, iRep,
-									repSize - 1, targetFileNamePrefix);
+									targetFileNamePrefix);
 							logger.info(downloadInfo + " processed success.");
 							writeToDownloadedFile(downloadInfo);
 						}
@@ -197,8 +197,6 @@ public class FinancialReportDownloader implements InitializingBean {
 				browser.download(file);
 				logger.info(file.getAbsolutePath() + " downloaded.");
 				unzipper.repeatTryUnzip(file);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
 			} finally {
 				browser.restorePage();
 			}
@@ -262,13 +260,13 @@ public class FinancialReportDownloader implements InitializingBean {
 	}
 
 	private void repeatTryDownload(List<Option> reportTypeOpts, int index,
-			int MaxIndex, String targetFileNamePrefix) {
+			String targetFileNamePrefix) {
 		int tryAmount = 0;
 		while (true) {
 			try {
 				XbrlDownloadTable tab = getTargetTable(reportTypeOpts, index,
 						targetFileNamePrefix);
-				// Null means "查無符合資料！
+				// Null means "查無符合資料！"
 				if (tab == null) {
 					return;
 				}
@@ -288,9 +286,9 @@ public class FinancialReportDownloader implements InitializingBean {
 
 	private String getDownloadInfo(Option mkOpt, Option indOpt, Option yearOpt,
 			Option seasonOpt, Option repOpt) {
-		return mkOpt.getText() + "/" + indOpt.getText() + "/"
-				+ yearOpt.getText() + "/" + seasonOpt.getText() + "/"
-				+ repOpt.getText();
+		return mkOpt.getValue() + "/" + indOpt.getValue() + "/"
+				+ yearOpt.getValue() + "/" + seasonOpt.getValue() + "/"
+				+ repOpt.getValue();
 	}
 
 	private boolean isDownloaded(String downloadInfo) throws IOException {

@@ -1,0 +1,228 @@
+package idv.hsiehpinghan.stockservice.operator;
+
+import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
+import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
+import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
+import idv.hsiehpinghan.seleniumassistant.webelement.Div;
+import idv.hsiehpinghan.seleniumassistant.webelement.Select;
+import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
+import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
+import idv.hsiehpinghan.stockservice.utility.StockAjaxWaitUtility;
+import idv.hsiehpinghan.stockservice.webelement.GretaiDatePickerTable;
+import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.apache.log4j.Logger;
+import org.openqa.selenium.By;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class MonthlyOperatingIncomeDownloader implements
+		InitializingBean {
+	private final String YYYYMM = "yyyyMM";
+	private final String HISTORY = "歷史資料";
+//	private final int MAX_TRY_AMOUNT = 3;
+	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
+	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private File downloadDir;
+	private File downloadedLog;
+	private List<String> downloadedList;
+//
+	@Autowired
+	private HtmlUnitFirefoxVersionBrowser browser;
+//	// private FirefoxBrowser browser = new FirefoxBrowser();
+
+	@Autowired
+	private StockServiceProperty stockServiceProperty;
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		downloadDir = stockServiceProperty
+				.getMonthlyOperatingIncomeDownloadDir();
+		generateDownloadedLogFile();
+	}
+
+	public File downloadStockClosingCondition() throws IOException {
+		moveToTargetPage();
+		downloadedList = FileUtils.readLines(downloadedLog);
+		Date now = Calendar.getInstance().getTime();
+		Date targetDate = BEGIN_DATA_DATE;
+		while (targetDate.getTime() < now.getTime()) {
+			String downloadInfo = getDownloadInfo(targetDate);
+			if (isDownloaded(downloadInfo) == false) {
+				selectSearchType(HISTORY);
+//				inputDataDate(targetDate);
+//				logger.info(downloadInfo + " process start.");
+//				repeatTryDownload(targetDate);
+//				logger.info(downloadInfo + " processed success.");
+//				writeToDownloadedFile(downloadInfo);
+			}
+			targetDate = DateUtils.addMonths(targetDate, 1);
+		}
+//		return downloadDir;
+		
+		return null;
+	}
+
+	void moveToTargetPage() {
+		final String MONTHLY_OPERATION_INCOME_PAGE_URL = "http://mops.twse.com.tw/mops/web/t05st10_ifrs";
+		browser.browse(MONTHLY_OPERATION_INCOME_PAGE_URL);
+		Div div = browser
+				.getDiv(By
+						.cssSelector("#caption"));
+		AjaxWaitUtility.waitUntilTextStartWith(div, "   採用IFRSs後之月營業收入資訊");
+	}
+
+	BrowserBase getBrowser() {
+		return browser;
+	}
+
+//	void inputDataDate(Date date) {
+//		triggerDatepickerDisplay();
+//		GretaiDatePickerTable table = new GretaiDatePickerTable(
+//				browser.getTable(By.cssSelector("#ui-datepicker-div > table")));
+//		selectYear(date, table);
+//		selectMonth(date, table);
+//		selectDayOfMonth(date, table);
+//	}
+
+	void selectSearchType(String text) {
+		Select sel = browser.getSelect(By.cssSelector("#isnew"));
+		sel.selectByText(text);
+		AjaxWaitUtility.waitUntilDisplayed(getYearDiv());
+	}
+
+
+//	void repeatTryDownload(Date targetDate) {
+//		int tryAmount = 0;
+//		while (true) {
+//			try {
+//				downloadCsv(targetDate);
+//				break;
+//			} catch (Exception e) {
+//				++tryAmount;
+//				logger.warn("Download fail " + tryAmount + " times !!!");
+//				logger.warn(browser.getWebDriver().getPageSource());
+//				if (tryAmount >= MAX_TRY_AMOUNT) {
+//					throw new RuntimeException(e);
+//				}
+//				ThreadUtility.sleep(tryAmount * 10);
+//			}
+//		}
+//	}
+//
+//	String getFileName(String str) {
+//		int idxBegin = str.indexOf("=") + 1;
+//		return str.substring(idxBegin);
+//	}
+//
+//	private void downloadCsv(Date targetDate) {
+//		browser.closeAllChildWindow();
+//		browser.getButton(
+//				By.cssSelector("body > div:nth-child(1) > div.h-pnl-right.rpt-search-fullscreen > button.btn-download.ui-button.ui-widget.ui-state-default.ui-corner-all.ui-button-text-icon-primary"))
+//				.click();
+//		if (browser.hasChildWindow() == false) {
+//			return;
+//		}
+//		AjaxWaitUtility.waitUntilFirstChildWindowAttachmentNotNull(browser);
+//		browser.switchToFirstChildWindow();
+//		try {
+//			String fileName = getFileName(browser.getAttachment());
+//			File file = new File(downloadDir.getAbsolutePath(), fileName);
+//			browser.download(file);
+//			logger.info(file.getAbsolutePath() + " downloaded.");
+//		} finally {
+//			browser.switchToParentWindow();
+//			browser.closeAllChildWindow();
+//		}
+//	}
+
+	private Date generateBeginDataDate() {
+		return DateUtility.getDate(2013, 1, 1);
+	}
+
+	private void generateDownloadedLogFile() throws IOException {
+		if (downloadedLog == null) {
+			downloadedLog = new File(downloadDir, "downloaded.log");
+			if (downloadedLog.exists() == false) {
+				FileUtils.touch(downloadedLog);
+			}
+		}
+	}
+
+	private String getDownloadInfo(Date date) {
+		return DateFormatUtils.format(date, YYYYMM);
+	}
+
+	private boolean isDownloaded(String downloadInfo) throws IOException {
+		if (downloadedList.contains(downloadInfo)) {
+			logger.info(downloadInfo + " downloaded before.");
+			return true;
+		}
+		return false;
+	}
+
+//	private void writeToDownloadedFile(String downloadInfo) throws IOException {
+//		String infoLine = downloadInfo + System.lineSeparator();
+//		FileUtils.write(downloadedLog, infoLine, Charsets.UTF_8, true);
+//	}
+//
+//	private void triggerDatepickerDisplay() {
+//		TextInput dataDateInput = browser.getTextInput(By
+//				.cssSelector("#input_date"));
+//		dataDateInput.click();
+//		Div datepickerDiv = browser
+//				.getDiv(By.cssSelector("#ui-datepicker-div"));
+//		AjaxWaitUtility.waitUntilDisplayed(datepickerDiv);
+//	}
+//
+//	private void selectYear(Date date, GretaiDatePickerTable table) {
+//		// Input year.
+//		Select yearSel = browser
+//				.getSelect(By
+//						.cssSelector("#ui-datepicker-div > div > div > select.ui-datepicker-year"));
+//		yearSel.click();
+//		int year = DateUtility.getYear(date);
+//		yearSel.selectByValue(String.valueOf(year));
+//		StockAjaxWaitUtility.waitUntilAllDataYearEqual(table, year);
+//	}
+//
+//	private void selectMonth(Date date, GretaiDatePickerTable table) {
+//		// Input month.
+//		Select monthSel = browser
+//				.getSelect(By
+//						.cssSelector("#ui-datepicker-div > div > div > select.ui-datepicker-month"));
+//		monthSel.click();
+//		int year = DateUtility.getYear(date);
+//		// Month value begins from 0.
+//		int month = DateUtility.getMonth(date) - 1;
+//		monthSel.selectByValue(String.valueOf(month));
+//		StockAjaxWaitUtility.waitUntilAllDataYearAndDataMonthEqual(table, year,
+//				month);
+//	}
+//
+//	private void selectDayOfMonth(Date date, GretaiDatePickerTable table) {
+//		int dayOfMonth = DateUtility.getDayOfMonth(date);
+//		// Input day of month.
+//		table.clickDayOfMonth(dayOfMonth);
+//		TextInput dateInput = browser.getTextInput(By
+//				.cssSelector("#input_date"));
+//		String targetDateStr = DateUtility.getRocDateString(date, "yyyy/MM/dd");
+//		AjaxWaitUtility.waitUntilValueEqual(dateInput, targetDateStr);
+//	}
+	private Div getYearDiv() {
+		return browser.getDiv(By.cssSelector("#year"));
+	}
+}

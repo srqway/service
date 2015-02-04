@@ -9,9 +9,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class StockServiceProperty implements InitializingBean {
-	private final String EXCHANGE_RATE = "exchange-rate";
-	private final String FINANCIAL_REPORT = "financial-report";
-	private final String STOCK_CLOSING_CONDITION = "stock-closing-condition";
+	private final String EXCHANGE_RATE = "exchange_rate";
+	private final String FINANCIAL_REPORT = "financial_report";
+	private final String STOCK_CLOSING_CONDITION = "stock_closing_condition";
+	private final String MONTHLY_OPERATING_INCOME = "monthly_operating_income";
+	private final String COMPANY_BASIC_INFO = "company_basic_info";
+	private final String BOT = "bot";
+	private final String MOPS = "mops";
 	private final String TWSE = "twse";
 	private final String GRETAI = "gretai";
 	private String downloadDir;
@@ -27,29 +31,42 @@ public class StockServiceProperty implements InitializingBean {
 	}
 
 	public File getStockClosingConditionDownloadDirOfTwse() {
-		File dir = new File(downloadDir, STOCK_CLOSING_CONDITION);
-		return new File(dir, TWSE);
+		File dir = new File(downloadDir, TWSE);
+		return new File(dir, STOCK_CLOSING_CONDITION);
 	}
 
 	public File getStockClosingConditionDownloadDirOfGretai() {
-		File dir = new File(downloadDir, STOCK_CLOSING_CONDITION);
-		return new File(dir, GRETAI);
+		File dir = new File(downloadDir, GRETAI);
+		return new File(dir, STOCK_CLOSING_CONDITION);
 	}
-	
+
+	public File getMonthlyOperatingIncomeDownloadDir() {
+		File dir = new File(downloadDir, MOPS);
+		return new File(dir, MONTHLY_OPERATING_INCOME);
+	}
+
 	public File getExchangeRateDownloadDir() {
-		return new File(downloadDir, EXCHANGE_RATE);
+		File dir = new File(downloadDir, BOT);
+		return new File(dir, EXCHANGE_RATE);
 	}
 
 	public File getFinancialReportDownloadDir() {
-		return new File(downloadDir, FINANCIAL_REPORT);
+		File dir = new File(downloadDir, MOPS);
+		return new File(dir, FINANCIAL_REPORT);
 	}
 
+	public File getCompanyBasicInfoDownloadDir() {
+		File dir = new File(downloadDir, MOPS);
+		return new File(dir, COMPANY_BASIC_INFO);
+	}
+	
 	public File getFinancialReportExtractDir() {
-		return new File(extractDir, FINANCIAL_REPORT);
+		File dir = new File(extractDir, MOPS);
+		return new File(dir, FINANCIAL_REPORT);
 	}
 
 	private void processDownloadDir() {
-		String pDownloadDir = "stock-service.download_dir";
+		String pDownloadDir = "stock_service_download_dir";
 		downloadDir = environment.getProperty(pDownloadDir);
 		if (downloadDir == null) {
 			throw new RuntimeException(pDownloadDir + " not set !!!");
@@ -57,7 +74,7 @@ public class StockServiceProperty implements InitializingBean {
 	}
 
 	private void processExtractDir() {
-		String pExtractDir = "stock-service.extract_dir";
+		String pExtractDir = "stock_service_extract_dir";
 		extractDir = environment.getProperty(pExtractDir);
 		if (extractDir == null) {
 			throw new RuntimeException(pExtractDir + " not set !!!");
