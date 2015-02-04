@@ -210,10 +210,6 @@ public class StockClosingConditionHbaseManager implements
 				if (condRepo.exists(stockCode, date)) {
 					continue;
 				}
-				
-				System.err.println(stockCode);
-				
-				
 				BigDecimal openingPrice = getBigDecimalOfGretai(strArr[4]);
 				BigDecimal closingPrice = getBigDecimalOfGretai(strArr[2]);
 				BigDecimal change = getBigDecimalOfGretai(strArr[3].replace(
@@ -232,7 +228,7 @@ public class StockClosingConditionHbaseManager implements
 				entities.add(entity);
 			}
 			condRepo.put(entities);
-			writeToProcessedFileOfTwse(file);
+			writeToProcessedFileOfGretai(file);
 			logger.info(file.getName() + " saved to "
 					+ condRepo.getTargetTableName() + ".");
 			++count;
@@ -258,7 +254,7 @@ public class StockClosingConditionHbaseManager implements
 
 	private boolean hasDataOfGretai(File file, Date date, List<String> lines)
 			throws IOException {
-		if (lines.size() == 1) {
+		if (lines.size() == 0) {
 			return false;
 		}
 		String targetDateStr = DateUtility.getRocDateString(date, "yyyy/MM/dd");
@@ -312,10 +308,6 @@ public class StockClosingConditionHbaseManager implements
 
 	private BigDecimal getBigDecimalOfGretai(String str) {
 		String trimmedStr = str.trim();
-		
-		System.err.println(trimmedStr);
-		
-		
 		if(trimmedStr.startsWith("---")) {
 			return null;
 		}
@@ -357,6 +349,11 @@ public class StockClosingConditionHbaseManager implements
 		FileUtils.write(processedLogOfTwse, infoLine, Charsets.UTF_8, true);
 	}
 
+	private void writeToProcessedFileOfGretai(File file) throws IOException {
+		String infoLine = generateProcessedInfo(file) + System.lineSeparator();
+		FileUtils.write(processedLogOfGretai, infoLine, Charsets.UTF_8, true);
+	}
+	
 	private StockClosingCondition generateEntity(String stockCode, Date date,
 			Date now, BigDecimal openingPrice, BigDecimal closingPrice,
 			BigDecimal change, BigDecimal highestPrice, BigDecimal lowestPrice,
