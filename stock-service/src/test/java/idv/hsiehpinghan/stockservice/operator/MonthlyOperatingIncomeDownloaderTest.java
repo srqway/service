@@ -1,10 +1,14 @@
 package idv.hsiehpinghan.stockservice.operator;
 
+import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
+import idv.hsiehpinghan.seleniumassistant.webelement.Select;
+import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.openqa.selenium.By;
 import org.springframework.context.ApplicationContext;
@@ -15,6 +19,8 @@ import org.testng.annotations.Test;
 public class MonthlyOperatingIncomeDownloaderTest {
 	private StockServiceProperty stockServiceProperty;
 	private MonthlyOperatingIncomeDownloader downloader;
+	private String stockCode = "2330";
+	private Date date = DateUtility.getDate(2014, 6, 9);
 
 	@BeforeClass
 	public void beforeClass() throws IOException {
@@ -33,11 +39,63 @@ public class MonthlyOperatingIncomeDownloaderTest {
 				.getDiv(By.cssSelector("#caption")).getText();
 		Assert.assertEquals(text, "   採用IFRSs後之月營業收入資訊");
 	}
-	
-	@Test(dependsOnMethods={"moveToTargetPage"})
+
+	@Test(dependsOnMethods = { "moveToTargetPage" })
 	public void selectSearchType() {
 		downloader.selectSearchType("歷史資料");
 		Div yearDiv = downloader.getBrowser().getDiv(By.cssSelector("#year"));
 		Assert.assertEquals(yearDiv.isDisplayed(), true);
+	}
+
+	@Test(dependsOnMethods = { "selectSearchType" })
+	public void inputStockCode() {
+		downloader.inputStockCode(stockCode);
+		TextInput input = downloader.getBrowser().getTextInput(
+				By.cssSelector("#co_id"));
+		Assert.assertEquals(input.getValue(), stockCode);
+	}
+
+	@Test(dependsOnMethods = { "inputStockCode" })
+	public void inputYear() {
+		downloader.inputYear(date);
+		TextInput input = downloader.getBrowser().getTextInput(
+				By.cssSelector("#year"));
+		int year = DateUtility.getRocYear(date);
+		Assert.assertEquals(input.getValue(), String.valueOf(year));
+	}
+
+	@Test(dependsOnMethods = { "inputYear" })
+	public void selectMonth() {
+		downloader.selectMonth(date);
+		Select sel = downloader.getBrowser()
+				.getSelect(By.cssSelector("#month"));
+		int month = DateUtility.getMonth(date);
+		Assert.assertEquals(sel.getSelectedText(), String.valueOf(month));
+	}
+
+	@Test(dependsOnMethods = { "selectMonth" })
+	public void repeatTryDownload() {
+		try {
+			downloader.repeatTryDownload("2330", date);
+		} catch (Exception e) {
+			System.err.println(downloader.getBrowser().getWebDriver()
+					.getPageSource());
+			throw new RuntimeException(e);
+		}
+		// String dateStr = DateUtility.getRocDateString(date, "yyyyMMdd");
+		// File dir = stockServiceProperty
+		// .getStockClosingConditionDownloadDirOfGretai();
+		// String fileName = "SQUOTE_02_" + dateStr + ".csv";
+		// boolean result = ArrayUtils.contains(dir.list(), fileName);
+		// if(result == false) {
+		// System.err.println(downloaderOfGretai.getBrowser().getWebDriver().getPageSource());
+		// }
+		// Assert.assertTrue(result);
+	}
+
+	@Test
+	public void getStockCodes() throws Exception {
+		String[] stockCodes = downloader.getStockCodes();
+		Assert.assertTrue(0 < stockCodes.length);
 	}
 }

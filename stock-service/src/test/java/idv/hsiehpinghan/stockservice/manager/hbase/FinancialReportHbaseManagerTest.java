@@ -18,6 +18,9 @@ import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 import idv.hsiehpinghan.xbrlassistant.xbrl.Instance;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -80,10 +83,9 @@ public class FinancialReportHbaseManagerTest {
 
 	@Test
 	public void processXbrlFiles() throws Exception {
-		StockDownloadInfo downloadInfo = reportManager.getDownloadInfoEntity();
 		File instanceFile = SystemResourceUtility
 				.getFileResource("xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml");
-		reportManager.processXbrlFiles(instanceFile, downloadInfo);
+		reportManager.processXbrlFiles(instanceFile, new ArrayList<String>(0));
 		String[] strArr = instanceFile.getName().split("-");
 		String stockCode = strArr[5];
 		ReportType reportType = ReportType.getReportType(strArr[4]);
@@ -105,6 +107,7 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(val.getUnit(), "TWD");
 		Assert.assertEquals(val.getValue().toString(), "-120107000");
 		// Test downloadInfo.
+		StockDownloadInfo downloadInfo = getOrCreateStockDownloadInfo();
 		Assert.assertTrue(downloadInfo.getStockCodeFamily()
 				.getLatestValue(allStockCode).getStockCodes().contains("1101"));
 		Assert.assertTrue(downloadInfo.getReportTypeFamily()
@@ -120,11 +123,10 @@ public class FinancialReportHbaseManagerTest {
 
 	@Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
-		StockDownloadInfo downloadInfo = reportManager.getDownloadInfoEntity();
 		File xbrlDirectory = stockServiceProperty
 				.getFinancialReportExtractDir();
-		int processFilesAmt = reportManager.saveFinancialReportToHBase(
-				xbrlDirectory, downloadInfo);
+		int processFilesAmt = reportManager
+				.saveFinancialReportToHBase(xbrlDirectory);
 		int fileAmt = getSubFilesAmt(xbrlDirectory);
 		Assert.assertEquals(processFilesAmt, fileAmt);
 	}
@@ -171,5 +173,13 @@ public class FinancialReportHbaseManagerTest {
 			++count;
 		}
 		return count;
+	}
+
+	private StockDownloadInfo getOrCreateStockDownloadInfo()
+			throws IllegalAccessException, NoSuchMethodException,
+			SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException {
+		String tableName = instanceRepo.getTargetTableName();
+		return infoRepo.getOrCreateEntity(tableName);
 	}
 }

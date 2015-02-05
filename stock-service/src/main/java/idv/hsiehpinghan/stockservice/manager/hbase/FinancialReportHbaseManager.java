@@ -26,17 +26,23 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
-public class FinancialReportHbaseManager implements IFinancialReportManager {
+public class FinancialReportHbaseManager implements IFinancialReportManager,
+		InitializingBean {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private List<String> presentIds;
 	private List<Dollar> targetDallars;
+	private File extractDir;
+	private File processedLog;
 
 	@Autowired
 	private FinancialReportDownloader downloader;
@@ -71,6 +77,12 @@ public class FinancialReportHbaseManager implements IFinancialReportManager {
 	}
 
 	@Override
+	public void afterPropertiesSet() throws Exception {
+		extractDir = stockServiceProperty.getFinancialReportExtractDir();
+		generateProcessedLog();
+	}
+
+	@Override
 	public boolean updateFinancialReportPresentation() {
 		XbrlTaxonomyVersion[] versions = XbrlTaxonomyVersion.values();
 		XbrlTaxonomyVersion version = null;
@@ -102,10 +114,7 @@ public class FinancialReportHbaseManager implements IFinancialReportManager {
 			return false;
 		}
 		try {
-			StockDownloadInfo downloadInfo = getDownloadInfoEntity();
-			int processFilesAmt = saveFinancialReportToHBase(xbrlDir,
-					downloadInfo);
-			infoRepo.put(downloadInfo);
+			int processFilesAmt = saveFinancialReportToHBase(xbrlDir);
 			logger.info("Saved " + processFilesAmt + " xbrl files to "
 					+ instanceRepo.getTargetTableName() + ".");
 		} catch (Exception e) {
@@ -162,18 +171,6 @@ public class FinancialReportHbaseManager implements IFinancialReportManager {
 		}
 	}
 
-	StockDownloadInfo getDownloadInfoEntity() throws IllegalAccessException,
-			NoSuchMethodException, SecurityException, InstantiationException,
-			IllegalArgumentException, InvocationTargetException, IOException {
-		String tableName = instanceRepo.getTargetTableName();
-		StockDownloadInfo entity = infoRepo.get(tableName);
-		if (entity == null) {
-			entity = new StockDownloadInfo();
-			entity.new RowKey(tableName, entity);
-		}
-		return entity;
-	}
-
 	File downloadFinancialReportInstance() {
 		try {
 			File xbrlDir = downloader.downloadFinancialReport();
@@ -185,18 +182,18 @@ public class FinancialReportHbaseManager implements IFinancialReportManager {
 		}
 	}
 
-	int saveFinancialReportToHBase(File xbrlDir, StockDownloadInfo downloadInfo)
-			throws Exception {
-		return processXbrlFiles(xbrlDir, downloadInfo);
+	int saveFinancialReportToHBase(File xbrlDir) throws Exception {
+		List<String> processedList = FileUtils.readLines(processedLog);
+		return processXbrlFiles(xbrlDir, processedList);
 	}
 
-	int processXbrlFiles(File file, StockDownloadInfo downloadInfo)
+	int processXbrlFiles(File file, List<String> processedList)
 			throws Exception {
 		int count = 0;
 		if (file.isDirectory()) {
 			File[] fs = file.listFiles();
 			for (File f : fs) {
-				count += processXbrlFiles(f, downloadInfo);
+				count += processXbrlFiles(f, processedList);
 			}
 		} else {
 			// ex. tifrs-fr0-m1-ci-cr-1101-2013Q1.xml
@@ -207,30 +204,39 @@ public class FinancialReportHbaseManager implements IFinancialReportManager {
 			int season = Integer.valueOf(strArr[6].substring(5, 6));
 			ObjectNode objNode = instanceAssistant.getInstanceJson(file,
 					presentIds);
-			if (instanceRepo.exists(stockCode, reportType, year, season) == false) {
+			if (isProcessed(processedList, file) == false) {
 				instanceRepo.put(stockCode, reportType, year, season, objNode,
 						presentIds);
 				logger.info(file.getName() + " saved to "
 						+ instanceRepo.getTargetTableName() + ".");
-			} else {
-				logger.info(file.getName() + " already saved to "
-						+ instanceRepo.getTargetTableName() + ".");
+				StockDownloadInfo downloadInfo = getDownloadInfoEntity(
+						stockCode, reportType, year, season);
+				infoRepo.put(downloadInfo);
+				writeToProcessedFile(file);
 			}
-			addToDownloadInfoEntity(downloadInfo, stockCode, reportType, year,
-					season);
 			++count;
 		}
 		return count;
 	}
 
-	private void addToDownloadInfoEntity(StockDownloadInfo downloadInfo,
-			String stockCode, ReportType reportType, int year, int season)
-			throws IllegalAccessException {
+	private void writeToProcessedFile(File file) throws IOException {
+		String infoLine = generateProcessedInfo(file) + System.lineSeparator();
+		FileUtils.write(processedLog, infoLine, Charsets.UTF_8, true);
+	}
+
+	private StockDownloadInfo getDownloadInfoEntity(String stockCode,
+			ReportType reportType, int year, int season)
+			throws IllegalAccessException, NoSuchMethodException,
+			SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException {
+		String tableName = instanceRepo.getTargetTableName();
+		StockDownloadInfo downloadInfo = infoRepo.getOrCreateEntity(tableName);
 		Date date = Calendar.getInstance().getTime();
 		addStockCode(downloadInfo, date, stockCode);
 		addReportType(downloadInfo, date, reportType);
 		addYear(downloadInfo, date, year);
 		addSeason(downloadInfo, date, season);
+		return downloadInfo;
 	}
 
 	private void addStockCode(StockDownloadInfo downloadInfo, Date date,
@@ -253,6 +259,29 @@ public class FinancialReportHbaseManager implements IFinancialReportManager {
 	private void addSeason(StockDownloadInfo downloadInfo, Date date, int season) {
 		String all = StockDownloadInfo.SeasonFamily.SeasonQualifier.ALL;
 		downloadInfo.getSeasonFamily().addSeason(all, date, season);
+	}
+
+	private void generateProcessedLog() throws IOException {
+		if (processedLog == null) {
+			processedLog = new File(extractDir, "processed.log");
+			if (processedLog.exists() == false) {
+				FileUtils.touch(processedLog);
+			}
+		}
+	}
+
+	private boolean isProcessed(List<String> processedList, File file)
+			throws IOException {
+		String processedInfo = generateProcessedInfo(file);
+		if (processedList.contains(processedInfo)) {
+			logger.info(processedInfo + " processed before.");
+			return true;
+		}
+		return false;
+	}
+
+	private String generateProcessedInfo(File file) {
+		return file.getName();
 	}
 
 	private File downloadExchangeRate() {

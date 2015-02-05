@@ -10,7 +10,9 @@ import idv.hsiehpinghan.stockdao.entity.CompanyBasicInfo.FinanceFamily;
 import idv.hsiehpinghan.stockdao.entity.CompanyBasicInfo.FinanceFamily.FinanceQualifier;
 import idv.hsiehpinghan.stockdao.entity.CompanyBasicInfo.RoleFamily;
 import idv.hsiehpinghan.stockdao.entity.CompanyBasicInfo.RoleFamily.RoleQualifier;
+import idv.hsiehpinghan.stockdao.entity.StockDownloadInfo;
 import idv.hsiehpinghan.stockdao.repository.ICompanyBasicInfoRepository;
+import idv.hsiehpinghan.stockdao.repository.IStockDownloadInfoRepository;
 import idv.hsiehpinghan.stockservice.manager.ICompanyBasicInfoManager;
 import idv.hsiehpinghan.stockservice.operator.CompanyBasicInfoDownloader;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
@@ -47,6 +49,8 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 	private CompanyBasicInfoDownloader downloader;
 	@Autowired
 	private ICompanyBasicInfoRepository comInfoRepo;
+	@Autowired
+	private IStockDownloadInfoRepository infoRepo;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -90,6 +94,8 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 			int size = lines.size();
 			List<CompanyBasicInfo> entities = new ArrayList<CompanyBasicInfo>(
 					size - startRow);
+			StockDownloadInfo downloadInfo = infoRepo
+					.getOrCreateEntity(comInfoRepo.getTargetTableName());
 			for (int i = startRow; i < size; ++i) {
 				String line = lines.get(i).replace(DOUBLE_UOTATION_STRING,
 						EMPTY_STRING);
@@ -99,6 +105,7 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 				}
 				String[] fnStrArr = file.getName().split("[_.]");
 				String stockCode = getString(strArr[0]);
+				addStockCode(downloadInfo, now, stockCode);
 				String marketType = getString(fnStrArr[0]);
 				String industryType = getString(fnStrArr[1]);
 				String chineseName = getString(strArr[1]);
@@ -146,9 +153,10 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 				entities.add(entity);
 			}
 			comInfoRepo.put(entities);
-			writeToProcessedFile(file);
 			logger.info(file.getName() + " saved to "
 					+ comInfoRepo.getTargetTableName() + ".");
+			infoRepo.put(downloadInfo);
+			writeToProcessedFile(file);
 			++count;
 		}
 		return count;
@@ -157,7 +165,7 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 	void truncateProcessedLog() throws IOException {
 		FileUtils.write(processedLog, "", Charsets.UTF_8);
 	}
-	
+
 	private String getTargetStartRowString(File file) {
 		String fileName = file.getName();
 		if (fileName.startsWith("sii")) {
@@ -338,5 +346,11 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 				FileUtils.touch(processedLog);
 			}
 		}
+	}
+	
+	private void addStockCode(StockDownloadInfo downloadInfo, Date date,
+			String stockCode) {
+		String all = StockDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;
+		downloadInfo.getStockCodeFamily().addStockCode(all, date, stockCode);
 	}
 }
