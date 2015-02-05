@@ -47,6 +47,7 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 		moveToTargetPage();
 		downloadedList = FileUtils.readLines(downloadedLog);
 		List<Option> mkOpts = getMarketTypeSelect().getOptions();
+		String oldStockCode = "";
 		for (int iMk = mkOpts.size() - 1; iMk >= 0; --iMk) {
 			Option mkOpt = mkOpts.get(iMk);
 			if (isTargetMarketType(mkOpt.getText().trim()) == false) {
@@ -55,7 +56,6 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 			List<Option> oldIndOpts = getIndustryTypeSelect().getOptions();
 			mkOpt.click();
 			List<Option> indOpts = getIndustryOptions(oldIndOpts);
-			String oldStockCode = "";
 			for (int iInd = indOpts.size() - 1; iInd >= 0; --iInd) {
 				Option indOpt = indOpts.get(iInd);
 				if (isTargetIndustryType(indOpt.getText().trim()) == false) {
@@ -66,7 +66,6 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 					continue;
 				}
 				indOpt.click();
-
 				// ex : sii_03.csv
 				String fileName = getFileName(mkOpt, indOpt);
 				logger.info(downloadInfo + " process start.");
@@ -108,7 +107,7 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 				if (tryAmount >= MAX_TRY_AMOUNT) {
 					throw new RuntimeException(e);
 				}
-				ThreadUtility.sleep(tryAmount * 60);
+				ThreadUtility.sleep(tryAmount * 10);
 			}
 		}
 	}
@@ -142,6 +141,10 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 		if ("".equals(text)) {
 			return false;
 		}
+		// "化學生技醫療" = "化學工業" + "生技醫療業"
+		if ("化學生技醫療".equals(text)) {
+			return false;
+		}
 		return true;
 	}
 
@@ -168,6 +171,9 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 			browser.getButton(
 					By.cssSelector("#table01 > form:nth-child(3) > button"))
 					.click();
+			if (browser.hasAttachment() == false) {
+				throw new RuntimeException("No attachment !!!");
+			}
 			File file = new File(downloadDir.getAbsolutePath(), fileName);
 			browser.download(file);
 			logger.info(file.getAbsolutePath() + " downloaded.");

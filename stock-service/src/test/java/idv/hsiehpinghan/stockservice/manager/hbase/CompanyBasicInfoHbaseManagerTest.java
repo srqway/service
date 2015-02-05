@@ -6,11 +6,9 @@ import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
 import java.io.File;
-import java.io.IOException;
 
 import junit.framework.Assert;
 
-import org.apache.commons.io.FileUtils;
 import org.springframework.context.ApplicationContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -36,15 +34,10 @@ public class CompanyBasicInfoHbaseManagerTest {
 
 	@Test
 	public void saveCompanyBasicInfoToHBase() throws Exception {
+		manager.truncateProcessedLog();
 		File dir = stockServiceProperty.getCompanyBasicInfoDownloadDir();
-		truncateProcessedLogFle(dir);
 		int processedAmt = manager.saveCompanyBasicInfoToHBase(dir);
 		Assert.assertTrue(processedAmt > 0);
-	}
-
-	private void truncateProcessedLogFle(File dir) throws IOException {
-		File processedLog = new File(dir, "processed.log");
-		FileUtils.write(processedLog, "", false);
 	}
 
 	private void dropAndCreateTable() throws Exception {

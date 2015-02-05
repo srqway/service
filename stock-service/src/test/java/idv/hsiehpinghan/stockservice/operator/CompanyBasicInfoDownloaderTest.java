@@ -56,14 +56,7 @@ public class CompanyBasicInfoDownloaderTest {
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })
 	public void downloadCompanyBasicInfo() throws Exception {
-		File dir = null;
-		try {
-			dir = downloader.downloadCompanyBasicInfo();
-		} catch (Exception e) {
-			System.err.println(downloader.getBrowser().getWebDriver()
-					.getPageSource());
-			throw new RuntimeException(e);
-		}
+		File dir = downloader.downloadCompanyBasicInfo();
 		String fileName = "sii_01.csv";
 		boolean result = ArrayUtils.contains(dir.list(), fileName);
 		if (result == false) {

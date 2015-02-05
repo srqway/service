@@ -124,12 +124,6 @@ public class FinancialReportDownloader implements InitializingBean {
 		return browser;
 	}
 
-	String getFileName(String str) {
-		int idxBegin = str.indexOf("\"") + 1;
-		int idxEnd = str.lastIndexOf("\"");
-		return str.substring(idxBegin, idxEnd);
-	}
-
 	private void generateDownloadedLogFile() throws IOException {
 		if (downloadedLog == null) {
 			downloadedLog = new File(downloadDir, "downloaded.log");
@@ -192,7 +186,7 @@ public class FinancialReportDownloader implements InitializingBean {
 			browser.cacheCurrentPage();
 			try {
 				table.clickDownloadButton(i);
-				String fileName = getFileName(browser.getAttachment());
+				String fileName = browser.getAttachmentFileName();
 				File file = new File(downloadDir.getAbsolutePath(), fileName);
 				browser.download(file);
 				logger.info(file.getAbsolutePath() + " downloaded.");
