@@ -8,7 +8,7 @@ import java.util.List;
 import org.apache.commons.collections.ListUtils;
 
 public class MonthlyOperatingIncomeDownloadTable extends Table {
-	private static final String[] titles = { "", "本月", "去年同期", "增減金額", "增減百分比",
+	private static final String[] itemNames = { "本月", "去年同期", "增減金額", "增減百分比",
 			"本年累計", "去年累計", "增減金額", "增減百分比", "備註" };
 	private List<String> targetRowTexts;
 	private String currentMonth;
@@ -105,8 +105,8 @@ public class MonthlyOperatingIncomeDownloadTable extends Table {
 		return comment;
 	}
 
-	public static String[] getTitles() {
-		return titles;
+	public static String[] getItemNames() {
+		return itemNames;
 	}
 
 	private void checkTitle() {
@@ -122,7 +122,7 @@ public class MonthlyOperatingIncomeDownloadTable extends Table {
 		// i = 0 is title.
 		for (int i = 1, size = 9; i < size; ++i) {
 			String itemName = getTextOfCell(i, 0);
-			String targetItemName = titles[i];
+			String targetItemName = itemNames[i - 1];
 			if (targetItemName.equals(itemName) == false) {
 				throw new RuntimeException("TargetItemName(" + targetItemName
 						+ ") different from itemName(" + itemName + ") !!!");

@@ -11,6 +11,8 @@ import idv.hsiehpinghan.stockdao.entity.CompanyBasicInfo.FinanceFamily.FinanceQu
 import idv.hsiehpinghan.stockdao.entity.CompanyBasicInfo.RoleFamily;
 import idv.hsiehpinghan.stockdao.entity.CompanyBasicInfo.RoleFamily.RoleQualifier;
 import idv.hsiehpinghan.stockdao.entity.StockDownloadInfo;
+import idv.hsiehpinghan.stockdao.enumeration.IndustryType;
+import idv.hsiehpinghan.stockdao.enumeration.MarketType;
 import idv.hsiehpinghan.stockdao.repository.ICompanyBasicInfoRepository;
 import idv.hsiehpinghan.stockdao.repository.IStockDownloadInfoRepository;
 import idv.hsiehpinghan.stockservice.manager.ICompanyBasicInfoManager;
@@ -96,6 +98,10 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 					size - startRow);
 			StockDownloadInfo downloadInfo = infoRepo
 					.getOrCreateEntity(comInfoRepo.getTargetTableName());
+			String[] fnStrArr = file.getName().split("[_.]");
+			MarketType marketType = MarketType.getMopsMarketType(fnStrArr[0]);
+			IndustryType industryType = IndustryType
+					.getMopsIndustryType(getString(fnStrArr[1]));
 			for (int i = startRow; i < size; ++i) {
 				String line = lines.get(i).replace(DOUBLE_UOTATION_STRING,
 						EMPTY_STRING);
@@ -103,11 +109,8 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 				if (strArr.length <= 1) {
 					break;
 				}
-				String[] fnStrArr = file.getName().split("[_.]");
 				String stockCode = getString(strArr[0]);
 				addStockCode(downloadInfo, now, stockCode);
-				String marketType = getString(fnStrArr[0]);
-				String industryType = getString(fnStrArr[1]);
 				String chineseName = getString(strArr[1]);
 				String englishBriefName = getString(strArr[24]);
 				String unifiedBusinessNumber = getString(strArr[3]);
@@ -213,12 +216,12 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 	}
 
 	private CompanyBasicInfo generateEntity(String stockCode, Date now,
-			String marketType, String industryType, String chineseName,
-			String englishBriefName, String unifiedBusinessNumber,
-			String establishmentDate, String listingDate, String chairman,
-			String generalManager, String spokesperson,
-			String jobTitleOfSpokesperson, String actingSpokesman,
-			String chineseAddress, String telephone,
+			MarketType marketType, IndustryType industryType,
+			String chineseName, String englishBriefName,
+			String unifiedBusinessNumber, String establishmentDate,
+			String listingDate, String chairman, String generalManager,
+			String spokesperson, String jobTitleOfSpokesperson,
+			String actingSpokesman, String chineseAddress, String telephone,
 			String stockTransferAgency, String telephoneOfStockTransferAgency,
 			String addressOfStockTransferAgency, String englishAddress,
 			String faxNumber, String email, String webSite,
@@ -247,12 +250,14 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 	}
 
 	private void generateCommonFamilyContent(CompanyBasicInfo entity, Date now,
-			String marketType, String industryType, String chineseName,
-			String englishBriefName, String unifiedBusinessNumber,
-			String establishmentDate, String listingDate) {
+			MarketType marketType, IndustryType industryType,
+			String chineseName, String englishBriefName,
+			String unifiedBusinessNumber, String establishmentDate,
+			String listingDate) {
 		CommonFamily commonFamily = entity.getCommonFamily();
-		commonFamily.add(CommonQualifier.MARKET_TYPE, now, marketType);
-		commonFamily.add(CommonQualifier.INDUSTRY_TYPE, now, industryType);
+		commonFamily.add(CommonQualifier.MARKET_TYPE, now, marketType.name());
+		commonFamily.add(CommonQualifier.INDUSTRY_TYPE, now,
+				industryType.name());
 		commonFamily.add(CommonQualifier.CHINESE_NAME, now, chineseName);
 		commonFamily.add(CommonQualifier.ENGLISH_BRIEF_NAME, now,
 				englishBriefName);
@@ -347,7 +352,7 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 			}
 		}
 	}
-	
+
 	private void addStockCode(StockDownloadInfo downloadInfo, Date date,
 			String stockCode) {
 		String all = StockDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;

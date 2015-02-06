@@ -206,10 +206,10 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private String generateCsvFileTitle() {
 		if (titleString == null) {
 			titleString = ArrayUtility.toString(
-					MonthlyOperatingIncomeDownloadTable.getTitles(),
+					MonthlyOperatingIncomeDownloadTable.getItemNames(),
 					COMMA_STRING);
 		}
-		return titleString;
+		return titleString + System.lineSeparator();
 	}
 
 	private String generateCsvFileData(MonthlyOperatingIncomeDownloadTable table) {
