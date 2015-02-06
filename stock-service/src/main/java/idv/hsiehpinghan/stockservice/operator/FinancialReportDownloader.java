@@ -234,8 +234,7 @@ public class FinancialReportDownloader implements InitializingBean {
 		getSearchButton().click();
 		try {
 			XbrlDownloadTable tab = waitAjaxTableReload(targetFileNamePrefix);
-			AjaxWaitUtility.waitUntilRowTextEqual(tab, 0,
-					tab.getTargetRowTexts());
+			tab.checkTitles();
 			return tab;
 		} catch (TimeoutException e) {
 			Font font = browser.getFont(By

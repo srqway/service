@@ -5,6 +5,8 @@ import idv.hsiehpinghan.seleniumassistant.webelement.Table;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections.ListUtils;
+
 public class XbrlDownloadTable extends Table {
 	private final int DOWNLOAD_BUTTON_COLUMN_INDEX = 2;
 	private final String ONCLICK = "onclick";
@@ -71,6 +73,15 @@ public class XbrlDownloadTable extends Table {
 			}
 		}
 		return false;
+	}
+
+	public void checkTitles() {
+		List<String> titles = getRowAsStringList(0);
+		List<String> targetTitles = getTargetRowTexts();
+		if (ListUtils.isEqualList(titles, targetTitles) == false) {
+			throw new RuntimeException("TargetTitles(" + targetTitles
+					+ ") different from titles(" + titles + ") !!!");
+		}
 	}
 
 	private String getFileName(String attrValue) {
