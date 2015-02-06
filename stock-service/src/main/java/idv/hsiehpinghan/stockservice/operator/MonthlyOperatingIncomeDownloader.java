@@ -86,9 +86,14 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 					inputYear(targetDate);
 					selectMonth(targetDate);
 					logger.info(downloadInfo + " process start.");
-					repeatTryDownload(stockCode, targetDate);
-					logger.info(downloadInfo + " processed success.");
-					writeToDownloadedFile(downloadInfo);
+					boolean hasData = repeatTryDownload(stockCode, targetDate);
+					if (hasData == true) {
+						logger.info(downloadInfo + " processed success.");
+						writeToDownloadedFile(downloadInfo);
+					} else {
+						logger.info(downloadInfo + " has no data.");
+					}
+
 				}
 				targetDate = DateUtils.addMonths(targetDate, 1);
 			}
@@ -141,12 +146,11 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 		sel.selectByText(String.valueOf(month));
 	}
 
-	void repeatTryDownload(String stockCode, Date targetDate) {
+	boolean repeatTryDownload(String stockCode, Date targetDate) {
 		int tryAmount = 0;
 		while (true) {
 			try {
-				download(stockCode, targetDate);
-				break;
+				return download(stockCode, targetDate);
 			} catch (Exception e) {
 				++tryAmount;
 				logger.warn("Download fail " + tryAmount + " times !!!");
@@ -169,7 +173,8 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 		return "民國" + rocYear + "年" + month + "月";
 	}
 
-	private void download(String stockCode, Date targetDate) throws IOException {
+	private boolean download(String stockCode, Date targetDate)
+			throws IOException {
 		browser.getButton(
 				By.cssSelector("td.bar01b:nth-child(4) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)"))
 				.click();
@@ -183,11 +188,12 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 							.cssSelector("#table01 > table.hasBorder")));
 			File file = writeToCsvFile(stockCode, targetDate, tab);
 			logger.info(file.getAbsolutePath() + " downloaded.");
+			return true;
 		} catch (TimeoutException e) {
 			Font font = browser.getFont(By
 					.cssSelector("#table01 > center > h3:nth-child(1)"));
 			if ("資料庫中查無需求資料。".equals(font.getText())) {
-				return;
+				return false;
 			}
 			throw e;
 		}

@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.context.ApplicationContext;
 import org.testng.Assert;
@@ -117,18 +118,15 @@ public class FinancialReportHbaseManagerTest {
 				.getYears().contains(2013));
 		Assert.assertTrue(downloadInfo.getSeasonFamily()
 				.getLatestValue(allSeason).getSeasons().contains(1));
-
-		HbaseEntityTestUtility.dropAndCreateTargetTable(instanceRepo);
 	}
 
 	@Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
-		File xbrlDirectory = stockServiceProperty
-				.getFinancialReportExtractDir();
-		int processFilesAmt = reportManager
-				.saveFinancialReportToHBase(xbrlDirectory);
-		int fileAmt = getSubFilesAmt(xbrlDirectory);
-		Assert.assertEquals(processFilesAmt, fileAmt);
+		File xbrlDir = stockServiceProperty.getFinancialReportExtractDir();
+		int actual = reportManager.saveFinancialReportToHBase(xbrlDir);
+		String[] ext = { "xml" };
+		int expected = FileUtils.listFiles(xbrlDir, ext, true).size();
+		Assert.assertEquals(actual, expected);
 	}
 
 	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
@@ -153,7 +151,7 @@ public class FinancialReportHbaseManagerTest {
 				.getRowAmount(dataRepo.getTargetTableClass());
 		int expected = hbaseAssistant.getRowAmount(instanceRepo
 				.getTargetTableClass());
-		Assert.assertEquals(expected, actual);
+		Assert.assertEquals(actual, expected);
 	}
 
 	private void dropAndCreateTable() throws Exception {
@@ -161,18 +159,6 @@ public class FinancialReportHbaseManagerTest {
 		HbaseEntityTestUtility.dropAndCreateTargetTable(instanceRepo);
 		HbaseEntityTestUtility.dropAndCreateTargetTable(infoRepo);
 		HbaseEntityTestUtility.dropAndCreateTargetTable(dataRepo);
-	}
-
-	private int getSubFilesAmt(File file) {
-		int count = 0;
-		if (file.isDirectory()) {
-			for (File f : file.listFiles()) {
-				count += getSubFilesAmt(f);
-			}
-		} else {
-			++count;
-		}
-		return count;
 	}
 
 	private StockDownloadInfo getOrCreateStockDownloadInfo()

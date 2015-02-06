@@ -4,6 +4,7 @@ import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
+import idv.hsiehpinghan.testutility.utility.DeleteUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,13 +64,9 @@ public class StockClosingConditionOfTwseDownloaderTest {
 		String dateStr = DateFormatUtils.format(date, "yyyyMMdd");
 		File dir = stockServiceProperty
 				.getStockClosingConditionDownloadDirOfTwse();
-		String fileName = "A112" + dateStr + "ALLBUT0999.csv";
-		boolean result = ArrayUtils.contains(dir.list(), fileName);
-		if (result == false) {
-			System.err.println(downloaderOfTwse.getBrowser().getWebDriver()
-					.getPageSource());
-		}
-		Assert.assertTrue(result);
+		String fileName = "A112" + dateStr + "MS.csv";
+		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+		DeleteUtility.delete(dir, fileName);
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })

@@ -38,6 +38,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Service
 public class FinancialReportHbaseManager implements IFinancialReportManager,
 		InitializingBean {
+	private final String[] EXTENSIONS = { "xml" };
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private List<String> presentIds;
 	private List<Dollar> targetDallars;
@@ -184,39 +185,34 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 
 	int saveFinancialReportToHBase(File xbrlDir) throws Exception {
 		List<String> processedList = FileUtils.readLines(processedLog);
-		return processXbrlFiles(xbrlDir, processedList);
-	}
-
-	int processXbrlFiles(File file, List<String> processedList)
-			throws Exception {
 		int count = 0;
-		if (file.isDirectory()) {
-			File[] fs = file.listFiles();
-			for (File f : fs) {
-				count += processXbrlFiles(f, processedList);
-			}
-		} else {
-			// ex. tifrs-fr0-m1-ci-cr-1101-2013Q1.xml
-			String[] strArr = file.getName().split("-");
-			String stockCode = strArr[5];
-			ReportType reportType = ReportType.getMopsReportType(strArr[4]);
-			int year = Integer.valueOf(strArr[6].substring(0, 4));
-			int season = Integer.valueOf(strArr[6].substring(5, 6));
-			ObjectNode objNode = instanceAssistant.getInstanceJson(file,
-					presentIds);
-			if (isProcessed(processedList, file) == false) {
-				instanceRepo.put(stockCode, reportType, year, season, objNode,
-						presentIds);
-				logger.info(file.getName() + " saved to "
-						+ instanceRepo.getTargetTableName() + ".");
-				StockDownloadInfo downloadInfo = getDownloadInfoEntity(
-						stockCode, reportType, year, season);
-				infoRepo.put(downloadInfo);
-				writeToProcessedFile(file);
-			}
+		// ex. tifrs-fr0-m1-ci-cr-1101-2013Q1.xml
+		for (File file : FileUtils.listFiles(xbrlDir, EXTENSIONS, true)) {
+			processXbrlFiles(file, processedList);
 			++count;
 		}
 		return count;
+	}
+
+	void processXbrlFiles(File file, List<String> processedList)
+			throws Exception {
+		String[] strArr = file.getName().split("-");
+		String stockCode = strArr[5];
+		ReportType reportType = ReportType.getMopsReportType(strArr[4]);
+		int year = Integer.valueOf(strArr[6].substring(0, 4));
+		int season = Integer.valueOf(strArr[6].substring(5, 6));
+		ObjectNode objNode = instanceAssistant
+				.getInstanceJson(file, presentIds);
+		if (isProcessed(processedList, file) == false) {
+			instanceRepo.put(stockCode, reportType, year, season, objNode,
+					presentIds);
+			logger.info(file.getName() + " saved to "
+					+ instanceRepo.getTargetTableName() + ".");
+			StockDownloadInfo downloadInfo = getDownloadInfoEntity(stockCode,
+					reportType, year, season);
+			infoRepo.put(downloadInfo);
+			writeToProcessedFile(file);
+		}
 	}
 
 	private void writeToProcessedFile(File file) throws IOException {

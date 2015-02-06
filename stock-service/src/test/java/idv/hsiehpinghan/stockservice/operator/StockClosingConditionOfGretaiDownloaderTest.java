@@ -65,12 +65,7 @@ public class StockClosingConditionOfGretaiDownloaderTest {
 		File dir = stockServiceProperty
 				.getStockClosingConditionDownloadDirOfGretai();
 		String fileName = "SQUOTE_02_" + dateStr + ".csv";
-		boolean result = ArrayUtils.contains(dir.list(), fileName);
-		if (result == false) {
-			System.err.println(downloaderOfGretai.getBrowser().getWebDriver()
-					.getPageSource());
-		}
-		Assert.assertTrue(result);
+		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })

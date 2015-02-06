@@ -99,10 +99,15 @@ public class FinancialReportDownloader implements InitializingBean {
 							String targetFileNamePrefix = getTargetFileNameRegex(
 									yearOpt, seasonOpt, mkOpt, repOpt);
 							logger.info(downloadInfo + " process start.");
-							repeatTryDownload(reportTypeOpts, iRep,
-									targetFileNamePrefix);
-							logger.info(downloadInfo + " processed success.");
-							writeToDownloadedFile(downloadInfo);
+							boolean hasData = repeatTryDownload(reportTypeOpts,
+									iRep, targetFileNamePrefix);
+							if (hasData == true) {
+								writeToDownloadedFile(downloadInfo);
+								logger.info(downloadInfo
+										+ " processed success.");
+							} else {
+								logger.info(downloadInfo + " has no data.");
+							}
 						}
 					}
 				}
@@ -252,7 +257,7 @@ public class FinancialReportDownloader implements InitializingBean {
 				+ mkOpt.getValue() + "-.*-" + repOpt.getValue() + ".zip";
 	}
 
-	private void repeatTryDownload(List<Option> reportTypeOpts, int index,
+	private boolean repeatTryDownload(List<Option> reportTypeOpts, int index,
 			String targetFileNamePrefix) {
 		int tryAmount = 0;
 		while (true) {
@@ -261,10 +266,10 @@ public class FinancialReportDownloader implements InitializingBean {
 						targetFileNamePrefix);
 				// Null means "查無符合資料！"
 				if (tab == null) {
-					return;
+					return false;
 				}
 				downLoad(tab);
-				break;
+				return true;
 			} catch (Exception e) {
 				++tryAmount;
 				logger.warn("Download fail " + tryAmount + " times !!!");

@@ -1,5 +1,6 @@
 package idv.hsiehpinghan.stockservice.operator;
 
+import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
 import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CompanyBasicInfoDownloader implements InitializingBean {
+	private final String EMPTY_STRING = StringUtility.EMPTY_STRING;
 	private final int MAX_TRY_AMOUNT = 3;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
@@ -47,7 +49,7 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 		moveToTargetPage();
 		downloadedList = FileUtils.readLines(downloadedLog);
 		List<Option> mkOpts = getMarketTypeSelect().getOptions();
-		String oldStockCode = "";
+		String oldStockCode = EMPTY_STRING;
 		for (int iMk = mkOpts.size() - 1; iMk >= 0; --iMk) {
 			Option mkOpt = mkOpts.get(iMk);
 			if (isTargetMarketType(mkOpt.getText().trim()) == false) {
@@ -70,8 +72,13 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 				String fileName = getFileName(mkOpt, indOpt);
 				logger.info(downloadInfo + " process start.");
 				oldStockCode = repeatTryDownload(oldStockCode, fileName);
-				logger.info(downloadInfo + " processed success.");
-				writeToDownloadedFile(downloadInfo);
+				if (EMPTY_STRING.equals(oldStockCode) == false) {
+					logger.info(downloadInfo + " processed success.");
+					writeToDownloadedFile(downloadInfo);
+				} else {
+					logger.info(downloadInfo + " has no data.");
+				}
+
 			}
 		}
 		return downloadDir;
@@ -96,7 +103,7 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 				String newStockCode = waitAjaxTableReload(oldStockCode);
 				// Null means "查無資料！"
 				if (newStockCode == null) {
-					return "";
+					return EMPTY_STRING;
 				}
 				downLoad(fileName);
 				return newStockCode;

@@ -2,6 +2,7 @@ package idv.hsiehpinghan.stockservice.operator;
 
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
+import idv.hsiehpinghan.testutility.utility.DeleteUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +53,7 @@ public class CompanyBasicInfoDownloaderTest {
 					.getPageSource());
 		}
 		Assert.assertTrue(result);
+		DeleteUtility.delete(dir, fileName);
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })

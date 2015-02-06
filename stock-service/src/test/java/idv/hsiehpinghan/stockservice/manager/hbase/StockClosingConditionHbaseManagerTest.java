@@ -31,7 +31,7 @@ public class StockClosingConditionHbaseManagerTest {
 		condRepo = applicationContext
 				.getBean(StockClosingConditionRepository.class);
 
-		dropAndCreateTable();
+//		dropAndCreateTable();
 	}
 
 	@Test

@@ -29,7 +29,7 @@ public class CompanyBasicInfoHbaseManagerTest {
 		comInfoRepo = applicationContext
 				.getBean(CompanyBasicInfoRepository.class);
 
-		dropAndCreateTable();
+//		dropAndCreateTable();
 	}
 
 	@Test
