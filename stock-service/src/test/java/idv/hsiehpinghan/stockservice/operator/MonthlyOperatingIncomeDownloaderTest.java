@@ -7,9 +7,11 @@ import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.openqa.selenium.By;
 import org.springframework.context.ApplicationContext;
 import org.testng.Assert;
@@ -82,15 +84,17 @@ public class MonthlyOperatingIncomeDownloaderTest {
 					.getPageSource());
 			throw new RuntimeException(e);
 		}
-		// String dateStr = DateUtility.getRocDateString(date, "yyyyMMdd");
-		// File dir = stockServiceProperty
-		// .getStockClosingConditionDownloadDirOfGretai();
-		// String fileName = "SQUOTE_02_" + dateStr + ".csv";
-		// boolean result = ArrayUtils.contains(dir.list(), fileName);
-		// if(result == false) {
-		// System.err.println(downloaderOfGretai.getBrowser().getWebDriver().getPageSource());
-		// }
-		// Assert.assertTrue(result);
+		String fileName = downloader.getFileName(stockCode, date);
+		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
+		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+	}
+
+	@Test(dependsOnMethods = { "repeatTryDownload" })
+	public void downloadMonthlyOperatingIncome() throws Exception {
+		File dir = downloader.downloadMonthlyOperatingIncome();
+		Date date = DateUtility.getDate(2013, 1, 22);
+		String fileName = downloader.getFileName(stockCode, date);
+		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
 	}
 
 	@Test

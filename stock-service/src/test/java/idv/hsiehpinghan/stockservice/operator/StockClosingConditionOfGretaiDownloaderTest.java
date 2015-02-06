@@ -15,7 +15,6 @@ import org.springframework.context.ApplicationContext;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.testng.internal.junit.ArrayAsserts;
 
 public class StockClosingConditionOfGretaiDownloaderTest {
 	private StockServiceProperty stockServiceProperty;
@@ -58,7 +57,8 @@ public class StockClosingConditionOfGretaiDownloaderTest {
 		try {
 			downloaderOfGretai.repeatTryDownload(date);
 		} catch (Exception e) {
-			System.err.println(downloaderOfGretai.getBrowser().getWebDriver().getPageSource());	
+			System.err.println(downloaderOfGretai.getBrowser().getWebDriver()
+					.getPageSource());
 			throw new RuntimeException(e);
 		}
 		String dateStr = DateUtility.getRocDateString(date, "yyyyMMdd");
@@ -66,28 +66,19 @@ public class StockClosingConditionOfGretaiDownloaderTest {
 				.getStockClosingConditionDownloadDirOfGretai();
 		String fileName = "SQUOTE_02_" + dateStr + ".csv";
 		boolean result = ArrayUtils.contains(dir.list(), fileName);
-		if(result == false) {
-			System.err.println(downloaderOfGretai.getBrowser().getWebDriver().getPageSource());		
+		if (result == false) {
+			System.err.println(downloaderOfGretai.getBrowser().getWebDriver()
+					.getPageSource());
 		}
 		Assert.assertTrue(result);
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })
 	public void downloadStockClosingCondition() throws Exception {
-		File dir = null;
-		try {
-			dir = downloaderOfGretai.downloadStockClosingCondition();
-		} catch (Exception e) {
-			System.err.println(downloaderOfGretai.getBrowser().getWebDriver().getPageSource());	
-			throw new RuntimeException(e);
-		}
+		File dir = downloaderOfGretai.downloadStockClosingCondition();
 		String dateStr = DateUtility.getRocDateString(
 				DateUtility.getDate(2013, 1, 1), "yyyyMMdd");
 		String fileName = "SQUOTE_02_" + dateStr + ".csv";
-		boolean result = ArrayUtils.contains(dir.list(), fileName);
-		if(result == false) {
-			System.err.println(downloaderOfGretai.getBrowser().getWebDriver().getPageSource());		
-		}
-		Assert.assertTrue(result);
+		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
 	}
 }

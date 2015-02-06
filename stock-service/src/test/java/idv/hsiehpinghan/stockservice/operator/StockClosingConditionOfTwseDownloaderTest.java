@@ -74,22 +74,10 @@ public class StockClosingConditionOfTwseDownloaderTest {
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })
 	public void downloadStockClosingCondition() throws Exception {
-		File dir = null;
-		try {
-			dir = downloaderOfTwse.downloadStockClosingCondition();
-		} catch (Exception e) {
-			System.err.println(downloaderOfTwse.getBrowser().getWebDriver()
-					.getPageSource());
-			throw new RuntimeException(e);
-		}
+		File dir = downloaderOfTwse.downloadStockClosingCondition();
 		String dateStr = DateFormatUtils.format(date, "yyyyMMdd");
 		String fileName = "A112" + dateStr + "ALLBUT0999.csv";
-		boolean result = ArrayUtils.contains(dir.list(), fileName);
-		if (result == false) {
-			System.err.println(downloaderOfTwse.getBrowser().getWebDriver()
-					.getPageSource());
-		}
-		Assert.assertTrue(result);
+		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
 	}
 
 	@Test
