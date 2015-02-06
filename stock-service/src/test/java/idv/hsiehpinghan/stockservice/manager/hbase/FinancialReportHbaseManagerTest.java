@@ -88,7 +88,7 @@ public class FinancialReportHbaseManagerTest {
 		reportManager.processXbrlFiles(instanceFile, new ArrayList<String>(0));
 		String[] strArr = instanceFile.getName().split("-");
 		String stockCode = strArr[5];
-		ReportType reportType = ReportType.getReportType(strArr[4]);
+		ReportType reportType = ReportType.getMopsReportType(strArr[4]);
 		int year = Integer.valueOf(strArr[6].substring(0, 4));
 		int season = Integer.valueOf(strArr[6].substring(5, 6));
 		FinancialReportInstance entity = instanceRepo.get(stockCode,

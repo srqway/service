@@ -199,7 +199,7 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 			// ex. tifrs-fr0-m1-ci-cr-1101-2013Q1.xml
 			String[] strArr = file.getName().split("-");
 			String stockCode = strArr[5];
-			ReportType reportType = ReportType.getReportType(strArr[4]);
+			ReportType reportType = ReportType.getMopsReportType(strArr[4]);
 			int year = Integer.valueOf(strArr[6].substring(0, 4));
 			int season = Integer.valueOf(strArr[6].substring(5, 6));
 			ObjectNode objNode = instanceAssistant.getInstanceJson(file,
