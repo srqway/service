@@ -1,5 +1,6 @@
 package idv.hsiehpinghan.stockservice.operator;
 
+import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
 import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
@@ -14,10 +15,10 @@ import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
@@ -35,11 +36,10 @@ import org.springframework.stereotype.Service;
 public class FinancialReportDownloader implements InitializingBean {
 	private final String NO_DATA_MSG_CSS_SELECTOR = "#table01 > h4 > font";
 	private final String NO_DATA_MSG = "查無符合資料！";
-	private final int MAX_TRY_AMOUNT = 3;
+	// Because one page with multi-download.
+	private final int MAX_TRY_AMOUNT = 20;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
-	private File downloadedLog;
-	private List<String> downloadedList;
 
 	@Autowired
 	private HtmlUnitFirefoxVersionBrowser browser;
@@ -51,7 +51,6 @@ public class FinancialReportDownloader implements InitializingBean {
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		downloadDir = stockServiceProperty.getFinancialReportDownloadDir();
-		generateDownloadedLogFile();
 	}
 
 	/**
@@ -62,7 +61,6 @@ public class FinancialReportDownloader implements InitializingBean {
 	 */
 	public File downloadFinancialReport() throws IOException {
 		moveToTargetPage();
-		downloadedList = FileUtils.readLines(downloadedLog);
 		List<Option> mkOpts = getMarketTypeSelect().getOptions();
 		for (int iMk = mkOpts.size() - 1; iMk >= 0; --iMk) {
 			Option mkOpt = mkOpts.get(iMk);
@@ -85,6 +83,9 @@ public class FinancialReportDownloader implements InitializingBean {
 					List<Option> seasonOpts = getSeasonSelect().getOptions();
 					for (int iSeason = 0, seasonSize = seasonOpts.size(); iSeason < seasonSize; ++iSeason) {
 						Option seasonOpt = seasonOpts.get(iSeason);
+						if (isFutureData(yearOpt, seasonOpt)) {
+							continue;
+						}
 						seasonOpt.click();
 						List<Option> reportTypeOpts = getReportTypeSelect()
 								.getOptions();
@@ -92,9 +93,6 @@ public class FinancialReportDownloader implements InitializingBean {
 							Option repOpt = reportTypeOpts.get(iRep);
 							String downloadInfo = getDownloadInfo(mkOpt,
 									indOpt, yearOpt, seasonOpt, repOpt);
-							if (isDownloaded(downloadInfo)) {
-								continue;
-							}
 							// ex : 2013-01-otc-02-C.zip
 							String targetFileNamePrefix = getTargetFileNameRegex(
 									yearOpt, seasonOpt, mkOpt, repOpt);
@@ -102,7 +100,6 @@ public class FinancialReportDownloader implements InitializingBean {
 							boolean hasData = repeatTryDownload(reportTypeOpts,
 									iRep, targetFileNamePrefix);
 							if (hasData == true) {
-								writeToDownloadedFile(downloadInfo);
 								logger.info(downloadInfo
 										+ " processed success.");
 							} else {
@@ -116,6 +113,22 @@ public class FinancialReportDownloader implements InitializingBean {
 		return unzipper.getExtractDir();
 	}
 
+	private boolean isFutureData(Option yearOpt, Option seasonOpt) {
+		Date seasonEndDate = getSeasonEndDate(yearOpt.getValue(),
+				seasonOpt.getValue());
+		Date now = Calendar.getInstance().getTime();
+		if (seasonEndDate.getTime() < now.getTime()) {
+			return false;
+		}
+		return true;
+	}
+
+	private Date getSeasonEndDate(String yearStr, String seasonStr) {
+		int year = Integer.valueOf(yearStr);
+		int season = Integer.valueOf(seasonStr);
+		return DateUtility.getSeasonEndDate(year, season);
+	}
+
 	Select getMarketTypeSelect() {
 		return browser.getSelect(By.id("MAR_KIND"));
 	}
@@ -127,15 +140,6 @@ public class FinancialReportDownloader implements InitializingBean {
 
 	BrowserBase getBrowser() {
 		return browser;
-	}
-
-	private void generateDownloadedLogFile() throws IOException {
-		if (downloadedLog == null) {
-			downloadedLog = new File(downloadDir, "downloaded.log");
-			if (downloadedLog.exists() == false) {
-				FileUtils.touch(downloadedLog);
-			}
-		}
 	}
 
 	private boolean isTargetMarketType(String text) {
@@ -183,9 +187,10 @@ public class FinancialReportDownloader implements InitializingBean {
 	}
 
 	private void downLoad(XbrlDownloadTable table) {
+		File[] extractedFiles = unzipper.getExtractDir().listFiles();
 		// i = 0 is title.
 		for (int i = 1, size = table.getRowSize(); i < size; ++i) {
-			if (isDownloaded(table, i)) {
+			if (isExtractedSuccess(extractedFiles, table, i)) {
 				continue;
 			}
 			browser.cacheCurrentPage();
@@ -202,18 +207,16 @@ public class FinancialReportDownloader implements InitializingBean {
 		}
 	}
 
-	private boolean isDownloaded(XbrlDownloadTable table, int rowIdx) {
+	private boolean isExtractedSuccess(File[] extractedFiles,
+			XbrlDownloadTable table, int rowIdx) {
 		String fileName = table.getDownloadFileName(rowIdx);
 		// Some industry type has no data.
 		if (fileName == null) {
 			return true;
 		}
-		String[] fns = downloadDir.list();
-		if (fns == null) {
-			return false;
-		}
-		for (String fn : fns) {
-			if (fn.equals(fileName)) {
+		for (File f : extractedFiles) {
+			if (f.getName().equals(fileName)) {
+				logger.info(f.getAbsolutePath() + " downloaded before.");
 				return true;
 			}
 		}
@@ -272,12 +275,12 @@ public class FinancialReportDownloader implements InitializingBean {
 				return true;
 			} catch (Exception e) {
 				++tryAmount;
-				logger.warn("Download fail " + tryAmount + " times !!!");
-				logger.warn(browser.getWebDriver().getPageSource());
+				logger.info("Download fail " + tryAmount + " times !!!");
 				if (tryAmount >= MAX_TRY_AMOUNT) {
+					logger.error(browser.getWebDriver().getPageSource());
 					throw new RuntimeException(e);
 				}
-				ThreadUtility.sleep(tryAmount * 60);
+				ThreadUtility.sleep(tryAmount * 10);
 			}
 		}
 	}
@@ -287,18 +290,5 @@ public class FinancialReportDownloader implements InitializingBean {
 		return mkOpt.getValue() + "/" + indOpt.getValue() + "/"
 				+ yearOpt.getValue() + "/" + seasonOpt.getValue() + "/"
 				+ repOpt.getValue();
-	}
-
-	private boolean isDownloaded(String downloadInfo) throws IOException {
-		if (downloadedList.contains(downloadInfo)) {
-			logger.info(downloadInfo + " downloaded before.");
-			return true;
-		}
-		return false;
-	}
-
-	private void writeToDownloadedFile(String downloadInfo) throws IOException {
-		String infoLine = downloadInfo + System.lineSeparator();
-		FileUtils.write(downloadedLog, infoLine, Charsets.UTF_8, true);
 	}
 }

@@ -109,9 +109,9 @@ public class StockClosingConditionOfGretaiDownloader implements
 				break;
 			} catch (Exception e) {
 				++tryAmount;
-				logger.warn("Download fail " + tryAmount + " times !!!");
-				logger.warn(browser.getWebDriver().getPageSource());
+				logger.info("Download fail " + tryAmount + " times !!!");
 				if (tryAmount >= MAX_TRY_AMOUNT) {
+					logger.error(browser.getWebDriver().getPageSource());
 					throw new RuntimeException(e);
 				}
 				ThreadUtility.sleep(tryAmount * 10);

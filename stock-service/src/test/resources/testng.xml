@@ -9,9 +9,9 @@
 	<test name="financialReport">
 		<classes>
 			<!-- Test operator -->
-<!-- 			<class -->
-<!-- 			name="idv.hsiehpinghan.stockservice.operator.FinancialReportDownloaderTest"  -->
-<!-- 				/> -->
+			<class
+			name="idv.hsiehpinghan.stockservice.operator.FinancialReportDownloaderTest" 
+				/>
 
 			<!-- Test manager -->
 <!-- 			<class -->
