@@ -97,7 +97,7 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
 	}
 
-	@Test
+//	@Test
 	public void getStockCodes() throws Exception {
 		String[] stockCodes = downloader.getStockCodes();
 		Assert.assertTrue(0 < stockCodes.length);

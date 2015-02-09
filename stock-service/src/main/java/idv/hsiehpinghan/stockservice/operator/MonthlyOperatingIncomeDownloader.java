@@ -43,7 +43,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private String titleString;
 	private final String YYYYMM = "yyyyMM";
 	private final String HISTORY = "歷史資料";
-	private final int MAX_TRY_AMOUNT = 3;
+	private final int MAX_TRY_AMOUNT = 10;
 	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;

@@ -4,6 +4,7 @@ import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
+import idv.hsiehpinghan.testutility.utility.DeleteUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,13 +67,14 @@ public class StockClosingConditionOfGretaiDownloaderTest {
 				.getStockClosingConditionDownloadDirOfGretai();
 		String fileName = "SQUOTE_02_" + dateStr + ".csv";
 		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+		DeleteUtility.delete(dir, fileName);
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })
 	public void downloadStockClosingCondition() throws Exception {
 		File dir = downloaderOfGretai.downloadStockClosingCondition();
 		String dateStr = DateUtility.getRocDateString(
-				DateUtility.getDate(2013, 1, 1), "yyyyMMdd");
+				DateUtility.getDate(2013, 1, 2), "yyyyMMdd");
 		String fileName = "SQUOTE_02_" + dateStr + ".csv";
 		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
 	}

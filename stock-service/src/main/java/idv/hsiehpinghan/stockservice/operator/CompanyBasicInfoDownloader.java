@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CompanyBasicInfoDownloader implements InitializingBean {
 	private final String EMPTY_STRING = StringUtility.EMPTY_STRING;
-	private final int MAX_TRY_AMOUNT = 3;
+	private final int MAX_TRY_AMOUNT = 10;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
 	private File downloadedLog;

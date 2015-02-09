@@ -61,7 +61,9 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 			if (isDownloaded(downloadInfo) == false) {
 				inputDataDate(targetDate);
 				selectType(ALL);
+				logger.info(downloadInfo + " process start.");
 				repeatTryDownload(targetDate);
+				logger.info(downloadInfo + " processed success.");
 				writeToDownloadedFile(downloadInfo);
 			}
 			targetDate = DateUtils.addDays(targetDate, 1);
