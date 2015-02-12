@@ -1,12 +1,16 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
+import idv.hsiehpinghan.hbaseassistant.utility.HbaseEntityTestUtility;
+import idv.hsiehpinghan.stockdao.entity.Xbrl;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
+import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
+import idv.hsiehpinghan.stockdao.enumeration.UnitType;
 import idv.hsiehpinghan.stockdao.repository.TaxonomyRepository;
+import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 import idv.hsiehpinghan.testutility.utility.SystemResourceUtility;
-import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
-import idv.hsiehpinghan.xbrlassistant.xbrl.Instance;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -19,7 +23,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class FinancialReportHbaseManagerTest {
-	// private final String DATE_PATTERN = "yyyyMMdd";
+	private final String DATE_PATTERN = "yyyyMMdd";
 	// private String allStockCode =
 	// StockDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;
 	// private String allReportType =
@@ -29,6 +33,7 @@ public class FinancialReportHbaseManagerTest {
 	// StockDownloadInfo.SeasonFamily.SeasonQualifier.ALL;
 	private FinancialReportHbaseManager manager;
 	private TaxonomyRepository taxonomyRepo;
+	private XbrlRepository xbrlRepo;
 
 	// private FinancialReportInstanceRepository instanceRepo;
 	// private StockDownloadInfoRepository infoRepo;
@@ -42,11 +47,11 @@ public class FinancialReportHbaseManagerTest {
 				.getApplicationContext();
 		manager = applicationContext.getBean(FinancialReportHbaseManager.class);
 		taxonomyRepo = applicationContext.getBean(TaxonomyRepository.class);
-
-		// dropAndCreateTable();
+		xbrlRepo = applicationContext.getBean(XbrlRepository.class);
+		dropAndCreateTable();
 	}
 
-//	@Test
+	// @Test
 	public void updateTaxonomyPresentation() throws Exception {
 		String tableName = taxonomyRepo.getTargetTableName();
 		if (taxonomyRepo.isTableExists(tableName)) {
@@ -68,37 +73,35 @@ public class FinancialReportHbaseManagerTest {
 		File instanceFile = SystemResourceUtility
 				.getFileResource("xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml");
 		manager.processXbrlFiles(instanceFile, new ArrayList<String>(0));
-//		String[] strArr = instanceFile.getName().split("-");
-//		String stockCode = strArr[5];
-//		ReportType reportType = ReportType.getMopsReportType(strArr[4]);
-//		int year = Integer.valueOf(strArr[6].substring(0, 4));
-//		int season = Integer.valueOf(strArr[6].substring(5, 6));
-//		FinancialReportInstance entity = instanceRepo.get(stockCode,
-//				reportType, year, season);
-//		// Test version.
-//		String version = entity.getInfoFamily()
-//				.getLatestValue(InstanceAssistant.VERSION).getInfoContent();
-//		Assert.assertEquals(version, "TIFRS_CI_CR_2013_03_31");
-//		// Test instance.
-//		String elementId = "tifrs-SCF_DecreaseIncreaseInFinancialAssetsHeldForTrading";
-//		String periodType = Instance.Attribute.DURATION;
-//		Date startDate = DateUtils.parseDate("20130101", DATE_PATTERN);
-//		Date endDate = DateUtils.parseDate("20130331", DATE_PATTERN);
-//		InstanceValue val = entity.getInstanceFamily().getLatestValue(
-//				elementId, periodType, startDate, endDate);
-//		Assert.assertEquals(val.getUnit(), "TWD");
-//		Assert.assertEquals(val.getValue().toString(), "-120107000");
-//		// Test downloadInfo.
-//		StockDownloadInfo downloadInfo = getOrCreateStockDownloadInfo();
-//		Assert.assertTrue(downloadInfo.getStockCodeFamily()
-//				.getLatestValue(allStockCode).getStockCodes().contains("1101"));
-//		Assert.assertTrue(downloadInfo.getReportTypeFamily()
-//				.getLatestValue(allReportType).getReportTypes()
-//				.contains(ReportType.CONSOLIDATED_STATEMENT));
-//		Assert.assertTrue(downloadInfo.getYearFamily().getLatestValue(allYear)
-//				.getYears().contains(2013));
-//		Assert.assertTrue(downloadInfo.getSeasonFamily()
-//				.getLatestValue(allSeason).getSeasons().contains(1));
+		String[] strArr = instanceFile.getName().split("-");
+		String stockCode = strArr[5];
+		ReportType reportType = ReportType.getMopsReportType(strArr[4]);
+		int year = Integer.valueOf(strArr[6].substring(0, 4));
+		int season = Integer.valueOf(strArr[6].substring(5, 6));
+		Xbrl entity = xbrlRepo.get(stockCode, reportType, year, season);
+		// Test version.
+		String version = entity.getInfoFamily().getVersion().name();
+		Assert.assertEquals(version, "TIFRS_CI_CR_2013_03_31");
+		// Test instance.
+		String elementId = "tifrs-SCF_DecreaseIncreaseInFinancialAssetsHeldForTrading";
+		PeriodType periodType = PeriodType.DURATION;
+		Date startDate = DateUtils.parseDate("20130101", DATE_PATTERN);
+		Date endDate = DateUtils.parseDate("20130331", DATE_PATTERN);
+		InstanceValue val = entity.getInstanceFamily().getInstanceValue(
+				elementId, periodType, startDate, endDate);
+		Assert.assertEquals(val.getUnitType(), UnitType.TWD);
+		Assert.assertEquals(val.getValue().toString(), "-120107000");
+		// Test downloadInfo.
+		// StockDownloadInfo downloadInfo = getOrCreateStockDownloadInfo();
+		// Assert.assertTrue(downloadInfo.getStockCodeFamily()
+		// .getLatestValue(allStockCode).getStockCodes().contains("1101"));
+		// Assert.assertTrue(downloadInfo.getReportTypeFamily()
+		// .getLatestValue(allReportType).getReportTypes()
+		// .contains(ReportType.CONSOLIDATED_STATEMENT));
+		// Assert.assertTrue(downloadInfo.getYearFamily().getLatestValue(allYear)
+		// .getYears().contains(2013));
+		// Assert.assertTrue(downloadInfo.getSeasonFamily()
+		// .getLatestValue(allSeason).getSeasons().contains(1));
 	}
 
 	// @Test(dependsOnMethods = { "processXbrlFiles" })
@@ -149,4 +152,8 @@ public class FinancialReportHbaseManagerTest {
 	// String tableName = instanceRepo.getTargetTableName();
 	// return infoRepo.getOrCreateEntity(tableName);
 	// }
+
+	private void dropAndCreateTable() throws Exception {
+		HbaseEntityTestUtility.dropAndCreateTargetTable(xbrlRepo);
+	}
 }

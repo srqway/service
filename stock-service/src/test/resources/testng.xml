@@ -9,7 +9,9 @@
 	<test name="financialReport">
 		<classes>
 			<!-- Test operator -->
-		
+<!-- 			<class -->
+<!-- 				name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" /> -->
+
 			<!-- Test manager -->
 			<class
 			name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" 

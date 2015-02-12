@@ -1,13 +1,15 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
-import idv.hsiehpinghan.stockdao.entity.Stock;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy.PresentationFamily;
+import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
-import idv.hsiehpinghan.stockdao.repository.StockRepository;
 import idv.hsiehpinghan.stockdao.repository.TaxonomyRepository;
+import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
 import idv.hsiehpinghan.stockservice.manager.IFinancialReportManager;
+import idv.hsiehpinghan.stockservice.operator.FinancialReportCalculator;
 import idv.hsiehpinghan.stockservice.operator.FinancialReportDownloader;
+import idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverter;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
 import idv.hsiehpinghan.xbrlassistant.assistant.TaxonomyAssistant;
@@ -21,6 +23,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
@@ -41,10 +44,13 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 
 	@Autowired
 	private FinancialReportDownloader downloader;
+	@Autowired
+	private XbrlInstanceConverter converter;
+
 	// @Autowired
 	// private ExchangeRateDownloader exchangeRateDownloader;
-	// @Autowired
-	// private FinancialReportCalculator calculator;
+	@Autowired
+	private FinancialReportCalculator calculator;
 	// @Autowired
 	// private FinancialReportJsonMaker jsonMaker;
 	@Autowired
@@ -58,7 +64,7 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	private TaxonomyRepository taxonomyRepo;
 
 	@Autowired
-	private StockRepository stockRepo;
+	private XbrlRepository xbrlRepo;
 
 	// @Autowired
 	// private IStockDownloadInfoRepository infoRepo;
@@ -117,7 +123,7 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		try {
 			int processFilesAmt = saveFinancialReportToHBase(xbrlDir);
 			logger.info("Saved " + processFilesAmt + " xbrl files to "
-					+ stockRepo.getTargetTableName() + ".");
+					+ xbrlRepo.getTargetTableName() + ".");
 		} catch (Exception e) {
 			logger.error("Save financial report to hbase fail !!!");
 			e.printStackTrace();
@@ -132,21 +138,21 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	// saveExchangeRateToDatabase(exchangeDir);
 	// return true;
 	// }
-	//
-	// @Override
-	// public boolean calculateFinancialReport() {
-	// try {
-	// StockDownloadInfo downloadInfo = infoRepo.get(instanceRepo
-	// .getTargetTableName());
-	// calculator.calculate(downloadInfo);
-	// } catch (Exception e) {
-	// logger.error("Calculate financial report fail !!!");
-	// e.printStackTrace();
-	// return false;
-	// }
-	// return true;
-	// }
-	//
+
+	@Override
+	public boolean calculateFinancialReport() {
+		try {
+			StockDownloadInfo downloadInfo = infoRepo.get(instanceRepo
+					.getTargetTableName());
+			calculator.calculate(downloadInfo);
+		} catch (Exception e) {
+			logger.error("Calculate financial report fail !!!");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
 	// @Override
 	// public StockDownloadInfo getFinancialReportDownloadInfo() {
 	// try {
@@ -194,12 +200,6 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		return count;
 	}
 
-	private void generateInstanceFamilyContent(Stock entity, ObjectNode objNode) {
-		System.err.println(objNode);
-		
-
-	}
-	
 	void processXbrlFiles(File file, List<String> processedList)
 			throws Exception {
 		String[] strArr = file.getName().split("-");
@@ -210,29 +210,20 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		ObjectNode objNode = instanceAssistant
 				.getInstanceJson(file, presentIds);
 		if (isProcessed(processedList, file) == false) {
-			Stock entity = stockRepo.generateEntity(stockCode);
-			generateInstanceFamilyContent(entity, objNode);
-			int i = 1/0;
-			
-//			entity.getXbrlInstanceFamily().set(elementId, periodType, instant, startDate, endDate, unitType, ver, value);
-//			
-//			
-//			instanceRepo.put(stockCode, reportType, year, season, objNode,
-//					presentIds);
-//			logger.info(file.getName() + " saved to "
-//					+ instanceRepo.getTargetTableName() + ".");
-//			StockDownloadInfo downloadInfo = getDownloadInfoEntity(stockCode,
-//					reportType, year, season);
-//			infoRepo.put(downloadInfo);
-//			writeToProcessedFile(file);
+			Xbrl entity = converter.convert(stockCode, reportType, year,
+					season, objNode);
+			xbrlRepo.put(entity);
+			logger.info(file.getName() + " saved to "
+					+ xbrlRepo.getTargetTableName() + ".");
+			writeToProcessedFile(file);
 		}
 	}
 
-	// private void writeToProcessedFile(File file) throws IOException {
-	// String infoLine = generateProcessedInfo(file) + System.lineSeparator();
-	// FileUtils.write(processedLog, infoLine, Charsets.UTF_8, true);
-	// }
-	//
+	private void writeToProcessedFile(File file) throws IOException {
+		String infoLine = generateProcessedInfo(file) + System.lineSeparator();
+		FileUtils.write(processedLog, infoLine, Charsets.UTF_8, true);
+	}
+
 	// private StockDownloadInfo getDownloadInfoEntity(String stockCode,
 	// ReportType reportType, int year, int season)
 	// throws IllegalAccessException, NoSuchMethodException,

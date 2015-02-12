@@ -4,10 +4,10 @@ public interface IFinancialReportManager {
 	boolean updateTaxonomyPresentation();
 
 	boolean updateXbrlInstance();
-	//
+
 	// boolean updateExchangeRate();
-	//
-	// boolean calculateFinancialReport();
+
+	boolean calculateFinancialReport();
 	//
 	// StockDownloadInfo getFinancialReportDownloadInfo();
 	//
