@@ -4,6 +4,7 @@ import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.enumeration.UnitType;
@@ -50,7 +51,7 @@ public class XbrlInstanceConverter {
 			throws ParseException {
 		Date ver = Calendar.getInstance().getTime();
 		generateInfoFamily(entity, objNode, ver);
-		generateInstanceFamily(entity, objNode, ver);
+		generateInstanceAndItemFamily(entity, objNode, ver);
 	}
 
 	private Date getDate(JsonNode dateNode) throws ParseException {
@@ -60,9 +61,21 @@ public class XbrlInstanceConverter {
 		return DateUtils.parseDate(dateNode.textValue(), DATE_PATTERN);
 	}
 
-	private void generateInstanceFamily(Xbrl entity, ObjectNode objNode,
+	private BigDecimal getTwdValue(UnitType unitType, BigDecimal value) {
+		if (UnitType.TWD.equals(unitType)) {
+			return value;
+		} else if (UnitType.SHARES.equals(unitType)) {
+			return value;
+		} else {
+			throw new RuntimeException("UnitType(" + unitType
+					+ ") not implement !!!");
+		}
+	}
+
+	private void generateInstanceAndItemFamily(Xbrl entity, ObjectNode objNode,
 			Date ver) throws ParseException {
 		InstanceFamily instanceFamily = entity.getInstanceFamily();
+		ItemFamily itemFamily = entity.getItemFamily();
 		JsonNode instanceNode = objNode.get(InstanceAssistant.INSTANCE);
 		Iterator<Entry<String, JsonNode>> fields = instanceNode.fields();
 		while (fields.hasNext()) {
@@ -81,6 +94,9 @@ public class XbrlInstanceConverter {
 						.textValue());
 				instanceFamily.setInstanceValue(eleId, periodType, instant,
 						startDate, endDate, ver, unitType, value);
+				BigDecimal twdValue = getTwdValue(unitType, value);
+				itemFamily.setItemValue(eleId, periodType, instant, startDate,
+						endDate, ver, twdValue);
 			}
 		}
 	}

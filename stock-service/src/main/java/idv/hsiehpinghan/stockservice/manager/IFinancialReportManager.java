@@ -7,7 +7,7 @@ public interface IFinancialReportManager {
 
 	// boolean updateExchangeRate();
 
-	boolean calculateFinancialReport();
+//	boolean calculateFinancialReport();
 	//
 	// StockDownloadInfo getFinancialReportDownloadInfo();
 	//

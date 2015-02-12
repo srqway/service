@@ -49,8 +49,8 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 
 	// @Autowired
 	// private ExchangeRateDownloader exchangeRateDownloader;
-	@Autowired
-	private FinancialReportCalculator calculator;
+//	@Autowired
+//	private FinancialReportCalculator calculator;
 	// @Autowired
 	// private FinancialReportJsonMaker jsonMaker;
 	@Autowired
@@ -139,19 +139,19 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	// return true;
 	// }
 
-	@Override
-	public boolean calculateFinancialReport() {
-		try {
-			StockDownloadInfo downloadInfo = infoRepo.get(instanceRepo
-					.getTargetTableName());
-			calculator.calculate(downloadInfo);
-		} catch (Exception e) {
-			logger.error("Calculate financial report fail !!!");
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
+//	@Override
+//	public boolean calculateFinancialReport() {
+//		try {
+//			StockDownloadInfo downloadInfo = infoRepo.get(instanceRepo
+//					.getTargetTableName());
+//			calculator.calculate(downloadInfo);
+//		} catch (Exception e) {
+//			logger.error("Calculate financial report fail !!!");
+//			e.printStackTrace();
+//			return false;
+//		}
+//		return true;
+//	}
 
 	// @Override
 	// public StockDownloadInfo getFinancialReportDownloadInfo() {

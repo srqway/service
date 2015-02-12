@@ -21,58 +21,60 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@Service
 public class FinancialReportCalculator {
-	private final String TWD = "TWD";
-	private final String SHARES = "Shares";
-	private final String DURATION = "duration";
-	private final String INSTANT = "instant";
-
-	private Logger logger = Logger.getLogger(this.getClass().getName());
-//	@Autowired
-//	private IFinancialReportDataRepository dataRepo;
-//	@Autowired
-//	private IFinancialReportInstanceRepository instanceRepo;
-
-	public void calculate(StockDownloadInfo stockDownloadInfo)
-			throws NoSuchFieldException, SecurityException,
-			IllegalArgumentException, IllegalAccessException,
-			NoSuchMethodException, InvocationTargetException,
-			InstantiationException, IOException {
-		String allStockCode = StockDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;
-		String allReportType = StockDownloadInfo.ReportTypeFamily.ReportTypeQualifier.ALL;
-		String allYear = StockDownloadInfo.YearFamily.YearQualifier.ALL;
-		String allSeason = StockDownloadInfo.SeasonFamily.SeasonQualifier.ALL;
-		StockCodeValue stockCodeValue = stockDownloadInfo.getStockCodeFamily()
-				.getLatestValue(allStockCode);
-		ReportTypeValue reportTypeValue = stockDownloadInfo
-				.getReportTypeFamily().getLatestValue(allReportType);
-		YearValue yearValue = stockDownloadInfo.getYearFamily().getLatestValue(
-				allYear);
-		SeasonValue seasonValue = stockDownloadInfo.getSeasonFamily()
-				.getLatestValue(allSeason);
-
-		int precessAmt = 0;
-		for (String stockCode : stockCodeValue.getStockCodes()) {
-			for (ReportType reportType : reportTypeValue.getReportTypes()) {
-				for (Integer year : yearValue.getYears()) {
-					for (Integer season : seasonValue.getSeasons()) {
-						if (process(stockCode, reportType, year, season) == false) {
-							continue;
-						}
-						FinancialReportData entity = generateEntity(stockCode,
-								reportType, year, season);
-						dataRepo.put(entity);
-						++precessAmt;
-						logSaveMsg(stockCode, reportType, year, season, entity);
-					}
-				}
-			}
-		}
-		logger.info("Saved " + precessAmt + " xbrl files to "
-				+ dataRepo.getTargetTableName() + ".");
-	}
-
+	
+}
+//@Service
+//public class FinancialReportCalculator {
+//	private final String TWD = "TWD";
+//	private final String SHARES = "Shares";
+//	private final String DURATION = "duration";
+//	private final String INSTANT = "instant";
+//
+//	private Logger logger = Logger.getLogger(this.getClass().getName());
+////	@Autowired
+////	private IFinancialReportDataRepository dataRepo;
+////	@Autowired
+////	private IFinancialReportInstanceRepository instanceRepo;
+//
+//	public void calculate(StockDownloadInfo stockDownloadInfo)
+//			throws NoSuchFieldException, SecurityException,
+//			IllegalArgumentException, IllegalAccessException,
+//			NoSuchMethodException, InvocationTargetException,
+//			InstantiationException, IOException {
+//		String allStockCode = StockDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;
+//		String allReportType = StockDownloadInfo.ReportTypeFamily.ReportTypeQualifier.ALL;
+//		String allYear = StockDownloadInfo.YearFamily.YearQualifier.ALL;
+//		String allSeason = StockDownloadInfo.SeasonFamily.SeasonQualifier.ALL;
+//		StockCodeValue stockCodeValue = stockDownloadInfo.getStockCodeFamily()
+//				.getLatestValue(allStockCode);
+//		ReportTypeValue reportTypeValue = stockDownloadInfo
+//				.getReportTypeFamily().getLatestValue(allReportType);
+//		YearValue yearValue = stockDownloadInfo.getYearFamily().getLatestValue(
+//				allYear);
+//		SeasonValue seasonValue = stockDownloadInfo.getSeasonFamily()
+//				.getLatestValue(allSeason);
+//
+//		int precessAmt = 0;
+//		for (String stockCode : stockCodeValue.getStockCodes()) {
+//			for (ReportType reportType : reportTypeValue.getReportTypes()) {
+//				for (Integer year : yearValue.getYears()) {
+//					for (Integer season : seasonValue.getSeasons()) {
+//						if (process(stockCode, reportType, year, season) == false) {
+//							continue;
+//						}
+//						FinancialReportData entity = generateEntity(stockCode,
+//								reportType, year, season);
+//						dataRepo.put(entity);
+//						++precessAmt;
+//						logSaveMsg(stockCode, reportType, year, season, entity);
+//					}
+//				}
+//			}
+//		}
+//		logger.info("Saved " + precessAmt + " xbrl files to "
+//				+ dataRepo.getTargetTableName() + ".");
+//	}
 //	private boolean process(String stockCode, ReportType reportType,
 //			Integer year, Integer season) throws NoSuchFieldException,
 //			SecurityException, IllegalArgumentException,
@@ -177,4 +179,4 @@ public class FinancialReportCalculator {
 //				+ ") / year(" + year + ") / season(" + season + ") saved to "
 //				+ rowKey.getTableName());
 //	}
-}
+//}

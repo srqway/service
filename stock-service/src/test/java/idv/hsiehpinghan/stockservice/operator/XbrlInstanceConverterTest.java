@@ -3,6 +3,7 @@ package idv.hsiehpinghan.stockservice.operator;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily.InfoQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RowKey;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
@@ -45,13 +46,11 @@ public class XbrlInstanceConverterTest {
 				.getApplicationContext();
 		converter = applicationContext.getBean(XbrlInstanceConverter.class);
 		instanceAssistant = applicationContext.getBean(InstanceAssistant.class);
-
 		presentIds = new ArrayList<String>(4);
 		presentIds.add(Presentation.Id.BalanceSheet);
 		presentIds.add(Presentation.Id.StatementOfComprehensiveIncome);
 		presentIds.add(Presentation.Id.StatementOfCashFlows);
 		presentIds.add(Presentation.Id.StatementOfChangesInEquity);
-
 		startDate = DateUtils.parseDate("20130101", "yyyyMMdd");
 		endDate = DateUtils.parseDate("20130331", "yyyyMMdd");
 	}
@@ -76,9 +75,14 @@ public class XbrlInstanceConverterTest {
 		Set<InfoQualifier> infoQuals = xbrl.getInfoFamily().getQualifiers();
 		Assert.assertTrue(infoQuals.size() == 5);
 		// Test InstanceFamily
-		InstanceValue val = xbrl.getInstanceFamily().getInstanceValue(
+		InstanceValue instVal = xbrl.getInstanceFamily().getInstanceValue(
 				elementId, periodType, startDate, endDate);
-		Assert.assertEquals(unitType, val.getUnitType());
-		Assert.assertEquals(value, val.getValue());
+		Assert.assertEquals(unitType, instVal.getUnitType());
+		Assert.assertEquals(value, instVal.getValue());
+		// Test ItemFamily
+		ItemValue itemVal = xbrl.getItemFamily().getItemValue(elementId,
+				periodType, startDate, endDate);
+		Assert.assertEquals(value, itemVal.getValue());
+
 	}
 }
