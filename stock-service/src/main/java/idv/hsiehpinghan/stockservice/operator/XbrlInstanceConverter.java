@@ -1,10 +1,18 @@
 package idv.hsiehpinghan.stockservice.operator;
 
+import idv.hsiehpinghan.datatypeutility.utility.BigDecimalUtility;
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
+import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnQualifier;
+import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.GrowthFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceQualifier;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemQualifier;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemValue;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.enumeration.UnitType;
@@ -20,6 +28,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +60,9 @@ public class XbrlInstanceConverter {
 			throws ParseException {
 		Date ver = Calendar.getInstance().getTime();
 		generateInfoFamily(entity, objNode, ver);
-		generateInstanceAndItemFamily(entity, objNode, ver);
+		generateInstanceFamily(entity, objNode, ver);
+		generateItemFamily(entity, ver);
+		generateGrowthFamily(entity, ver);
 	}
 
 	private Date getDate(JsonNode dateNode) throws ParseException {
@@ -72,10 +83,100 @@ public class XbrlInstanceConverter {
 		}
 	}
 
-	private void generateInstanceAndItemFamily(Xbrl entity, ObjectNode objNode,
+	private BigDecimal getOneYearBeforeValue(ItemFamily itemFamily,
+			String elementId, PeriodType periodType, Date instant,
+			Date startDate, Date endDate) {
+		ItemValue itemValue = null;
+		if (PeriodType.INSTANT.equals(periodType)) {
+			Date oneYearBeforeInstant = DateUtils.addYears(instant, -1);
+			itemValue = itemFamily.getItemValue(elementId, periodType,
+					oneYearBeforeInstant);
+		} else if (PeriodType.DURATION.equals(periodType)) {
+			Date oneYearBeforeStartDate = DateUtils.addYears(startDate, -1);
+			Date oneYearBeforeEndDate = DateUtils.addYears(endDate, -1);
+			itemValue = itemFamily.getItemValue(elementId, periodType,
+					oneYearBeforeStartDate, oneYearBeforeEndDate);
+		} else {
+			throw new RuntimeException("PeriodType(" + periodType
+					+ ") not implements !!!");
+		}
+		if(itemValue == null) {
+			return null;
+		}
+		return itemValue.getValue();
+	}
+
+	private void generateGrowthFamily(Xbrl entity, Date ver) {
+		GrowthFamily growthFamily = entity.getGrowthFamily();
+		ItemFamily itemFamily = entity.getItemFamily();
+		String OldElementId = null;
+		for (Entry<HBaseColumnQualifier, NavigableMap<Date, HBaseValue>> qualEnt : itemFamily
+				.getDescendingQualifierVersionValueSet()) {
+			ItemQualifier itemQual = (ItemQualifier) qualEnt.getKey();
+			String elementId = itemQual.getElementId();
+			if (elementId.equals(OldElementId)) {
+				continue;
+			}
+			PeriodType periodType = itemQual.getPeriodType();
+			Date instant = itemQual.getInstant();
+			Date startDate = itemQual.getStartDate();
+			Date endDate = itemQual.getEndDate();
+			BigDecimal oneYearBeforeValue = getOneYearBeforeValue(itemFamily,
+					elementId, periodType, instant, startDate, endDate);
+			if(oneYearBeforeValue != null) {
+				for (Entry<Date, HBaseValue> verEnt : qualEnt.getValue().entrySet()) {
+					BigDecimal value = ((ItemValue) verEnt.getValue()).getValue();
+
+					System.err.println(itemQual.getElementId() + " / "
+							+ itemQual.getPeriodType() + " / "
+							+ itemQual.getInstant() + " / "
+							+ itemQual.getStartDate() + " / "
+							+ itemQual.getEndDate() + " / " + value);
+
+					growthFamily.setGrowthValue(elementId, periodType, instant,
+							startDate, endDate, ver,
+							getGrowthRate(oneYearBeforeValue, value));
+				}
+			}
+			OldElementId = elementId;
+		}
+	}
+
+	private BigDecimal getGrowthRate(BigDecimal oneYearBeforeValue,
+			BigDecimal value) {
+		if (oneYearBeforeValue == null) {
+			return null;
+		}
+		if (BigDecimal.ZERO.equals(oneYearBeforeValue)) {
+			return null;
+		}
+		return BigDecimalUtility.divide(value, oneYearBeforeValue).subtract(
+				BigDecimal.ONE);
+	}
+
+	private void generateItemFamily(Xbrl entity, Date ver) {
+		ItemFamily itemFamily = entity.getItemFamily();
+		for (Entry<HBaseColumnQualifier, NavigableMap<Date, HBaseValue>> qualEnt : entity
+				.getInstanceFamily().getQualifierVersionValueSet()) {
+			InstanceQualifier instQual = (InstanceQualifier) qualEnt.getKey();
+			String elementId = instQual.getElementId();
+			PeriodType periodType = instQual.getPeriodType();
+			Date instant = instQual.getInstant();
+			Date startDate = instQual.getStartDate();
+			Date endDate = instQual.getEndDate();
+			for (Entry<Date, HBaseValue> verEnt : qualEnt.getValue().entrySet()) {
+				InstanceValue val = (InstanceValue) verEnt.getValue();
+				BigDecimal value = getTwdValue(val.getUnitType(),
+						val.getValue());
+				itemFamily.setItemValue(elementId, periodType, instant,
+						startDate, endDate, ver, value);
+			}
+		}
+	}
+
+	private void generateInstanceFamily(Xbrl entity, ObjectNode objNode,
 			Date ver) throws ParseException {
 		InstanceFamily instanceFamily = entity.getInstanceFamily();
-		ItemFamily itemFamily = entity.getItemFamily();
 		JsonNode instanceNode = objNode.get(InstanceAssistant.INSTANCE);
 		Iterator<Entry<String, JsonNode>> fields = instanceNode.fields();
 		while (fields.hasNext()) {
@@ -94,9 +195,6 @@ public class XbrlInstanceConverter {
 						.textValue());
 				instanceFamily.setInstanceValue(eleId, periodType, instant,
 						startDate, endDate, ver, unitType, value);
-				BigDecimal twdValue = getTwdValue(unitType, value);
-				itemFamily.setItemValue(eleId, periodType, instant, startDate,
-						endDate, ver, twdValue);
 			}
 		}
 	}
