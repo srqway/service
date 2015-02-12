@@ -1,11 +1,15 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
+import idv.hsiehpinghan.stockdao.entity.Stock;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy.PresentationFamily;
-import idv.hsiehpinghan.stockdao.repository.ITaxonomyRepository;
+import idv.hsiehpinghan.stockdao.enumeration.ReportType;
+import idv.hsiehpinghan.stockdao.repository.StockRepository;
+import idv.hsiehpinghan.stockdao.repository.TaxonomyRepository;
 import idv.hsiehpinghan.stockservice.manager.IFinancialReportManager;
 import idv.hsiehpinghan.stockservice.operator.FinancialReportDownloader;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
+import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
 import idv.hsiehpinghan.xbrlassistant.assistant.TaxonomyAssistant;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 import idv.hsiehpinghan.xbrlassistant.xbrl.Presentation;
@@ -28,7 +32,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Service
 public class FinancialReportHbaseManager implements IFinancialReportManager,
 		InitializingBean {
-	// private final String[] EXTENSIONS = { "xml" };
+	private final String[] EXTENSIONS = { "xml" };
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private List<String> presentIds;
 	// private List<Dollar> targetDallars;
@@ -48,13 +52,14 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 
 	@Autowired
 	private TaxonomyAssistant taxonomyAssistant;
-	// @Autowired
-	// private InstanceAssistant instanceAssistant;
 	@Autowired
-	private ITaxonomyRepository taxonomyRepo;
+	private InstanceAssistant instanceAssistant;
+	@Autowired
+	private TaxonomyRepository taxonomyRepo;
 
-	// @Autowired
-	// private IFinancialReportInstanceRepository instanceRepo;
+	@Autowired
+	private StockRepository stockRepo;
+
 	// @Autowired
 	// private IStockDownloadInfoRepository infoRepo;
 
@@ -103,40 +108,22 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		return true;
 	}
 
-	private void generatePresentationFamilyContent(Taxonomy entity, Date ver,
-			ObjectNode presentNode) {
-		PresentationFamily fam = entity.getPresentationFamily();
-		fam.setBalanceSheet(ver, presentNode.get(Presentation.Id.BalanceSheet)
-				.toString());
-		fam.setStatementOfCashFlows(ver,
-				presentNode.get(Presentation.Id.StatementOfCashFlows)
-						.toString());
-		fam.setStatementOfChangesInEquity(ver,
-				presentNode.get(Presentation.Id.StatementOfChangesInEquity)
-						.toString());
-		fam.setStatementOfComprehensiveIncome(ver,
-				presentNode.get(Presentation.Id.StatementOfComprehensiveIncome)
-						.toString());
-	}
-
 	@Override
 	public boolean updateXbrlInstance() {
-//		File xbrlDir = downloadFinancialReportInstance();
-//		if (xbrlDir == null) {
-//			return false;
-//		}
-//		try {
-//			int processFilesAmt = saveFinancialReportToHBase(xbrlDir);
-//			logger.info("Saved " + processFilesAmt + " xbrl files to "
-//					+ instanceRepo.getTargetTableName() + ".");
-//		} catch (Exception e) {
-//			logger.error("Save financial report to hbase fail !!!");
-//			e.printStackTrace();
-//			return false;
-//		}
-//		return true;
-		
-		return false;
+		File xbrlDir = downloadFinancialReportInstance();
+		if (xbrlDir == null) {
+			return false;
+		}
+		try {
+			int processFilesAmt = saveFinancialReportToHBase(xbrlDir);
+			logger.info("Saved " + processFilesAmt + " xbrl files to "
+					+ stockRepo.getTargetTableName() + ".");
+		} catch (Exception e) {
+			logger.error("Save financial report to hbase fail !!!");
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 
 	// @Override
@@ -196,38 +183,51 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		}
 	}
 
-	// int saveFinancialReportToHBase(File xbrlDir) throws Exception {
-	// List<String> processedList = FileUtils.readLines(processedLog);
-	// int count = 0;
-	// // ex. tifrs-fr0-m1-ci-cr-1101-2013Q1.xml
-	// for (File file : FileUtils.listFiles(xbrlDir, EXTENSIONS, true)) {
-	// processXbrlFiles(file, processedList);
-	// ++count;
-	// }
-	// return count;
-	// }
-	//
-	// void processXbrlFiles(File file, List<String> processedList)
-	// throws Exception {
-	// String[] strArr = file.getName().split("-");
-	// String stockCode = strArr[5];
-	// ReportType reportType = ReportType.getMopsReportType(strArr[4]);
-	// int year = Integer.valueOf(strArr[6].substring(0, 4));
-	// int season = Integer.valueOf(strArr[6].substring(5, 6));
-	// ObjectNode objNode = instanceAssistant
-	// .getInstanceJson(file, presentIds);
-	// if (isProcessed(processedList, file) == false) {
-	// instanceRepo.put(stockCode, reportType, year, season, objNode,
-	// presentIds);
-	// logger.info(file.getName() + " saved to "
-	// + instanceRepo.getTargetTableName() + ".");
-	// StockDownloadInfo downloadInfo = getDownloadInfoEntity(stockCode,
-	// reportType, year, season);
-	// infoRepo.put(downloadInfo);
-	// writeToProcessedFile(file);
-	// }
-	// }
-	//
+	int saveFinancialReportToHBase(File xbrlDir) throws Exception {
+		List<String> processedList = FileUtils.readLines(processedLog);
+		int count = 0;
+		// ex. tifrs-fr0-m1-ci-cr-1101-2013Q1.xml
+		for (File file : FileUtils.listFiles(xbrlDir, EXTENSIONS, true)) {
+			processXbrlFiles(file, processedList);
+			++count;
+		}
+		return count;
+	}
+
+	private void generateInstanceFamilyContent(Stock entity, ObjectNode objNode) {
+		System.err.println(objNode);
+		
+
+	}
+	
+	void processXbrlFiles(File file, List<String> processedList)
+			throws Exception {
+		String[] strArr = file.getName().split("-");
+		String stockCode = strArr[5];
+		ReportType reportType = ReportType.getMopsReportType(strArr[4]);
+		int year = Integer.valueOf(strArr[6].substring(0, 4));
+		int season = Integer.valueOf(strArr[6].substring(5, 6));
+		ObjectNode objNode = instanceAssistant
+				.getInstanceJson(file, presentIds);
+		if (isProcessed(processedList, file) == false) {
+			Stock entity = stockRepo.generateEntity(stockCode);
+			generateInstanceFamilyContent(entity, objNode);
+			int i = 1/0;
+			
+//			entity.getXbrlInstanceFamily().set(elementId, periodType, instant, startDate, endDate, unitType, ver, value);
+//			
+//			
+//			instanceRepo.put(stockCode, reportType, year, season, objNode,
+//					presentIds);
+//			logger.info(file.getName() + " saved to "
+//					+ instanceRepo.getTargetTableName() + ".");
+//			StockDownloadInfo downloadInfo = getDownloadInfoEntity(stockCode,
+//					reportType, year, season);
+//			infoRepo.put(downloadInfo);
+//			writeToProcessedFile(file);
+		}
+	}
+
 	// private void writeToProcessedFile(File file) throws IOException {
 	// String infoLine = generateProcessedInfo(file) + System.lineSeparator();
 	// FileUtils.write(processedLog, infoLine, Charsets.UTF_8, true);
@@ -281,20 +281,20 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		}
 	}
 
-	// private boolean isProcessed(List<String> processedList, File file)
-	// throws IOException {
-	// String processedInfo = generateProcessedInfo(file);
-	// if (processedList.contains(processedInfo)) {
-	// logger.info(processedInfo + " processed before.");
-	// return true;
-	// }
-	// return false;
-	// }
-	//
-	// private String generateProcessedInfo(File file) {
-	// return file.getName();
-	// }
-	//
+	private boolean isProcessed(List<String> processedList, File file)
+			throws IOException {
+		String processedInfo = generateProcessedInfo(file);
+		if (processedList.contains(processedInfo)) {
+			logger.info(processedInfo + " processed before.");
+			return true;
+		}
+		return false;
+	}
+
+	private String generateProcessedInfo(File file) {
+		return file.getName();
+	}
+
 	// private File downloadExchangeRate() {
 	// return exchangeRateDownloader.downloadExchangeRate(targetDallars);
 	// }
@@ -303,4 +303,20 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	// // TODO Auto-generated method stub
 	// return false;
 	// }
+
+	private void generatePresentationFamilyContent(Taxonomy entity, Date ver,
+			ObjectNode presentNode) {
+		PresentationFamily fam = entity.getPresentationFamily();
+		fam.setBalanceSheet(ver, presentNode.get(Presentation.Id.BalanceSheet)
+				.toString());
+		fam.setStatementOfCashFlows(ver,
+				presentNode.get(Presentation.Id.StatementOfCashFlows)
+						.toString());
+		fam.setStatementOfChangesInEquity(ver,
+				presentNode.get(Presentation.Id.StatementOfChangesInEquity)
+						.toString());
+		fam.setStatementOfComprehensiveIncome(ver,
+				presentNode.get(Presentation.Id.StatementOfComprehensiveIncome)
+						.toString());
+	}
 }
