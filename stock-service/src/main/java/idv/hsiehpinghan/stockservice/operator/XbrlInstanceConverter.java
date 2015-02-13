@@ -26,9 +26,12 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
+import java.util.Set;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,19 +103,38 @@ public class XbrlInstanceConverter {
 			throw new RuntimeException("PeriodType(" + periodType
 					+ ") not implements !!!");
 		}
-		if(itemValue == null) {
+		if (itemValue == null) {
 			return null;
 		}
 		return itemValue.getValue();
 	}
 
-	private void generateGrowthFamily(Xbrl entity, Date ver) {
-		GrowthFamily growthFamily = entity.getGrowthFamily();
-		ItemFamily itemFamily = entity.getItemFamily();
+	private Set<Entry<ItemQualifier, ItemValue>> getLatestElementIdRecord(
+			ItemFamily itemFamily) {
 		String OldElementId = null;
-		for (Entry<HBaseColumnQualifier, NavigableMap<Date, HBaseValue>> qualEnt : itemFamily
-				.getDescendingQualifierVersionValueSet()) {
-			ItemQualifier itemQual = (ItemQualifier) qualEnt.getKey();
+		Set<Entry<HBaseColumnQualifier, HBaseValue>> qualValSet = itemFamily
+				.getLatestQualifierAndValueAsDescendingSet();
+		Map<ItemQualifier, ItemValue> map = new HashMap<ItemQualifier, ItemValue>(
+				qualValSet.size());
+		for (Entry<HBaseColumnQualifier, HBaseValue> qualValEnt : qualValSet) {
+			ItemQualifier itemQual = (ItemQualifier) qualValEnt.getKey();
+			String elementId = itemQual.getElementId();
+			if (elementId.equals(OldElementId)) {
+				continue;
+			}
+			ItemValue itemVal = (ItemValue) qualValEnt.getValue();
+			map.put(itemQual, itemVal);
+			OldElementId = elementId;
+		}
+		return map.entrySet();
+	}
+
+	private void generateGrowthFamily(Xbrl entity, Date ver) {
+		ItemFamily itemFamily = entity.getItemFamily();
+		GrowthFamily growthFamily = entity.getGrowthFamily();
+		String OldElementId = null;
+		for (Entry<ItemQualifier, ItemValue> qualValEnt : getLatestElementIdRecord(itemFamily)) {
+			ItemQualifier itemQual = (ItemQualifier) qualValEnt.getKey();
 			String elementId = itemQual.getElementId();
 			if (elementId.equals(OldElementId)) {
 				continue;
@@ -123,35 +145,40 @@ public class XbrlInstanceConverter {
 			Date endDate = itemQual.getEndDate();
 			BigDecimal oneYearBeforeValue = getOneYearBeforeValue(itemFamily,
 					elementId, periodType, instant, startDate, endDate);
-			if(oneYearBeforeValue != null) {
-				for (Entry<Date, HBaseValue> verEnt : qualEnt.getValue().entrySet()) {
-					BigDecimal value = ((ItemValue) verEnt.getValue()).getValue();
+			if (oneYearBeforeValue != null) {
+				BigDecimal value = ((ItemValue) qualValEnt.getValue())
+						.getValue();
 
-					System.err.println(itemQual.getElementId() + " / "
-							+ itemQual.getPeriodType() + " / "
-							+ itemQual.getInstant() + " / "
-							+ itemQual.getStartDate() + " / "
-							+ itemQual.getEndDate() + " / " + value);
+				System.err
+						.print(elementId + " / " + periodType + " / " + instant
+								+ " / " + startDate + " / " + endDate + " / ");
 
-					growthFamily.setGrowthValue(elementId, periodType, instant,
-							startDate, endDate, ver,
-							getGrowthRate(oneYearBeforeValue, value));
-				}
+				BigDecimal growthRatio = getGrowthRatio(value,
+						oneYearBeforeValue);
+				growthFamily.setRatio(elementId, periodType, instant,
+						startDate, endDate, ver, growthRatio);
+				BigDecimal growthRatioLn = getGrowthRatioNaturalLogarithm(growthRatio);
+				growthFamily.setNaturalLogarithm(elementId, periodType,
+						instant, startDate, endDate, ver, growthRatioLn);
+
+				System.err.println(getGrowthRatio(value, oneYearBeforeValue)
+						+ " / " + growthRatioLn);
+
 			}
 			OldElementId = elementId;
 		}
 	}
 
-	private BigDecimal getGrowthRate(BigDecimal oneYearBeforeValue,
-			BigDecimal value) {
-		if (oneYearBeforeValue == null) {
+	private BigDecimal getGrowthRatio(BigDecimal value,
+			BigDecimal oneYearBeforeValue) {
+		return BigDecimalUtility.divide(value, oneYearBeforeValue);
+	}
+
+	private BigDecimal getGrowthRatioNaturalLogarithm(BigDecimal growthRatio) {
+		if (growthRatio == null) {
 			return null;
 		}
-		if (BigDecimal.ZERO.equals(oneYearBeforeValue)) {
-			return null;
-		}
-		return BigDecimalUtility.divide(value, oneYearBeforeValue).subtract(
-				BigDecimal.ONE);
+		return BigDecimalUtility.getNaturalLogarithm(growthRatio);
 	}
 
 	private void generateItemFamily(Xbrl entity, Date ver) {
@@ -170,6 +197,11 @@ public class XbrlInstanceConverter {
 						val.getValue());
 				itemFamily.setItemValue(elementId, periodType, instant,
 						startDate, endDate, ver, value);
+
+				// System.err.println(elementId + " / "
+				// + periodType + " / " + instant
+				// + " / " + startDate + " / "
+				// + endDate + " / " + value);
 			}
 		}
 	}

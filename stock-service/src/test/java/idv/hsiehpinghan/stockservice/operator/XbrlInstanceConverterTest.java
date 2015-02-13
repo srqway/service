@@ -83,6 +83,12 @@ public class XbrlInstanceConverterTest {
 		ItemValue itemVal = xbrl.getItemFamily().getItemValue(elementId,
 				periodType, startDate, endDate);
 		Assert.assertEquals(value, itemVal.getValue());
-
+		// Test ItemFamily
+		BigDecimal ratio = xbrl.getGrowthFamily().getRatio(elementId,
+				periodType, startDate, endDate);
+		Assert.assertEquals(0, ratio.compareTo(new BigDecimal("0.9")));
+		BigDecimal ln = xbrl.getGrowthFamily().getNaturalLogarithm(elementId,
+				periodType, startDate, endDate);
+		Assert.assertEquals(0, ln.compareTo(new BigDecimal("-0.11")));
 	}
 }
