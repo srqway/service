@@ -45,9 +45,6 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 	@Autowired
 	private StockInfoRepository stockInfoRepo;
 
-	// @Autowired
-	// private IStockDownloadInfoRepository infoRepo;
-
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		downloadDir = stockServiceProperty.getCompanyBasicInfoDownloadDir();
@@ -64,7 +61,7 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 			int processFilesAmt = saveCompanyBasicInfoToHBase(dir);
 			logger.info("Saved " + processFilesAmt + " files to "
 					+ stockInfoRepo.getTargetTableName() + ".");
-//			truncateProcessedLog();
+			// truncateProcessedLog();
 		} catch (Exception e) {
 			logger.error("Update company basic info fail !!!");
 			e.printStackTrace();
@@ -89,8 +86,6 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 			int startRow = getStartRow(file, lines);
 			int size = lines.size();
 			List<StockInfo> entities = new ArrayList<StockInfo>(size - startRow);
-			// StockDownloadInfo downloadInfo = infoRepo
-			// .getOrCreateEntity(comInfoRepo.getTargetTableName());
 			String[] fnStrArr = file.getName().split("[_.]");
 			MarketType marketType = MarketType.getMopsMarketType(fnStrArr[0]);
 			IndustryType industryType = IndustryType
@@ -103,7 +98,6 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 					break;
 				}
 				String stockCode = getString(strArr[0]);
-				// addStockCode(downloadInfo, now, stockCode);
 				String chineseName = getString(strArr[1]);
 				String englishBriefName = getString(strArr[24]);
 				String unifiedBusinessNumber = getString(strArr[3]);
@@ -151,7 +145,6 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 			stockInfoRepo.put(entities);
 			logger.info(file.getName() + " saved to "
 					+ stockInfoRepo.getTargetTableName() + ".");
-			// infoRepo.put(downloadInfo);
 			writeToProcessedFile(file);
 			++count;
 		}
@@ -289,93 +282,6 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 		fam.setWebSite(ver, webSite);
 	}
 
-	// private void generateCommonFamilyContent(StockInfo entity, Date ver,
-	// MarketType marketType, IndustryType industryType,
-	// String chineseName, String englishBriefName,
-	// String unifiedBusinessNumber, String establishmentDate,
-	// String listingDate) {
-	// CompanyFamily companyFamily = entity.getCompanyFamily();
-	// companyFamily.setAccountant1(ver, accountant1);
-	//
-	//
-	// companyFamily.setMarketType(ver, marketType);
-	// companyFamily.setIndustryType(ver, industryType);
-	// companyFamily.setChineseName(ver, chineseName);
-	// commonFamily.add(CommonQualifier.CHINESE_NAME, now, chineseName);
-	// commonFamily.add(CommonQualifier.ENGLISH_BRIEF_NAME, now,
-	// englishBriefName);
-	// commonFamily.add(CommonQualifier.UNIFIED_BUSINESS_NUMBER, now,
-	// unifiedBusinessNumber);
-	// commonFamily.add(CommonQualifier.ESTABLISHMENT_DATE, now,
-	// establishmentDate);
-	// commonFamily.add(CommonQualifier.LISTING_DATE, now, listingDate);
-	// }
-
-	// private void generateRoleFamilyContent(CompanyBasicInfo entity, Date now,
-	// String chairman, String generalManager, String spokesperson,
-	// String jobTitleOfSpokesperson, String actingSpokesman) {
-	// RoleFamily roleFamily = entity.getRoleFamily();
-	// roleFamily.add(RoleQualifier.CHAIRMAN, now, chairman);
-	// roleFamily.add(RoleQualifier.GENERAL_MANAGER, now, generalManager);
-	// roleFamily.add(RoleQualifier.SPOKESPERSON, now, spokesperson);
-	// roleFamily.add(RoleQualifier.JOB_TITLE_OF_SPOKESPERSON_, now,
-	// jobTitleOfSpokesperson);
-	// roleFamily.add(RoleQualifier.ACTING_SPOKESMAN, now, actingSpokesman);
-	// }
-	//
-	// private void generateCommunicationFamilyContent(CompanyBasicInfo entity,
-	// Date now, String chineseAddress, String telephone,
-	// String stockTransferAgency, String telephoneOfStockTransferAgency,
-	// String addressOfStockTransferAgency, String englishAddress,
-	// String faxNumber, String email, String webSite) {
-	// CommunicationFamily communicationFamily = entity
-	// .getCommunicationFamily();
-	// communicationFamily.add(CommunicationQualifier.CHINESE_ADDRESS, now,
-	// chineseAddress);
-	// communicationFamily.add(CommunicationQualifier.TELEPHONE, now,
-	// telephone);
-	// communicationFamily.add(CommunicationQualifier.STOCK_TRANSFER_AGENCY,
-	// now, stockTransferAgency);
-	// communicationFamily.add(
-	// CommunicationQualifier.TELEPHONE_OF_STOCK_TRANSFER_AGENCY, now,
-	// telephoneOfStockTransferAgency);
-	// communicationFamily.add(
-	// CommunicationQualifier.ADDRESS_OF_STOCK_TRANSFER_AGENCY, now,
-	// addressOfStockTransferAgency);
-	// communicationFamily.add(CommunicationQualifier.ENGLISH_ADDRESS, now,
-	// englishAddress);
-	// communicationFamily.add(CommunicationQualifier.FAX_NUMBER, now,
-	// faxNumber);
-	// communicationFamily.add(CommunicationQualifier.EMAIL, now, email);
-	// communicationFamily.add(CommunicationQualifier.WEB_SITE, now, webSite);
-	// }
-	//
-	// private void generateFinanceFamilyContent(CompanyBasicInfo entity,
-	// Date now, String financialReportType,
-	// String parValueOfOrdinaryShares, String paidInCapital,
-	// String amountOfOrdinaryShares,
-	// String privatePlacementAmountOfOrdinaryShares,
-	// String amountOfPreferredShares, String accountingFirm,
-	// String accountant_1, String accountant_2) {
-	// FinanceFamily financeFamily = entity.getFinanceFamily();
-	// financeFamily.add(FinanceQualifier.FINANCIAL_REPORT_TYPE, now,
-	// financialReportType);
-	// financeFamily.add(FinanceQualifier.PAR_VALUE_OF_ORDINARY_SHARES, now,
-	// parValueOfOrdinaryShares);
-	// financeFamily.add(FinanceQualifier.PAID_IN_CAPITAL, now, paidInCapital);
-	// financeFamily.add(FinanceQualifier.AMOUNT_OF_ORDINARY_SHARES, now,
-	// amountOfOrdinaryShares);
-	// financeFamily.add(
-	// FinanceQualifier.PRIVATE_PLACEMENT_AMOUNT_OF_ORDINARY_SHARES,
-	// now, privatePlacementAmountOfOrdinaryShares);
-	// financeFamily.add(FinanceQualifier.AMOUNT_OF_PREFERRED_SHARES, now,
-	// amountOfPreferredShares);
-	// financeFamily
-	// .add(FinanceQualifier.ACCOUNTING_FIRM, now, accountingFirm);
-	// financeFamily.add(FinanceQualifier.ACCOUNTANT_1, now, accountant_1);
-	// financeFamily.add(FinanceQualifier.ACCOUNTANT_2, now, accountant_2);
-	// }
-
 	private File downloadCompanyBasicInfo() {
 		try {
 			File dir = downloader.downloadCompanyBasicInfo();
@@ -396,9 +302,4 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 		}
 	}
 
-	// private void addStockCode(StockDownloadInfo downloadInfo, Date date,
-	// String stockCode) {
-	// String all = StockDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;
-	// downloadInfo.getStockCodeFamily().addStockCode(all, date, stockCode);
-	// }
 }

@@ -6,6 +6,7 @@ import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
+import idv.hsiehpinghan.testutility.utility.DeleteUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -87,6 +88,7 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		String fileName = downloader.getFileName(stockCode, date);
 		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
 		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+		DeleteUtility.delete(dir, fileName);
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })

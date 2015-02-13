@@ -75,7 +75,7 @@ public class StockClosingConditionOfGretaiDownloaderTest {
 		File dir = downloaderOfGretai.downloadStockClosingCondition();
 		String dateStr = DateUtility.getRocDateString(
 				DateUtility.getDate(2013, 1, 2), "yyyyMMdd");
-		String fileName = "SQUOTE_02_" + dateStr + ".csv";
+		String fileName = "SQUOTE_EW_" + dateStr + ".csv";
 		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
 	}
 }

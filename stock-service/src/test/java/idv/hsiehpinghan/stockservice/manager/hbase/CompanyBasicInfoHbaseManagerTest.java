@@ -27,7 +27,7 @@ public class CompanyBasicInfoHbaseManagerTest {
 				.getBean(CompanyBasicInfoHbaseManager.class);
 		stockInfoRepo = applicationContext.getBean(StockInfoRepository.class);
 
-		dropAndCreateTable();
+//		dropAndCreateTable();
 	}
 
 	@Test

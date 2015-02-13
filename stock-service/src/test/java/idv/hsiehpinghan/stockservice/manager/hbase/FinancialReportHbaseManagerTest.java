@@ -8,6 +8,7 @@ import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.enumeration.UnitType;
 import idv.hsiehpinghan.stockdao.repository.TaxonomyRepository;
 import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
+import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 import idv.hsiehpinghan.testutility.utility.SystemResourceUtility;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
@@ -16,6 +17,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.context.ApplicationContext;
 import org.testng.Assert;
@@ -24,34 +26,24 @@ import org.testng.annotations.Test;
 
 public class FinancialReportHbaseManagerTest {
 	private final String DATE_PATTERN = "yyyyMMdd";
-	// private String allStockCode =
-	// StockDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;
-	// private String allReportType =
-	// StockDownloadInfo.ReportTypeFamily.ReportTypeQualifier.ALL;
-	// private String allYear = StockDownloadInfo.YearFamily.YearQualifier.ALL;
-	// private String allSeason =
-	// StockDownloadInfo.SeasonFamily.SeasonQualifier.ALL;
 	private FinancialReportHbaseManager manager;
 	private TaxonomyRepository taxonomyRepo;
 	private XbrlRepository xbrlRepo;
+	private StockServiceProperty stockServiceProperty;
 
-	// private FinancialReportInstanceRepository instanceRepo;
-	// private StockDownloadInfoRepository infoRepo;
-	// private FinancialReportDataRepository dataRepo;
-	// private StockServiceProperty stockServiceProperty;
-	// private HbaseAssistant hbaseAssistant;
-	//
 	@BeforeClass
 	public void beforeClass() throws Exception {
 		ApplicationContext applicationContext = TestngSuitSetting
 				.getApplicationContext();
+		stockServiceProperty = applicationContext
+				.getBean(StockServiceProperty.class);
 		manager = applicationContext.getBean(FinancialReportHbaseManager.class);
 		taxonomyRepo = applicationContext.getBean(TaxonomyRepository.class);
 		xbrlRepo = applicationContext.getBean(XbrlRepository.class);
 		dropAndCreateTable();
 	}
 
-	// @Test
+	@Test
 	public void updateTaxonomyPresentation() throws Exception {
 		String tableName = taxonomyRepo.getTargetTableName();
 		if (taxonomyRepo.isTableExists(tableName)) {
@@ -91,43 +83,23 @@ public class FinancialReportHbaseManagerTest {
 				elementId, periodType, startDate, endDate);
 		Assert.assertEquals(val.getUnitType(), UnitType.TWD);
 		Assert.assertEquals(val.getValue().toString(), "-120107000");
-		// Test downloadInfo.
-		// StockDownloadInfo downloadInfo = getOrCreateStockDownloadInfo();
-		// Assert.assertTrue(downloadInfo.getStockCodeFamily()
-		// .getLatestValue(allStockCode).getStockCodes().contains("1101"));
-		// Assert.assertTrue(downloadInfo.getReportTypeFamily()
-		// .getLatestValue(allReportType).getReportTypes()
-		// .contains(ReportType.CONSOLIDATED_STATEMENT));
-		// Assert.assertTrue(downloadInfo.getYearFamily().getLatestValue(allYear)
-		// .getYears().contains(2013));
-		// Assert.assertTrue(downloadInfo.getSeasonFamily()
-		// .getLatestValue(allSeason).getSeasons().contains(1));
 	}
 
-	// @Test(dependsOnMethods = { "processXbrlFiles" })
-	// public void saveFinancialReportToHBase() throws Exception {
-	// File xbrlDir = stockServiceProperty.getFinancialReportExtractDir();
-	// int actual = reportManager.saveFinancialReportToHBase(xbrlDir);
-	// String[] ext = { "xml" };
-	// int expected = FileUtils.listFiles(xbrlDir, ext, true).size();
-	// Assert.assertEquals(actual, expected);
-	// }
-	//
-	// @Test(dependsOnMethods = { "saveFinancialReportToHBase" })
-	// public void updateFinancialReportInstance() throws Exception {
-	// reportManager.updateFinancialReportInstance();
-	// StockDownloadInfo infoEntity = infoRepo.get(instanceRepo
-	// .getTargetTableName());
-	// Assert.assertTrue(infoEntity.getStockCodeFamily()
-	// .getQualifierVersionValueSet().size() > 0);
-	// Assert.assertTrue(infoEntity.getReportTypeFamily()
-	// .getQualifierVersionValueSet().size() > 0);
-	// Assert.assertTrue(infoEntity.getYearFamily()
-	// .getQualifierVersionValueSet().size() > 0);
-	// Assert.assertTrue(infoEntity.getSeasonFamily()
-	// .getQualifierVersionValueSet().size() > 0);
-	// }
-	//
+	@Test(dependsOnMethods = { "processXbrlFiles" })
+	public void saveFinancialReportToHBase() throws Exception {
+		File xbrlDir = stockServiceProperty.getFinancialReportExtractDir();
+		int actual = manager.saveFinancialReportToHBase(xbrlDir);
+		String[] ext = { "xml" };
+		int expected = FileUtils.listFiles(xbrlDir, ext, true).size();
+		Assert.assertEquals(actual, expected);
+	}
+
+	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+	public void updateXbrlInstance() throws Exception {
+		boolean result = manager.updateXbrlInstance();
+		Assert.assertTrue(result);
+	}
+
 	// @Test(dependsOnMethods = { "updateFinancialReportInstance" })
 	// public void calculateFinancialReport() throws Exception {
 	// reportManager.calculateFinancialReport();
@@ -136,21 +108,6 @@ public class FinancialReportHbaseManagerTest {
 	// int expected = hbaseAssistant.getRowAmount(instanceRepo
 	// .getTargetTableClass());
 	// Assert.assertEquals(actual, expected);
-	// }
-	//
-	// private void dropAndCreateTable() throws Exception {
-	// HbaseEntityTestUtility.dropAndCreateTargetTable(presentRepo);
-	// HbaseEntityTestUtility.dropAndCreateTargetTable(instanceRepo);
-	// HbaseEntityTestUtility.dropAndCreateTargetTable(infoRepo);
-	// HbaseEntityTestUtility.dropAndCreateTargetTable(dataRepo);
-	// }
-	//
-	// private StockDownloadInfo getOrCreateStockDownloadInfo()
-	// throws IllegalAccessException, NoSuchMethodException,
-	// SecurityException, InstantiationException,
-	// IllegalArgumentException, InvocationTargetException, IOException {
-	// String tableName = instanceRepo.getTargetTableName();
-	// return infoRepo.getOrCreateEntity(tableName);
 	// }
 
 	private void dropAndCreateTable() throws Exception {

@@ -69,9 +69,6 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	@Autowired
 	private StockInfoRepository infoRepo;
 
-	// @Autowired
-	// private IStockDownloadInfoRepository infoRepo;
-
 	public FinancialReportHbaseManager() {
 		presentIds = new ArrayList<String>(4);
 		presentIds.add(Presentation.Id.BalanceSheet);
@@ -166,17 +163,6 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	// return true;
 	// }
 
-	// @Override
-	// public StockDownloadInfo getFinancialReportDownloadInfo() {
-	// try {
-	// return infoRepo.get(instanceRepo.getTargetTableName());
-	// } catch (Exception e) {
-	// logger.error("Get download info fail !!!");
-	// e.printStackTrace();
-	// return null;
-	// }
-	// }
-	//
 	@Override
 	public Map<String, ObjectNode> getFinancialReportDetailJsonMap(
 			String stockCode, ReportType reportType, Integer year,
@@ -237,45 +223,6 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		FileUtils.write(processedLog, infoLine, Charsets.UTF_8, true);
 	}
 
-	// private StockDownloadInfo getDownloadInfoEntity(String stockCode,
-	// ReportType reportType, int year, int season)
-	// throws IllegalAccessException, NoSuchMethodException,
-	// SecurityException, InstantiationException,
-	// IllegalArgumentException, InvocationTargetException, IOException {
-	// String tableName = instanceRepo.getTargetTableName();
-	// StockDownloadInfo downloadInfo = infoRepo.getOrCreateEntity(tableName);
-	// Date date = Calendar.getInstance().getTime();
-	// addStockCode(downloadInfo, date, stockCode);
-	// addReportType(downloadInfo, date, reportType);
-	// addYear(downloadInfo, date, year);
-	// addSeason(downloadInfo, date, season);
-	// return downloadInfo;
-	// }
-	//
-	// private void addStockCode(StockDownloadInfo downloadInfo, Date date,
-	// String stockCode) {
-	// String all = StockDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;
-	// downloadInfo.getStockCodeFamily().addStockCode(all, date, stockCode);
-	// }
-	//
-	// private void addReportType(StockDownloadInfo downloadInfo, Date date,
-	// ReportType reportType) {
-	// String all = StockDownloadInfo.ReportTypeFamily.ReportTypeQualifier.ALL;
-	// downloadInfo.getReportTypeFamily().addReportType(all, date, reportType);
-	// }
-	//
-	// private void addYear(StockDownloadInfo downloadInfo, Date date, int year)
-	// {
-	// String all = StockDownloadInfo.YearFamily.YearQualifier.ALL;
-	// downloadInfo.getYearFamily().addYear(all, date, year);
-	// }
-	//
-	// private void addSeason(StockDownloadInfo downloadInfo, Date date, int
-	// season) {
-	// String all = StockDownloadInfo.SeasonFamily.SeasonQualifier.ALL;
-	// downloadInfo.getSeasonFamily().addSeason(all, date, season);
-	// }
-
 	private void generateProcessedLog() throws IOException {
 		if (processedLog == null) {
 			processedLog = new File(extractDir, "processed.log");
@@ -298,15 +245,6 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	private String generateProcessedInfo(File file) {
 		return file.getName();
 	}
-
-	// private File downloadExchangeRate() {
-	// return exchangeRateDownloader.downloadExchangeRate(targetDallars);
-	// }
-	//
-	// private boolean saveExchangeRateToDatabase(File dataDirectory) {
-	// // TODO Auto-generated method stub
-	// return false;
-	// }
 
 	private void generatePresentationFamilyContent(Taxonomy entity, Date ver,
 			ObjectNode presentNode) {

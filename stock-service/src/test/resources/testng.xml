@@ -51,13 +51,13 @@
 	<test name="monthlyOperatingIncome">
 		<classes>
 			<!-- Test operator -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" 
-				/> -->
+			<class
+				name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" />
 
 			<!-- Test manager -->
-			<class
-				name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" 
+				/> -->
 		</classes>
 	</test>
 	<test name="exchangeRate">

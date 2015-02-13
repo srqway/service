@@ -148,11 +148,6 @@ public class XbrlInstanceConverter {
 			if (oneYearBeforeValue != null) {
 				BigDecimal value = ((ItemValue) qualValEnt.getValue())
 						.getValue();
-
-				System.err
-						.print(elementId + " / " + periodType + " / " + instant
-								+ " / " + startDate + " / " + endDate + " / ");
-
 				BigDecimal growthRatio = getGrowthRatio(value,
 						oneYearBeforeValue);
 				growthFamily.setRatio(elementId, periodType, instant,
@@ -160,10 +155,6 @@ public class XbrlInstanceConverter {
 				BigDecimal growthRatioLn = getGrowthRatioNaturalLogarithm(growthRatio);
 				growthFamily.setNaturalLogarithm(elementId, periodType,
 						instant, startDate, endDate, ver, growthRatioLn);
-
-				System.err.println(getGrowthRatio(value, oneYearBeforeValue)
-						+ " / " + growthRatioLn);
-
 			}
 			OldElementId = elementId;
 		}
@@ -197,11 +188,6 @@ public class XbrlInstanceConverter {
 						val.getValue());
 				itemFamily.setItemValue(elementId, periodType, instant,
 						startDate, endDate, ver, value);
-
-				// System.err.println(elementId + " / "
-				// + periodType + " / " + instant
-				// + " / " + startDate + " / "
-				// + endDate + " / " + value);
 			}
 		}
 	}
