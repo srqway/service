@@ -1,14 +1,16 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
+import idv.hsiehpinghan.stockdao.entity.StockInfo.RowKey;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy.PresentationFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
+import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockdao.repository.TaxonomyRepository;
 import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
 import idv.hsiehpinghan.stockservice.manager.IFinancialReportManager;
-import idv.hsiehpinghan.stockservice.operator.FinancialReportCalculator;
 import idv.hsiehpinghan.stockservice.operator.FinancialReportDownloader;
+import idv.hsiehpinghan.stockservice.operator.FinancialReportJsonMaker;
 import idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverter;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -49,22 +52,22 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 
 	// @Autowired
 	// private ExchangeRateDownloader exchangeRateDownloader;
-//	@Autowired
-//	private FinancialReportCalculator calculator;
 	// @Autowired
-	// private FinancialReportJsonMaker jsonMaker;
+	// private FinancialReportCalculator calculator;
+	@Autowired
+	private FinancialReportJsonMaker jsonMaker;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
-
 	@Autowired
 	private TaxonomyAssistant taxonomyAssistant;
 	@Autowired
 	private InstanceAssistant instanceAssistant;
 	@Autowired
 	private TaxonomyRepository taxonomyRepo;
-
 	@Autowired
 	private XbrlRepository xbrlRepo;
+	@Autowired
+	private StockInfoRepository infoRepo;
 
 	// @Autowired
 	// private IStockDownloadInfoRepository infoRepo;
@@ -132,6 +135,16 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		return true;
 	}
 
+	@Override
+	public List<String> getStockCodes() {
+		List<RowKey> rowKeys = infoRepo.getRowKeys();
+		List<String> stockCodes = new ArrayList<String>(rowKeys.size());
+		for (RowKey rowKey : rowKeys) {
+			stockCodes.add(rowKey.getStockCode());
+		}
+		return stockCodes;
+	}
+
 	// @Override
 	// public boolean updateExchangeRate() {
 	// File exchangeDir = downloadExchangeRate();
@@ -139,19 +152,19 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	// return true;
 	// }
 
-//	@Override
-//	public boolean calculateFinancialReport() {
-//		try {
-//			StockDownloadInfo downloadInfo = infoRepo.get(instanceRepo
-//					.getTargetTableName());
-//			calculator.calculate(downloadInfo);
-//		} catch (Exception e) {
-//			logger.error("Calculate financial report fail !!!");
-//			e.printStackTrace();
-//			return false;
-//		}
-//		return true;
-//	}
+	// @Override
+	// public boolean calculateFinancialReport() {
+	// try {
+	// StockDownloadInfo downloadInfo = infoRepo.get(instanceRepo
+	// .getTargetTableName());
+	// calculator.calculate(downloadInfo);
+	// } catch (Exception e) {
+	// logger.error("Calculate financial report fail !!!");
+	// e.printStackTrace();
+	// return false;
+	// }
+	// return true;
+	// }
 
 	// @Override
 	// public StockDownloadInfo getFinancialReportDownloadInfo() {
@@ -164,19 +177,19 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	// }
 	// }
 	//
-	// @Override
-	// public Map<String, ObjectNode> getFinancialReportDetailJsonMap(
-	// String stockCode, ReportType reportType, Integer year,
-	// Integer season) {
-	// try {
-	// return jsonMaker.getPresentationJsonMap(presentIds, stockCode,
-	// reportType, year, season);
-	// } catch (Exception e) {
-	// logger.error("Get presentation json map fail !!!");
-	// e.printStackTrace();
-	// return null;
-	// }
-	// }
+	@Override
+	public Map<String, ObjectNode> getFinancialReportDetailJsonMap(
+			String stockCode, ReportType reportType, Integer year,
+			Integer season) {
+		try {
+			return jsonMaker.getPresentationJsonMap(presentIds, stockCode,
+					reportType, year, season);
+		} catch (Exception e) {
+			logger.error("Get presentation json map fail !!!");
+			e.printStackTrace();
+			return null;
+		}
+	}
 
 	File downloadFinancialReportInstance() {
 		try {

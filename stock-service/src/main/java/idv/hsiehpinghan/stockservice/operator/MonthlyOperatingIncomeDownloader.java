@@ -11,6 +11,8 @@ import idv.hsiehpinghan.seleniumassistant.webelement.Font;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.Td;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
+import idv.hsiehpinghan.stockdao.entity.StockInfo.RowKey;
+import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.webelement.MonthlyOperatingIncomeDownloadTable;
 import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
@@ -50,10 +52,8 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
-//	@Autowired
-//	private IStockDownloadInfoRepository infoRepo;
-//	@Autowired
-//	private ICompanyBasicInfoRepository comInfoRepo;
+	@Autowired
+	private StockInfoRepository infoRepo;
 	@Autowired
 	private HtmlUnitFirefoxVersionBrowser browser;
 
@@ -66,46 +66,38 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 		generateDownloadedLogFile();
 	}
 
-//	public File downloadMonthlyOperatingIncome() throws IOException,
-//			IllegalAccessException, NoSuchMethodException, SecurityException,
-//			InstantiationException, IllegalArgumentException,
-//			InvocationTargetException {
-//		moveToTargetPage();
-//		downloadedList = FileUtils.readLines(downloadedLog);
-//		Date now = Calendar.getInstance().getTime();
-//		selectSearchType(HISTORY);
-//		for (String stockCode : getStockCodes()) {
-//			inputStockCode(stockCode);
-//			Date targetDate = BEGIN_DATA_DATE;
-//			while (targetDate.getTime() < now.getTime()) {
-//				String downloadInfo = getDownloadInfo(stockCode, targetDate);
-//				if (isDownloaded(downloadInfo) == false) {
-//					inputYear(targetDate);
-//					selectMonth(targetDate);
-//					logger.info(downloadInfo + " process start.");
-//					boolean hasData = repeatTryDownload(stockCode, targetDate);
-//					if (hasData == true) {
-//						logger.info(downloadInfo + " processed success.");
-//						writeToDownloadedFile(downloadInfo);
-//					} else {
-//						logger.info(downloadInfo + " has no data.");
-//					}
-//
-//				}
-//				targetDate = DateUtils.addMonths(targetDate, 1);
-//			}
-//		}
-//		return downloadDir;
-//	}
+	public File downloadMonthlyOperatingIncome() throws IOException,
+			IllegalAccessException, NoSuchMethodException, SecurityException,
+			InstantiationException, IllegalArgumentException,
+			InvocationTargetException {
+		moveToTargetPage();
+		downloadedList = FileUtils.readLines(downloadedLog);
+		Date now = Calendar.getInstance().getTime();
+		selectSearchType(HISTORY);
+		for (RowKey rowKey : infoRepo.getRowKeys()) {
+			String stockCode = rowKey.getStockCode();
+			inputStockCode(stockCode);
+			Date targetDate = BEGIN_DATA_DATE;
+			while (targetDate.getTime() < now.getTime()) {
+				String downloadInfo = getDownloadInfo(stockCode, targetDate);
+				if (isDownloaded(downloadInfo) == false) {
+					inputYear(targetDate);
+					selectMonth(targetDate);
+					logger.info(downloadInfo + " process start.");
+					boolean hasData = repeatTryDownload(stockCode, targetDate);
+					if (hasData == true) {
+						logger.info(downloadInfo + " processed success.");
+						writeToDownloadedFile(downloadInfo);
+					} else {
+						logger.info(downloadInfo + " has no data.");
+					}
 
-//	String[] getStockCodes() throws IllegalAccessException,
-//			NoSuchMethodException, SecurityException, InstantiationException,
-//			IllegalArgumentException, InvocationTargetException, IOException {
-//		StockDownloadInfo info = infoRepo.get(comInfoRepo.getTargetTableName());
-//		String all = StockDownloadInfo.StockCodeFamily.StockCodeQualifier.ALL;
-//		return info.getStockCodeFamily().getLatestValue(all)
-//				.getStockCodesAsArray();
-//	}
+				}
+				targetDate = DateUtils.addMonths(targetDate, 1);
+			}
+		}
+		return downloadDir;
+	}
 
 	void moveToTargetPage() {
 		final String MONTHLY_OPERATION_INCOME_PAGE_URL = "http://mops.twse.com.tw/mops/web/t05st10_ifrs";
