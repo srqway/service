@@ -6,7 +6,6 @@ import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
-import idv.hsiehpinghan.testutility.utility.DeleteUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,8 +77,27 @@ public class MonthlyOperatingIncomeDownloaderTest {
 
 	@Test(dependsOnMethods = { "selectMonth" })
 	public void repeatTryDownload() {
+		repeatTryDownloadType1();
+		repeatTryDownloadType2();
+	}
+
+	@Test(dependsOnMethods = { "repeatTryDownload" })
+	public void downloadMonthlyOperatingIncome() throws Exception {
+		String stockCode = "2330";
+		File dir = downloader.downloadMonthlyOperatingIncome();
+		Date date = DateUtility.getDate(2013, 1, 22);
+		String fileName = downloader.getFileName(stockCode, date);
+		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+	}
+
+	private void repeatTryDownloadType1() {
+		stockCode = "2330";
+		date = DateUtility.getDate(2014, 6, 9);
+		inputStockCode();
+		inputYear();
+		selectMonth();
 		try {
-			downloader.repeatTryDownload("2330", date);
+			downloader.repeatTryDownload(stockCode, date);
 		} catch (Exception e) {
 			System.err.println(downloader.getBrowser().getWebDriver()
 					.getPageSource());
@@ -88,14 +106,25 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		String fileName = downloader.getFileName(stockCode, date);
 		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
 		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
-		DeleteUtility.delete(dir, fileName);
+		// DeleteUtility.delete(dir, fileName);
 	}
 
-	@Test(dependsOnMethods = { "repeatTryDownload" })
-	public void downloadMonthlyOperatingIncome() throws Exception {
-		File dir = downloader.downloadMonthlyOperatingIncome();
-		Date date = DateUtility.getDate(2013, 1, 22);
+	private void repeatTryDownloadType2() {
+		stockCode = "1256";
+		date = DateUtility.getDate(2013, 1, 1);
+		inputStockCode();
+		inputYear();
+		selectMonth();
+		try {
+			downloader.repeatTryDownload(stockCode, date);
+		} catch (Exception e) {
+			System.err.println(downloader.getBrowser().getWebDriver()
+					.getPageSource());
+			throw new RuntimeException(e);
+		}
 		String fileName = downloader.getFileName(stockCode, date);
+		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
 		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+		// DeleteUtility.delete(dir, fileName);
 	}
 }

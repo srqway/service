@@ -15,6 +15,7 @@ import idv.hsiehpinghan.stockdao.entity.StockInfo.RowKey;
 import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.webelement.MonthlyOperatingIncomeDownloadTable;
+import idv.hsiehpinghan.stockservice.webelement.MonthlyOperatingIncomeDownloadTable.MonthlyOperatingIncome;
 import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
@@ -23,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -42,7 +44,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private String titleString;
 	private final String YYYYMM = "yyyyMM";
 	private final String HISTORY = "歷史資料";
-	private final int MAX_TRY_AMOUNT = 10;
+	private final int MAX_TRY_AMOUNT = 100;
 	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
@@ -78,7 +80,9 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 			String stockCode = rowKey.getStockCode();
 			inputStockCode(stockCode);
 			Date targetDate = BEGIN_DATA_DATE;
-			while (targetDate.getTime() < now.getTime()) {
+			// while (targetDate.getTime() < now.getTime()) {
+			while (targetDate.getTime() < DateUtils.addMonths(now, -1)
+					.getTime()) {
 				String downloadInfo = getDownloadInfo(stockCode, targetDate);
 				if (isDownloaded(downloadInfo) == false) {
 					inputYear(targetDate);
@@ -168,9 +172,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 				By.cssSelector("td.bar01b:nth-child(4) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)"))
 				.click();
 		try {
-			Td td = browser
-					.getTd(By
-							.cssSelector("#table01 > table:nth-child(4) > tbody > tr > td:nth-child(2)"));
+			Td td = browser.getTd(By.cssSelector("td.reportCont:nth-child(2)"));
 			AjaxWaitUtility.waitUntilTextEqual(td, getTargetText(targetDate));
 			MonthlyOperatingIncomeDownloadTable tab = new MonthlyOperatingIncomeDownloadTable(
 					browser.getTable(By
@@ -179,10 +181,12 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 			logger.info(file.getAbsolutePath() + " downloaded.");
 			return true;
 		} catch (TimeoutException e) {
-			Font font = browser.getFont(By
-					.cssSelector("#table01 > center > h3:nth-child(1)"));
-			if ("資料庫中查無需求資料。".equals(font.getText())) {
+			String text = browser.getFont(By
+					.cssSelector("#table01 > center > h3:nth-child(1)")).getText();
+			if ("資料庫中查無需求資料。".equals(text)) {
 				return false;
+			} else if ("外國發行人免申報本項資訊".equals(text)) {
+				return true;
 			}
 			throw e;
 		}
@@ -200,52 +204,73 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 
 	private String generateCsvFileTitle() {
 		if (titleString == null) {
-			titleString = ArrayUtility.toString(
-					MonthlyOperatingIncomeDownloadTable.getItemNames(),
-					COMMA_STRING);
+			titleString = "貨幣"
+					+ COMMA_STRING
+					+ ArrayUtility
+							.toString(MonthlyOperatingIncomeDownloadTable
+									.getItemNames2(), COMMA_STRING);
 		}
 		return titleString + System.lineSeparator();
 	}
 
 	private String generateCsvFileData(MonthlyOperatingIncomeDownloadTable table) {
-		String currentMonth = table.getCurrentMonth().replace(COMMA_STRING,
-				EMPTY_STRING);
-		String currentMonthOfLastYear = table.getCurrentMonthOfLastYear()
-				.replace(COMMA_STRING, EMPTY_STRING);
-		String differentAmount = table.getDifferentAmount().replace(
-				COMMA_STRING, EMPTY_STRING);
-		String differentPercent = table.getDifferentPercent().replace(
-				COMMA_STRING, EMPTY_STRING);
-		String cumulativeAmountOfThisYear = table
-				.getCumulativeAmountOfThisYear().replace(COMMA_STRING,
-						EMPTY_STRING);
-		String cumulativeAmountOfLastYear = table
-				.getCumulativeAmountOfLastYear().replace(COMMA_STRING,
-						EMPTY_STRING);
-		String cumulativeDifferentAmount = table.getCumulativeDifferentAmount()
-				.replace(COMMA_STRING, EMPTY_STRING);
-		String cumulativeDifferentPercent = table
-				.getCumulativeDifferentPercent().replace(COMMA_STRING,
-						EMPTY_STRING);
-		String comment = table.getComment();
 		sb.setLength(0);
-		sb.append(currentMonth);
-		sb.append(COMMA_STRING);
-		sb.append(currentMonthOfLastYear);
-		sb.append(COMMA_STRING);
-		sb.append(differentAmount);
-		sb.append(COMMA_STRING);
-		sb.append(differentPercent);
-		sb.append(COMMA_STRING);
-		sb.append(cumulativeAmountOfThisYear);
-		sb.append(COMMA_STRING);
-		sb.append(cumulativeAmountOfLastYear);
-		sb.append(COMMA_STRING);
-		sb.append(cumulativeDifferentAmount);
-		sb.append(COMMA_STRING);
-		sb.append(cumulativeDifferentPercent);
-		sb.append(COMMA_STRING);
-		sb.append(comment);
+		for (Entry<String, MonthlyOperatingIncome> ent : table
+				.getMonthlyOperatingIncomes().entrySet()) {
+			String currency = ent.getKey();
+			MonthlyOperatingIncome income = ent.getValue();
+			String currentMonth = income.getCurrentMonth().replace(
+					COMMA_STRING, EMPTY_STRING);
+			String currentMonthOfLastYear = income.getCurrentMonthOfLastYear()
+					.replace(COMMA_STRING, EMPTY_STRING);
+			String differentAmount = income.getDifferentAmount().replace(
+					COMMA_STRING, EMPTY_STRING);
+			String differentPercent = income.getDifferentPercent().replace(
+					COMMA_STRING, EMPTY_STRING);
+			String cumulativeAmountOfThisYear = income
+					.getCumulativeAmountOfThisYear().replace(COMMA_STRING,
+							EMPTY_STRING);
+			String cumulativeAmountOfLastYear = income
+					.getCumulativeAmountOfLastYear().replace(COMMA_STRING,
+							EMPTY_STRING);
+			String cumulativeDifferentAmount = income
+					.getCumulativeDifferentAmount().replace(COMMA_STRING,
+							EMPTY_STRING);
+			String cumulativeDifferentPercent = income
+					.getCumulativeDifferentPercent().replace(COMMA_STRING,
+							EMPTY_STRING);
+			String exchangeRateOfCurrentMonth = income
+					.getExchangeRateOfCurrentMonth().replace(COMMA_STRING,
+							EMPTY_STRING);
+			String cumulativeExchangeRateOfCurrentYear = income
+					.getCumulativeExchangeRateOfCurrentYear().replace(
+							COMMA_STRING, EMPTY_STRING);
+			String comment = income.getComment();
+			sb.append(currency);
+			sb.append(COMMA_STRING);
+			sb.append(currentMonth);
+			sb.append(COMMA_STRING);
+			sb.append(currentMonthOfLastYear);
+			sb.append(COMMA_STRING);
+			sb.append(differentAmount);
+			sb.append(COMMA_STRING);
+			sb.append(differentPercent);
+			sb.append(COMMA_STRING);
+			sb.append(cumulativeAmountOfThisYear);
+			sb.append(COMMA_STRING);
+			sb.append(cumulativeAmountOfLastYear);
+			sb.append(COMMA_STRING);
+			sb.append(cumulativeDifferentAmount);
+			sb.append(COMMA_STRING);
+			sb.append(cumulativeDifferentPercent);
+			sb.append(COMMA_STRING);
+			sb.append(exchangeRateOfCurrentMonth);
+			sb.append(COMMA_STRING);
+			sb.append(cumulativeExchangeRateOfCurrentYear);
+			sb.append(COMMA_STRING);
+			sb.append(comment);
+			sb.append(System.lineSeparator());
+		}
 		return sb.toString();
 	}
 
