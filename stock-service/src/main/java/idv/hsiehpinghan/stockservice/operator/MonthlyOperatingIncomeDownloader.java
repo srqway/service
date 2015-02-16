@@ -3,11 +3,11 @@ package idv.hsiehpinghan.stockservice.operator;
 import idv.hsiehpinghan.collectionutility.utility.ArrayUtility;
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
+import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
 import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
-import idv.hsiehpinghan.seleniumassistant.webelement.Font;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.Td;
 import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
@@ -16,6 +16,7 @@ import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.webelement.MonthlyOperatingIncomeDownloadTable;
 import idv.hsiehpinghan.stockservice.webelement.MonthlyOperatingIncomeDownloadTable.MonthlyOperatingIncome;
+import idv.hsiehpinghan.stockservice.webelement.SubsidiaryTable;
 import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
@@ -23,8 +24,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -32,6 +33,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,12 +46,12 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private String titleString;
 	private final String YYYYMM = "yyyyMM";
 	private final String HISTORY = "歷史資料";
-	private final int MAX_TRY_AMOUNT = 100;
+	private final int MAX_TRY_AMOUNT = 3;
 	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
 	private File downloadedLog;
-	private List<String> downloadedList;
+	private Set<String> downloadedSet;
 	private StringBuilder sb = new StringBuilder();
 
 	@Autowired
@@ -58,8 +60,6 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private StockInfoRepository infoRepo;
 	@Autowired
 	private HtmlUnitFirefoxVersionBrowser browser;
-
-	// private FirefoxBrowser browser = new FirefoxBrowser();
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -73,7 +73,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 			InstantiationException, IllegalArgumentException,
 			InvocationTargetException {
 		moveToTargetPage();
-		downloadedList = FileUtils.readLines(downloadedLog);
+		updateDownloadedSet();
 		Date now = Calendar.getInstance().getTime();
 		selectSearchType(HISTORY);
 		for (RowKey rowKey : infoRepo.getRowKeys()) {
@@ -91,7 +91,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 					boolean hasData = repeatTryDownload(stockCode, targetDate);
 					if (hasData == true) {
 						logger.info(downloadInfo + " processed success.");
-						writeToDownloadedFile(downloadInfo);
+						writeToDownloadedFileAndSet(downloadInfo);
 					} else {
 						logger.info(downloadInfo + " has no data.");
 					}
@@ -143,6 +143,9 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 		int tryAmount = 0;
 		while (true) {
 			try {
+				browser.getButton(
+						By.cssSelector("td.bar01b:nth-child(4) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)"))
+						.click();
 				return download(stockCode, targetDate);
 			} catch (Exception e) {
 				++tryAmount;
@@ -160,6 +163,10 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 		return getDownloadInfo(stockCode, date) + ".csv";
 	}
 
+	void updateDownloadedSet() throws IOException {
+		downloadedSet = FileUtility.readLinesAsHashSet(downloadedLog);
+	}
+
 	private String getTargetText(Date date) {
 		String rocYear = DateUtility.getRocDateString(date, "yyyy");
 		String month = DateUtility.getRocDateString(date, "MM");
@@ -168,9 +175,6 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 
 	private boolean download(String stockCode, Date targetDate)
 			throws IOException {
-		browser.getButton(
-				By.cssSelector("td.bar01b:nth-child(4) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2) > div:nth-child(1) > div:nth-child(1) > input:nth-child(1)"))
-				.click();
 		try {
 			Td td = browser.getTd(By.cssSelector("td.reportCont:nth-child(2)"));
 			AjaxWaitUtility.waitUntilTextEqual(td, getTargetText(targetDate));
@@ -181,15 +185,63 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 			logger.info(file.getAbsolutePath() + " downloaded.");
 			return true;
 		} catch (TimeoutException e) {
-			String text = browser.getFont(By
-					.cssSelector("#table01 > center > h3:nth-child(1)")).getText();
-			if ("資料庫中查無需求資料。".equals(text)) {
-				return false;
-			} else if ("外國發行人免申報本項資訊".equals(text)) {
-				return true;
+			try {
+				String text = browser.getFont(
+						By.cssSelector("#table01 > center > h3:nth-child(1)"))
+						.getText();
+				if ("資料庫中查無需求資料。".equals(text)) {
+					return false;
+				} else if ("外國發行人免申報本項資訊".equals(text)) {
+					return true;
+				}
+				throw e;
+			} catch (NoSuchElementException ex) {
+				return repeatTryDownloadSubsidiary(targetDate);
 			}
-			throw e;
 		}
+	}
+
+	private SubsidiaryTable getSubsidiaryTable() {
+		return new SubsidiaryTable(browser.getTable(By
+				.cssSelector("#table01 > form > table.hasBorder")));
+	}
+
+	private boolean repeatTryDownloadSubsidiary(Date targetDate) {
+		SubsidiaryTable tab = getSubsidiaryTable();
+		// i = 0 is title.
+		for (int i = 1, size = tab.getRowSize(); i < size; ++i) {
+			int tryAmount = 0;
+			while (true) {
+				try {
+					String stockCode = tab.getStockCode(i);
+					String downloadInfo = getDownloadInfo(stockCode, targetDate);
+					if (isDownloaded(downloadInfo) == false) {
+						tab.clickQueryButton(i);
+						download(stockCode, targetDate);
+						clickBackToPrePage();
+						writeToDownloadedFileAndSet(downloadInfo);
+					}
+					break;
+				} catch (Exception e) {
+					++tryAmount;
+					logger.info("Subsidiary download fail " + tryAmount
+							+ " times !!!");
+					if (tryAmount >= MAX_TRY_AMOUNT) {
+						logger.error(browser.getWebDriver().getPageSource());
+						throw new RuntimeException(e);
+					}
+					ThreadUtility.sleep(tryAmount * 10);
+				}
+			}
+		}
+		return true;
+	}
+
+	private void clickBackToPrePage() {
+		browser.getA(By.cssSelector("#ajax_back_button")).click();
+		;
+		SubsidiaryTable tab = getSubsidiaryTable();
+		AjaxWaitUtility.waitUntilRowTextEqual(tab, 0, tab.getTargetRowTexts());
 	}
 
 	private File writeToCsvFile(String stockCode, Date date,
@@ -292,16 +344,18 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	}
 
 	private boolean isDownloaded(String downloadInfo) throws IOException {
-		if (downloadedList.contains(downloadInfo)) {
+		if (downloadedSet.contains(downloadInfo)) {
 			logger.info(downloadInfo + " downloaded before.");
 			return true;
 		}
 		return false;
 	}
 
-	private void writeToDownloadedFile(String downloadInfo) throws IOException {
+	private void writeToDownloadedFileAndSet(String downloadInfo)
+			throws IOException {
 		String infoLine = downloadInfo + System.lineSeparator();
 		FileUtils.write(downloadedLog, infoLine, Charsets.UTF_8, true);
+		downloadedSet.add(downloadInfo);
 	}
 
 	private Div getYearDiv() {

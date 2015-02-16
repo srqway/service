@@ -2,6 +2,7 @@ package idv.hsiehpinghan.stockservice.manager.hbase;
 
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
+import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.DailyData;
 import idv.hsiehpinghan.stockdao.entity.DailyData.ClosingConditionFamily;
 import idv.hsiehpinghan.stockdao.repository.DailyDataRepository;
@@ -19,6 +20,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -121,10 +123,11 @@ public class StockClosingConditionHbaseManager implements
 			InstantiationException {
 		int count = 0;
 		Date ver = new Date();
-		List<String> processedList = FileUtils.readLines(processedLogOfTwse);
+		Set<String> processedSet = FileUtility
+				.readLinesAsHashSet(processedLogOfTwse);
 		// ex. A11220130104ALLBUT0999.csv
 		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
-			if (isProcessed(processedList, file)) {
+			if (isProcessed(processedSet, file)) {
 				continue;
 			}
 			Date date = DateUtils.parseDate(file.getName().substring(4, 12),
@@ -179,10 +182,11 @@ public class StockClosingConditionHbaseManager implements
 			InvocationTargetException, InstantiationException {
 		int count = 0;
 		Date ver = new Date();
-		List<String> processedList = FileUtils.readLines(processedLogOfGretai);
+		Set<String> processedSet = FileUtility
+				.readLinesAsHashSet(processedLogOfGretai);
 		// ex. SQUOTE_EW_1020107.csv
 		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
-			if (isProcessed(processedList, file)) {
+			if (isProcessed(processedSet, file)) {
 				continue;
 			}
 			Date date = DateUtility.parseRocDate(
@@ -324,10 +328,10 @@ public class StockClosingConditionHbaseManager implements
 		return str.trim();
 	}
 
-	private boolean isProcessed(List<String> processedList, File file)
+	private boolean isProcessed(Set<String> processedSet, File file)
 			throws IOException {
 		String processedInfo = generateProcessedInfo(file);
-		if (processedList.contains(processedInfo)) {
+		if (processedSet.contains(processedInfo)) {
 			logger.info(processedInfo + " processed before.");
 			return true;
 		}

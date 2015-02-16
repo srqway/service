@@ -1,5 +1,6 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
+import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.StockInfo.RowKey;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy.PresentationFamily;
@@ -25,6 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -189,18 +191,17 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	}
 
 	int saveFinancialReportToHBase(File xbrlDir) throws Exception {
-		List<String> processedList = FileUtils.readLines(processedLog);
+		Set<String> processedSet = FileUtility.readLinesAsHashSet(processedLog);
 		int count = 0;
 		// ex. tifrs-fr0-m1-ci-cr-1101-2013Q1.xml
 		for (File file : FileUtils.listFiles(xbrlDir, EXTENSIONS, true)) {
-			processXbrlFiles(file, processedList);
+			processXbrlFiles(file, processedSet);
 			++count;
 		}
 		return count;
 	}
 
-	void processXbrlFiles(File file, List<String> processedList)
-			throws Exception {
+	void processXbrlFiles(File file, Set<String> processedSet) throws Exception {
 		String[] strArr = file.getName().split("-");
 		String stockCode = strArr[5];
 		ReportType reportType = ReportType.getMopsReportType(strArr[4]);
@@ -208,7 +209,7 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		int season = Integer.valueOf(strArr[6].substring(5, 6));
 		ObjectNode objNode = instanceAssistant
 				.getInstanceJson(file, presentIds);
-		if (isProcessed(processedList, file) == false) {
+		if (isProcessed(processedSet, file) == false) {
 			Xbrl entity = converter.convert(stockCode, reportType, year,
 					season, objNode);
 			xbrlRepo.put(entity);
@@ -232,10 +233,10 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		}
 	}
 
-	private boolean isProcessed(List<String> processedList, File file)
+	private boolean isProcessed(Set<String> processedSet, File file)
 			throws IOException {
 		String processedInfo = generateProcessedInfo(file);
-		if (processedList.contains(processedInfo)) {
+		if (processedSet.contains(processedInfo)) {
 			logger.info(processedInfo + " processed before.");
 			return true;
 		}

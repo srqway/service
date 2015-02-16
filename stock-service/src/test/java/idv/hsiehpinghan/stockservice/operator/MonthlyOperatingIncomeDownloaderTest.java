@@ -79,6 +79,7 @@ public class MonthlyOperatingIncomeDownloaderTest {
 	public void repeatTryDownload() {
 		repeatTryDownloadType1();
 		repeatTryDownloadType2();
+		repeatTryDownloadType3();
 	}
 
 	@Test(dependsOnMethods = { "repeatTryDownload" })
@@ -116,6 +117,26 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		inputYear();
 		selectMonth();
 		try {
+			downloader.repeatTryDownload(stockCode, date);
+		} catch (Exception e) {
+			System.err.println(downloader.getBrowser().getWebDriver()
+					.getPageSource());
+			throw new RuntimeException(e);
+		}
+		String fileName = downloader.getFileName(stockCode, date);
+		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
+		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+		// DeleteUtility.delete(dir, fileName);
+	}
+
+	private void repeatTryDownloadType3() {
+		stockCode = "1907";
+		date = DateUtility.getDate(2013, 1, 1);
+		inputStockCode();
+		inputYear();
+		selectMonth();
+		try {
+			downloader.updateDownloadedSet();
 			downloader.repeatTryDownload(stockCode, date);
 		} catch (Exception e) {
 			System.err.println(downloader.getBrowser().getWebDriver()

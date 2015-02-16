@@ -1,6 +1,7 @@
 package idv.hsiehpinghan.stockservice.operator;
 
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
+import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
 import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
@@ -16,6 +17,7 @@ import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -33,7 +35,7 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
 	private File downloadedLog;
-	private List<String> downloadedList;
+	private Set<String> downloadedSet;
 	@Autowired
 	private HtmlUnitFirefoxVersionBrowser browser;
 	@Autowired
@@ -47,7 +49,7 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 
 	public File downloadCompanyBasicInfo() throws IOException {
 		moveToTargetPage();
-		downloadedList = FileUtils.readLines(downloadedLog);
+		downloadedSet = FileUtility.readLinesAsHashSet(downloadedLog);
 		List<Option> mkOpts = getMarketTypeSelect().getOptions();
 		String oldStockCode = EMPTY_STRING;
 		for (int iMk = mkOpts.size() - 1; iMk >= 0; --iMk) {
@@ -74,7 +76,7 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 				oldStockCode = repeatTryDownload(oldStockCode, fileName);
 				if (EMPTY_STRING.equals(oldStockCode) == false) {
 					logger.info(downloadInfo + " processed success.");
-					writeToDownloadedFile(downloadInfo);
+					writeToDownloadedFileAndSet(downloadInfo);
 				} else {
 					logger.info(downloadInfo + " has no data.");
 				}
@@ -215,15 +217,17 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 	}
 
 	private boolean isDownloaded(String downloadInfo) throws IOException {
-		if (downloadedList.contains(downloadInfo)) {
+		if (downloadedSet.contains(downloadInfo)) {
 			logger.info(downloadInfo + " downloaded before.");
 			return true;
 		}
 		return false;
 	}
 
-	private void writeToDownloadedFile(String downloadInfo) throws IOException {
+	private void writeToDownloadedFileAndSet(String downloadInfo)
+			throws IOException {
 		String infoLine = downloadInfo + System.lineSeparator();
 		FileUtils.write(downloadedLog, infoLine, Charsets.UTF_8, true);
+		downloadedSet.add(downloadInfo);
 	}
 }

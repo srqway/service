@@ -14,8 +14,8 @@ import idv.hsiehpinghan.testutility.utility.SystemResourceUtility;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -64,7 +64,7 @@ public class FinancialReportHbaseManagerTest {
 	public void processXbrlFiles() throws Exception {
 		File instanceFile = SystemResourceUtility
 				.getFileResource("xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml");
-		manager.processXbrlFiles(instanceFile, new ArrayList<String>(0));
+		manager.processXbrlFiles(instanceFile, new HashSet<String>(0));
 		String[] strArr = instanceFile.getName().split("-");
 		String stockCode = strArr[5];
 		ReportType reportType = ReportType.getMopsReportType(strArr[4]);

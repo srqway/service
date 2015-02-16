@@ -1,6 +1,7 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
+import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.MonthlyData;
 import idv.hsiehpinghan.stockdao.entity.MonthlyData.OperatingIncomeFamily;
 import idv.hsiehpinghan.stockdao.repository.MonthlyDataRepository;
@@ -16,6 +17,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -72,10 +74,10 @@ public class MonthlyOperatingIncomeHbaseManager implements
 			InvocationTargetException, InstantiationException {
 		int count = 0;
 		Date ver = new Date();
-		List<String> processedList = FileUtils.readLines(processedLog);
+		Set<String> processedSet = FileUtility.readLinesAsHashSet(processedLog);
 		// ex. 1101_201301.csv
 		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
-			if (isProcessed(processedList, file)) {
+			if (isProcessed(processedSet, file)) {
 				continue;
 			}
 			List<String> lines = FileUtils.readLines(file, UTF8);
@@ -197,10 +199,10 @@ public class MonthlyOperatingIncomeHbaseManager implements
 		}
 	}
 
-	private boolean isProcessed(List<String> processedList, File file)
+	private boolean isProcessed(Set<String> processedSet, File file)
 			throws IOException {
 		String processedInfo = generateProcessedInfo(file);
-		if (processedList.contains(processedInfo)) {
+		if (processedSet.contains(processedInfo)) {
 			logger.info(processedInfo + " processed before.");
 			return true;
 		}

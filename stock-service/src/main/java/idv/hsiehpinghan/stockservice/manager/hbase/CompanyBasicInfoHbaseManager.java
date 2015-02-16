@@ -1,6 +1,7 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
+import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.StockInfo;
 import idv.hsiehpinghan.stockdao.entity.StockInfo.CompanyFamily;
 import idv.hsiehpinghan.stockdao.enumeration.IndustryType;
@@ -16,6 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -76,10 +78,10 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 			InvocationTargetException, InstantiationException {
 		int count = 0;
 		Date ver = new Date();
-		List<String> processedList = FileUtils.readLines(processedLog);
+		Set<String> processedSet = FileUtility.readLinesAsHashSet(processedLog);
 		// ex. otc_06.csv
 		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
-			if (isProcessed(processedList, file)) {
+			if (isProcessed(processedSet, file)) {
 				continue;
 			}
 			List<String> lines = FileUtils.readLines(file, BIG5);
@@ -182,10 +184,10 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 		return str.trim();
 	}
 
-	private boolean isProcessed(List<String> processedList, File file)
+	private boolean isProcessed(Set<String> processedSet, File file)
 			throws IOException {
 		String processedInfo = generateProcessedInfo(file);
-		if (processedList.contains(processedInfo)) {
+		if (processedSet.contains(processedInfo)) {
 			logger.info(processedInfo + " processed before.");
 			return true;
 		}
