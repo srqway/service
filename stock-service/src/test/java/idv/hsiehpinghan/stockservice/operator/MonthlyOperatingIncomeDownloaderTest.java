@@ -75,14 +75,15 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		Assert.assertEquals(sel.getSelectedText(), String.valueOf(month));
 	}
 
-	@Test(dependsOnMethods = { "selectMonth" })
+//	@Test(dependsOnMethods = { "selectMonth" })
 	public void repeatTryDownload() {
 		repeatTryDownloadType1();
 		repeatTryDownloadType2();
 		repeatTryDownloadType3();
 	}
 
-	@Test(dependsOnMethods = { "repeatTryDownload" })
+//	@Test(dependsOnMethods = { "repeatTryDownload" })
+	@Test(dependsOnMethods = { "selectMonth" })
 	public void downloadMonthlyOperatingIncome() throws Exception {
 		String stockCode = "2330";
 		File dir = downloader.downloadMonthlyOperatingIncome();
@@ -143,7 +144,7 @@ public class MonthlyOperatingIncomeDownloaderTest {
 					.getPageSource());
 			throw new RuntimeException(e);
 		}
-		String fileName = downloader.getFileName(stockCode, date);
+		String fileName = downloader.getFileName(stockCode + "0021", date);
 		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
 		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
 		// DeleteUtility.delete(dir, fileName);

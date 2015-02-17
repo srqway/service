@@ -46,7 +46,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private String titleString;
 	private final String YYYYMM = "yyyyMM";
 	private final String HISTORY = "歷史資料";
-	private final int MAX_TRY_AMOUNT = 3;
+	private final int MAX_TRY_AMOUNT = 100;
 	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
@@ -154,7 +154,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 					logger.error(browser.getWebDriver().getPageSource());
 					throw new RuntimeException(e);
 				}
-				ThreadUtility.sleep(tryAmount * 10);
+				ThreadUtility.sleep(tryAmount * 1);
 			}
 		}
 	}
@@ -209,16 +209,18 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private boolean repeatTryDownloadSubsidiary(Date targetDate) {
 		SubsidiaryTable tab = getSubsidiaryTable();
 		// i = 0 is title.
-		for (int i = 1, size = tab.getRowSize(); i < size; ++i) {
+		for (int i = tab.getRowSize(), endRow = 2; i >= endRow; --i) {
+			boolean hasClickedQueryButton = false;
 			int tryAmount = 0;
 			while (true) {
+				hasClickedQueryButton = false;
 				try {
 					String stockCode = tab.getStockCode(i);
 					String downloadInfo = getDownloadInfo(stockCode, targetDate);
 					if (isDownloaded(downloadInfo) == false) {
 						tab.clickQueryButton(i);
+						hasClickedQueryButton = true;
 						download(stockCode, targetDate);
-						clickBackToPrePage();
 						writeToDownloadedFileAndSet(downloadInfo);
 					}
 					break;
@@ -231,15 +233,18 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 						throw new RuntimeException(e);
 					}
 					ThreadUtility.sleep(tryAmount * 10);
+				} finally {
+					if (hasClickedQueryButton) {
+						clickBackToPrePageButton();
+					}
 				}
 			}
 		}
 		return true;
 	}
 
-	private void clickBackToPrePage() {
+	private void clickBackToPrePageButton() {
 		browser.getA(By.cssSelector("#ajax_back_button")).click();
-		;
 		SubsidiaryTable tab = getSubsidiaryTable();
 		AjaxWaitUtility.waitUntilRowTextEqual(tab, 0, tab.getTargetRowTexts());
 	}
@@ -345,7 +350,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 
 	private boolean isDownloaded(String downloadInfo) throws IOException {
 		if (downloadedSet.contains(downloadInfo)) {
-			logger.info(downloadInfo + " downloaded before.");
+			logger.debug(downloadInfo + " downloaded before.");
 			return true;
 		}
 		return false;
