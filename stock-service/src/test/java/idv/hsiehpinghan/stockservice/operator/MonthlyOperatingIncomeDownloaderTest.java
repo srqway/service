@@ -75,14 +75,14 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		Assert.assertEquals(sel.getSelectedText(), String.valueOf(month));
 	}
 
-//	@Test(dependsOnMethods = { "selectMonth" })
+//	 @Test(dependsOnMethods = { "selectMonth" })
 	public void repeatTryDownload() {
 		repeatTryDownloadType1();
 		repeatTryDownloadType2();
 		repeatTryDownloadType3();
 	}
 
-//	@Test(dependsOnMethods = { "repeatTryDownload" })
+//	 @Test(dependsOnMethods = { "repeatTryDownload" })
 	@Test(dependsOnMethods = { "selectMonth" })
 	public void downloadMonthlyOperatingIncome() throws Exception {
 		String stockCode = "2330";
@@ -107,7 +107,7 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		}
 		String fileName = downloader.getFileName(stockCode, date);
 		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
-		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+		Assert.assertTrue(ArrayUtils.contains(downloader.getTargetDirectory(date).list(), fileName));
 		// DeleteUtility.delete(dir, fileName);
 	}
 
@@ -126,7 +126,7 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		}
 		String fileName = downloader.getFileName(stockCode, date);
 		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
-		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+		Assert.assertTrue(ArrayUtils.contains(downloader.getTargetDirectory(date).list(), fileName));
 		// DeleteUtility.delete(dir, fileName);
 	}
 
@@ -137,7 +137,7 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		inputYear();
 		selectMonth();
 		try {
-			downloader.updateDownloadedSet();
+			downloader.readDownloadedFileAndUpdateSet(date);
 			downloader.repeatTryDownload(stockCode, date);
 		} catch (Exception e) {
 			System.err.println(downloader.getBrowser().getWebDriver()
@@ -146,7 +146,7 @@ public class MonthlyOperatingIncomeDownloaderTest {
 		}
 		String fileName = downloader.getFileName(stockCode + "0021", date);
 		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
-		Assert.assertTrue(ArrayUtils.contains(dir.list(), fileName));
+		Assert.assertTrue(ArrayUtils.contains(downloader.getTargetDirectory(date).list(), fileName));
 		// DeleteUtility.delete(dir, fileName);
 	}
 }

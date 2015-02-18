@@ -41,6 +41,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MonthlyOperatingIncomeDownloader implements InitializingBean {
+	public static final String DOWNLOADED_LOG_FILE_NAME = "downloaded.log";
 	private final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private final String EMPTY_STRING = StringUtility.EMPTY_STRING;
 	private String titleString;
@@ -65,7 +66,6 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		downloadDir = stockServiceProperty
 				.getMonthlyOperatingIncomeDownloadDir();
-		generateDownloadedLogFile();
 	}
 
 	public File downloadMonthlyOperatingIncome() throws IOException,
@@ -73,16 +73,15 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 			InstantiationException, IllegalArgumentException,
 			InvocationTargetException {
 		moveToTargetPage();
-		updateDownloadedSet();
 		Date now = Calendar.getInstance().getTime();
 		selectSearchType(HISTORY);
-		for (RowKey rowKey : infoRepo.getRowKeys()) {
-			String stockCode = rowKey.getStockCode();
-			inputStockCode(stockCode);
-			Date targetDate = BEGIN_DATA_DATE;
-			// while (targetDate.getTime() < now.getTime()) {
-			while (targetDate.getTime() < DateUtils.addMonths(now, -1)
-					.getTime()) {
+		Date targetDate = BEGIN_DATA_DATE;
+		// while (targetDate.getTime() < now.getTime()) {
+		while (targetDate.getTime() < DateUtils.addMonths(now, -1).getTime()) {
+			readDownloadedFileAndUpdateSet(targetDate);
+			for (RowKey rowKey : infoRepo.getRowKeys()) {
+				String stockCode = rowKey.getStockCode();
+				inputStockCode(stockCode);
 				String downloadInfo = getDownloadInfo(stockCode, targetDate);
 				if (isDownloaded(downloadInfo) == false) {
 					inputYear(targetDate);
@@ -97,8 +96,8 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 					}
 
 				}
-				targetDate = DateUtils.addMonths(targetDate, 1);
 			}
+			targetDate = DateUtils.addMonths(targetDate, 1);
 		}
 		return downloadDir;
 	}
@@ -163,7 +162,17 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 		return getDownloadInfo(stockCode, date) + ".csv";
 	}
 
-	void updateDownloadedSet() throws IOException {
+	File getTargetDirectory(Date date) {
+		int year = DateUtility.getYear(date);
+		int month = DateUtility.getMonth(date);
+		return FileUtility.getOrCreateDirectory(downloadDir,
+				String.valueOf(year), String.valueOf(month));
+	}
+
+	void readDownloadedFileAndUpdateSet(Date date) throws IOException {
+		File targetDir = getTargetDirectory(date);
+		downloadedLog = FileUtility.getOrCreateFile(targetDir,
+				DOWNLOADED_LOG_FILE_NAME);
 		downloadedSet = FileUtility.readLinesAsHashSet(downloadedLog);
 	}
 
@@ -209,7 +218,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private boolean repeatTryDownloadSubsidiary(Date targetDate) {
 		SubsidiaryTable tab = getSubsidiaryTable();
 		// i = 0 is title.
-		for (int i = tab.getRowSize(), endRow = 2; i >= endRow; --i) {
+		for (int i = tab.getRowSize() - 1, endRow = 2; i >= endRow; --i) {
 			boolean hasClickedQueryButton = false;
 			int tryAmount = 0;
 			while (true) {
@@ -251,7 +260,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 
 	private File writeToCsvFile(String stockCode, Date date,
 			MonthlyOperatingIncomeDownloadTable table) throws IOException {
-		File csvFile = new File(downloadDir.getAbsolutePath(), getFileName(
+		File csvFile = new File(getTargetDirectory(date), getFileName(
 				stockCode, date));
 		FileUtils.write(csvFile, generateCsvFileTitle(), Charsets.UTF_8, false);
 		FileUtils.write(csvFile, generateCsvFileData(table), Charsets.UTF_8,
@@ -333,15 +342,6 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 
 	private Date generateBeginDataDate() {
 		return DateUtility.getDate(2013, 1, 1);
-	}
-
-	private void generateDownloadedLogFile() throws IOException {
-		if (downloadedLog == null) {
-			downloadedLog = new File(downloadDir, "downloaded.log");
-			if (downloadedLog.exists() == false) {
-				FileUtils.touch(downloadedLog);
-			}
-		}
 	}
 
 	private String getDownloadInfo(String stockCode, Date date) {
