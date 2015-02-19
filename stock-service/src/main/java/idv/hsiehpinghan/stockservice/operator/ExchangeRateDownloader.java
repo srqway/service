@@ -4,7 +4,7 @@ import idv.hsiehpinghan.datetimeutility.utility.CalendarUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select.Option;
-import idv.hsiehpinghan.stockdao.enumeration.DollarType;
+import idv.hsiehpinghan.stockdao.enumeration.CurrencyType;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.webelement.ExchangeRateDownloadTable;
 import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
@@ -47,7 +47,7 @@ public class ExchangeRateDownloader implements InitializingBean {
 	 * @param targetDallars
 	 * @return
 	 */
-	public File downloadExchangeRate(List<DollarType> targetDallars) {
+	public File downloadExchangeRate(List<CurrencyType> targetDallars) {
 		moveToTargetPage();
 		clickPeriodType();
 		List<Option> yearOpts = getYearSelect().getOptions();
@@ -142,8 +142,9 @@ public class ExchangeRateDownloader implements InitializingBean {
 		browser.getButton(By.id("Button1")).click();
 	}
 
-	private boolean isTargetDollar(String dollar, List<DollarType> targetDallars) {
-		for (DollarType dol : targetDallars) {
+	private boolean isTargetDollar(String dollar,
+			List<CurrencyType> targetDallars) {
+		for (CurrencyType dol : targetDallars) {
 			if (dol.name().equals(dollar)) {
 				return true;
 			}

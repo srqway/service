@@ -1,6 +1,6 @@
 package idv.hsiehpinghan.stockservice.operator;
 
-import idv.hsiehpinghan.stockdao.enumeration.DollarType;
+import idv.hsiehpinghan.stockdao.enumeration.CurrencyType;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
 import java.io.File;
@@ -26,8 +26,8 @@ public class ExchangeRateDownloaderTest {
 
 	@Test
 	public void downloadExchangeRate() {
-		List<DollarType> dollars = new ArrayList<DollarType>(1);
-		dollars.add(DollarType.USD);
+		List<CurrencyType> dollars = new ArrayList<CurrencyType>(1);
+		dollars.add(CurrencyType.USD);
 		File f = downloader.downloadExchangeRate(dollars);
 		Assert.assertTrue(f.list().length > 0);
 	}

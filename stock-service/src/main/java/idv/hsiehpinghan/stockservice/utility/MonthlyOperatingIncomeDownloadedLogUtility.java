@@ -27,14 +27,22 @@ public class MonthlyOperatingIncomeDownloadedLogUtility {
 			}
 		} else {
 			File downloadLog = recreateDownloadedLog(dir);
+//			String oldFileName = "";
 			for (File file : new TreeSet<File>(files)) {
-				String downloadInfo = getDownloadInfo(file);
-				FileUtils
-						.write(downloadLog, downloadInfo, Charsets.UTF_8, true);
+//				if (oldFileName.startsWith(getTest(file)) == false) {
+					String downloadInfo = getDownloadInfo(file);
+					FileUtils.write(downloadLog, downloadInfo, Charsets.UTF_8,
+							true);
+//				}
+//				oldFileName = file.getName();
 			}
 		}
 	}
 
+//	private static String getTest(File file) {
+//		String[] sArr =file.getName().split("\\.");
+//		return sArr[0].split("_")[0];
+//	}
 	private static String getDownloadInfo(File file) {
 		return file.getName().split("\\.")[0] + System.lineSeparator();
 	}

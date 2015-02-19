@@ -87,10 +87,10 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 					inputYear(targetDate);
 					selectMonth(targetDate);
 					logger.info(downloadInfo + " process start.");
-					boolean hasData = repeatTryDownload(stockCode, targetDate);
-					if (hasData == true) {
-						logger.info(downloadInfo + " processed success.");
+					boolean markAsDownloaded = repeatTryDownload(stockCode, targetDate);
+					if (markAsDownloaded == true) {
 						writeToDownloadedFileAndSet(downloadInfo);
+						logger.info(downloadInfo + " processed success.");
 					} else {
 						logger.info(downloadInfo + " has no data.");
 					}
@@ -199,8 +199,15 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 						By.cssSelector("#table01 > center > h3:nth-child(1)"))
 						.getText();
 				if ("資料庫中查無需求資料。".equals(text)) {
-					return false;
+					Date now = Calendar.getInstance().getTime();
+					if (isTwoMonthAgo(targetDate, now)) {
+						return true;
+					} else {
+						return false;	
+					}
 				} else if ("外國發行人免申報本項資訊".equals(text)) {
+					return true;
+				} else if ("本項目對發行臺灣存託憑證之公司屬自願申報".equals(text)) {
 					return true;
 				}
 				throw e;
@@ -354,6 +361,12 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 			return true;
 		}
 		return false;
+	}
+
+	private boolean isTwoMonthAgo(Date targetDate, Date now) {
+		long diff = now.getTime() - targetDate.getTime();
+		long twoMonth = 60 * DateUtility.DAY_MILLISECONDS;
+		return diff > twoMonth;
 	}
 
 	private void writeToDownloadedFileAndSet(String downloadInfo)
