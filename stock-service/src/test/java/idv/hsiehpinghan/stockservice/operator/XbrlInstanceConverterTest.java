@@ -3,7 +3,6 @@ package idv.hsiehpinghan.stockservice.operator;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily.InfoQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
-import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RowKey;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
@@ -80,9 +79,10 @@ public class XbrlInstanceConverterTest {
 		Assert.assertEquals(unitType, instVal.getUnitType());
 		Assert.assertEquals(value, instVal.getValue());
 		// Test ItemFamily
-		ItemValue itemVal = xbrl.getItemFamily().getItemValue(elementId,
-				periodType, startDate, endDate);
-		Assert.assertEquals(value, itemVal.getValue());
+		Assert.assertEquals(
+				value,
+				xbrl.getItemFamily().get(stockCode, periodType, startDate,
+						endDate));
 		// Test ItemFamily
 		BigDecimal ratio = xbrl.getGrowthFamily().getRatio(elementId,
 				periodType, startDate, endDate);

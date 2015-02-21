@@ -41,6 +41,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+/**
+ * Convert xbrl json to xbrl instance.
+ * 
+ * @author thank.hsiehpinghan
+ *
+ */
 @Service
 public class XbrlInstanceConverter {
 	private static final String COMMA_STRING = StringUtility.COMMA_STRING;
@@ -89,24 +95,21 @@ public class XbrlInstanceConverter {
 	private BigDecimal getOneYearBeforeValue(ItemFamily itemFamily,
 			String elementId, PeriodType periodType, Date instant,
 			Date startDate, Date endDate) {
-		ItemValue itemValue = null;
+		BigDecimal itemValue = null;
 		if (PeriodType.INSTANT.equals(periodType)) {
 			Date oneYearBeforeInstant = DateUtils.addYears(instant, -1);
-			itemValue = itemFamily.getItemValue(elementId, periodType,
+			itemValue = itemFamily.get(elementId, periodType,
 					oneYearBeforeInstant);
 		} else if (PeriodType.DURATION.equals(periodType)) {
 			Date oneYearBeforeStartDate = DateUtils.addYears(startDate, -1);
 			Date oneYearBeforeEndDate = DateUtils.addYears(endDate, -1);
-			itemValue = itemFamily.getItemValue(elementId, periodType,
+			itemValue = itemFamily.get(elementId, periodType,
 					oneYearBeforeStartDate, oneYearBeforeEndDate);
 		} else {
 			throw new RuntimeException("PeriodType(" + periodType
 					+ ") not implements !!!");
 		}
-		if (itemValue == null) {
-			return null;
-		}
-		return itemValue.getValue();
+		return itemValue;
 	}
 
 	private Set<Entry<ItemQualifier, ItemValue>> getLatestElementIdRecord(
@@ -186,8 +189,8 @@ public class XbrlInstanceConverter {
 				InstanceValue val = (InstanceValue) verEnt.getValue();
 				BigDecimal value = getTwdValue(val.getUnitType(),
 						val.getValue());
-				itemFamily.setItemValue(elementId, periodType, instant,
-						startDate, endDate, ver, value);
+				itemFamily.set(elementId, periodType, instant, startDate,
+						endDate, ver, value);
 			}
 		}
 	}

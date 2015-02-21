@@ -4,7 +4,6 @@ import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy.PresentationFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily;
-import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemValue;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.repository.TaxonomyRepository;
@@ -13,6 +12,7 @@ import idv.hsiehpinghan.xbrlassistant.xbrl.Presentation;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
@@ -172,22 +172,22 @@ public class FinancialReportJsonMaker {
 
 				if (PeriodType.INSTANT.equals(periodType)) {
 					for (String period : periods) {
-						ItemValue itemValue = getInstantItemValue(key, period,
+						BigDecimal itemValue = getInstantItemValue(key, period,
 								xbrl);
 						if (itemValue == null) {
 							continue;
 						}
-						objNode.put(period, itemValue.getValue());
+						objNode.put(period, itemValue);
 						hasContent |= true;
 					}
 				} else if (PeriodType.DURATION.equals(periodType)) {
 					for (String period : periods) {
-						ItemValue itemValue = getDurationItemValue(key, period,
-								xbrl);
+						BigDecimal itemValue = getDurationItemValue(key,
+								period, xbrl);
 						if (itemValue == null) {
 							continue;
 						}
-						objNode.put(period, itemValue.getValue());
+						objNode.put(period, itemValue);
 						hasContent |= true;
 					}
 				} else {
@@ -205,19 +205,18 @@ public class FinancialReportJsonMaker {
 		return hasContent;
 	}
 
-	private ItemValue getInstantItemValue(String elementId, String period,
+	private BigDecimal getInstantItemValue(String elementId, String period,
 			Xbrl xbrl) throws ParseException {
 		Date instant = DateUtils.parseDate(period, YYYYMMDD);
-		return xbrl.getItemFamily().getItemValue(elementId, PeriodType.INSTANT,
-				instant);
+		return xbrl.getItemFamily().get(elementId, PeriodType.INSTANT, instant);
 	}
 
-	private ItemValue getDurationItemValue(String elementId, String period,
+	private BigDecimal getDurationItemValue(String elementId, String period,
 			Xbrl xbrl) throws ParseException {
 		Date startDate = getStartDate(period);
 		Date endDate = getEndDate(period);
-		return xbrl.getItemFamily().getItemValue(elementId,
-				PeriodType.DURATION, startDate, endDate);
+		return xbrl.getItemFamily().get(elementId, PeriodType.DURATION,
+				startDate, endDate);
 	}
 
 	private Date getInstantDate(String period) throws ParseException {
