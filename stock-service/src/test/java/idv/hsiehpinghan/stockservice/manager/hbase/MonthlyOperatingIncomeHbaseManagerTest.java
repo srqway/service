@@ -7,6 +7,8 @@ import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
 import org.springframework.context.ApplicationContext;
@@ -18,6 +20,7 @@ public class MonthlyOperatingIncomeHbaseManagerTest {
 	private MonthlyOperatingIncomeHbaseManager manager;
 	private StockServiceProperty stockServiceProperty;
 	private MonthlyDataRepository monthlyRepo;
+	private Date ver = Calendar.getInstance().getTime();
 
 	@BeforeClass
 	public void beforeClass() throws Exception {
@@ -36,7 +39,7 @@ public class MonthlyOperatingIncomeHbaseManagerTest {
 	public void saveMonthlyOperatingIncomeToHBase() throws Exception {
 		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
 		truncateProcessedLogFle(dir);
-		manager.saveMonthlyOperatingIncomeToHBase(dir);
+		manager.saveMonthlyOperatingIncomeToHBase(ver, dir);
 		Assert.assertTrue(monthlyRepo.getRowAmount() > 0);
 	}
 

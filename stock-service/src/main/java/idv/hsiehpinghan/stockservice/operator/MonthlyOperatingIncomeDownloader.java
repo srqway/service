@@ -78,7 +78,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 		Date targetDate = BEGIN_DATA_DATE;
 		// while (targetDate.getTime() < now.getTime()) {
 		while (targetDate.getTime() < DateUtils.addMonths(now, -1).getTime()) {
-			readDownloadedFileAndUpdateSet(targetDate);
+			readDownloadedLogAndUpdateDownloadedSet(targetDate);
 			for (RowKey rowKey : infoRepo.getRowKeys()) {
 				String stockCode = rowKey.getStockCode();
 				inputStockCode(stockCode);
@@ -87,9 +87,10 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 					inputYear(targetDate);
 					selectMonth(targetDate);
 					logger.info(downloadInfo + " process start.");
-					boolean markAsDownloaded = repeatTryDownload(stockCode, targetDate);
+					boolean markAsDownloaded = repeatTryDownload(stockCode,
+							targetDate);
 					if (markAsDownloaded == true) {
-						writeToDownloadedFileAndSet(downloadInfo);
+						writeToDownloadedLogAndDownloadedSet(downloadInfo);
 						logger.info(downloadInfo + " processed success.");
 					} else {
 						logger.info(downloadInfo + " has no data.");
@@ -169,7 +170,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 				String.valueOf(year), String.valueOf(month));
 	}
 
-	void readDownloadedFileAndUpdateSet(Date date) throws IOException {
+	void readDownloadedLogAndUpdateDownloadedSet(Date date) throws IOException {
 		File targetDir = getTargetDirectory(date);
 		downloadedLog = FileUtility.getOrCreateFile(targetDir,
 				DOWNLOADED_LOG_FILE_NAME);
@@ -203,7 +204,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 					if (isTwoMonthAgo(targetDate, now)) {
 						return true;
 					} else {
-						return false;	
+						return false;
 					}
 				} else if ("外國發行人免申報本項資訊".equals(text)) {
 					return true;
@@ -237,7 +238,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 						tab.clickQueryButton(i);
 						hasClickedQueryButton = true;
 						download(stockCode, targetDate);
-						writeToDownloadedFileAndSet(downloadInfo);
+						writeToDownloadedLogAndDownloadedSet(downloadInfo);
 					}
 					break;
 				} catch (Exception e) {
@@ -369,7 +370,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 		return diff > twoMonth;
 	}
 
-	private void writeToDownloadedFileAndSet(String downloadInfo)
+	private void writeToDownloadedLogAndDownloadedSet(String downloadInfo)
 			throws IOException {
 		String infoLine = downloadInfo + System.lineSeparator();
 		FileUtils.write(downloadedLog, infoLine, Charsets.UTF_8, true);
