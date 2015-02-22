@@ -202,6 +202,9 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	}
 
 	void processXbrlFiles(File file, Set<String> processedSet) throws Exception {
+		if (isProcessed(processedSet, file)) {
+			return;
+		}
 		String[] strArr = file.getName().split("-");
 		String stockCode = strArr[5];
 		ReportType reportType = ReportType.getMopsReportType(strArr[4]);
@@ -209,14 +212,12 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		int season = Integer.valueOf(strArr[6].substring(5, 6));
 		ObjectNode objNode = instanceAssistant
 				.getInstanceJson(file, presentIds);
-		if (isProcessed(processedSet, file) == false) {
-			Xbrl entity = converter.convert(stockCode, reportType, year,
-					season, objNode);
-			xbrlRepo.put(entity);
-			logger.info(file.getName() + " saved to "
-					+ xbrlRepo.getTargetTableName() + ".");
-			writeToProcessedFile(file);
-		}
+		Xbrl entity = converter.convert(stockCode, reportType, year, season,
+				objNode);
+		xbrlRepo.put(entity);
+		logger.info(file.getName() + " saved to "
+				+ xbrlRepo.getTargetTableName() + ".");
+		writeToProcessedFile(file);
 	}
 
 	private void writeToProcessedFile(File file) throws IOException {

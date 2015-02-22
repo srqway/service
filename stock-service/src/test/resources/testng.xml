@@ -9,14 +9,12 @@
 	<test name="financialReport">
 		<classes>
 			<!-- Test operator -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" 
-				/> -->
+<!-- 			<class -->
+<!-- 				name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" /> -->
 
 			<!-- Test manager -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" -->
-			<!-- /> -->
+			<class
+				name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" />
 		</classes>
 	</test>
 	<test name="stockClosingCondition">
@@ -51,13 +49,13 @@
 	<test name="monthlyOperatingIncome">
 		<classes>
 			<!-- Test operator -->
-<!-- 			<class -->
-<!-- 				name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" /> -->
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" 
+				/> -->
 
 			<!-- Test manager -->
-			<class
-			name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" 
-				/>
+<!-- 			<class -->
+<!-- 				name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" /> -->
 		</classes>
 	</test>
 	<test name="exchangeRate">

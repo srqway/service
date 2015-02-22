@@ -13,6 +13,8 @@ import org.openqa.selenium.WebElement;
 
 public class MonthlyOperatingIncomeDownloadTable extends Table {
 	private static final String EMPTY_STRING = StringUtility.EMPTY_STRING;
+	private static final String COMMA_STRING = StringUtility.COMMA_STRING;
+	private static final String FULL_WIDTH_COMMA_STRING = StringUtility.FULL_WIDTH_COMMA_STRING;
 	private static final int DATA_ROW_BEGIN_INDEX_1 = 1;
 	private static final int DATA_ROW_BEGIN_INDEX_2 = 2;
 	private static final String[] itemNames1 = { "本月", "去年同期", "增減金額", "增減百分比",
@@ -298,7 +300,7 @@ public class MonthlyOperatingIncomeDownloadTable extends Table {
 			if (comment == null) {
 				throw new RuntimeException("Comment is null !!!");
 			}
-			return comment;
+			return comment.replace(COMMA_STRING, FULL_WIDTH_COMMA_STRING);
 		}
 
 	}
