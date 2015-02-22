@@ -186,6 +186,10 @@ public class StockClosingConditionHbaseManager implements
 				.readLinesAsHashSet(processedLogOfGretai);
 		// ex. SQUOTE_EW_1020107.csv
 		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
+			
+//			System.err.println(file.getAbsolutePath());
+			
+			
 			if (isProcessed(processedSet, file)) {
 				continue;
 			}
@@ -307,6 +311,12 @@ public class StockClosingConditionHbaseManager implements
 	private BigDecimal getBigDecimalOfGretai(String str) {
 		String trimmedStr = str.trim();
 		if (trimmedStr.startsWith("---")) {
+			return null;
+		} else if (trimmedStr.equals("除權息")) {
+			return null;
+		} else if (trimmedStr.equals("除權")) {
+			return null;
+		} else if (trimmedStr.equals("除息")) {
 			return null;
 		}
 		return new BigDecimal(str);

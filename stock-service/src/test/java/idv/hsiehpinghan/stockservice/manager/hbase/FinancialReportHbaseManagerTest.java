@@ -43,7 +43,7 @@ public class FinancialReportHbaseManagerTest {
 		dropAndCreateTable();
 	}
 
-//	@Test
+	@Test
 	public void updateTaxonomyPresentation() throws Exception {
 		String tableName = taxonomyRepo.getTargetTableName();
 		if (taxonomyRepo.isTableExists(tableName)) {
@@ -94,7 +94,7 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(actual, expected);
 	}
 
-	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+//	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
 	public void updateXbrlInstance() throws Exception {
 		boolean result = manager.updateXbrlInstance();
 		Assert.assertTrue(result);

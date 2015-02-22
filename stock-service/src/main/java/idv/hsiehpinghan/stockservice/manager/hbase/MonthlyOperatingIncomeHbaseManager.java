@@ -120,9 +120,6 @@ public class MonthlyOperatingIncomeHbaseManager implements
 			readProcessedLogAndUpdateProcessedSet(dir);
 			// ex. 1101_201301.csv
 			for (File file : FileUtils.listFiles(dir, EXTENSIONS, false)) {
-
-				System.err.println(file.getAbsolutePath());
-
 				if (isProcessed(file)) {
 					continue;
 				}

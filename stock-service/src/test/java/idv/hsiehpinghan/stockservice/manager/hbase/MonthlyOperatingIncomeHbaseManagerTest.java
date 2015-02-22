@@ -32,21 +32,21 @@ public class MonthlyOperatingIncomeHbaseManagerTest {
 				.getBean(MonthlyOperatingIncomeHbaseManager.class);
 		monthlyRepo = applicationContext.getBean(MonthlyDataRepository.class);
 
-		dropAndCreateTable();
+		// dropAndCreateTable();
 	}
 
 	@Test
 	public void saveMonthlyOperatingIncomeToHBase() throws Exception {
 		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
-		truncateProcessedLogFle(dir);
+//		truncateProcessedLogFle(dir);
 		manager.saveMonthlyOperatingIncomeToHBase(ver, dir);
 		Assert.assertTrue(monthlyRepo.getRowAmount() > 0);
 	}
 
-	private void truncateProcessedLogFle(File dir) throws IOException {
-		File processedLog = new File(dir, "processed.log");
-		FileUtils.write(processedLog, "", false);
-	}
+//	private void truncateProcessedLogFle(File dir) throws IOException {
+//		File processedLog = new File(dir, "processed.log");
+//		FileUtils.write(processedLog, "", false);
+//	}
 
 	private void dropAndCreateTable() throws Exception {
 		HbaseEntityTestUtility.dropAndCreateTargetTable(monthlyRepo);
