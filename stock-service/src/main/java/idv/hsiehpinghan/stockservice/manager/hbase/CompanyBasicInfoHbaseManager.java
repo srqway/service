@@ -54,6 +54,11 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 	}
 
 	@Override
+	public StockInfo getWithCompanyFamilyOnly(String stockCode) {
+		return stockInfoRepo.getWithCompanyFamilyOnly(stockCode);
+	}
+
+	@Override
 	public synchronized boolean updateCompanyBasicInfo() {
 		File dir = downloadCompanyBasicInfo();
 		if (dir == null) {
