@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -89,22 +88,8 @@ public class StockClosingConditionHbaseManager implements
 	}
 
 	@Override
-	public DailyData getLatestDailyData(String stockCode) {
-		Date now = Calendar.getInstance().getTime();
-		Date targetDate = now;
-		try {
-			while ((now.getTime() - targetDate.getTime()) < SIXTY_DAYS_MILLISECONDS) {
-				if(dailyRepo.exists(stockCode, targetDate)) {
-					return dailyRepo.get(stockCode, targetDate);
-				}
-				targetDate = DateUtils.addDays(targetDate, -1);
-			}
-			return null;
-		} catch (Exception e) {
-			logger.error("Get latest daily data(" + stockCode + ") fail !!!");
-			e.printStackTrace();
-			return null;
-		}
+	public List<DailyData> getAll(String stockCode) {
+		return dailyRepo.fuzzyGet(stockCode, null);
 	}
 
 	boolean updateStockClosingConditionOfTwse() throws NoSuchFieldException,
