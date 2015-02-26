@@ -57,8 +57,14 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 	}
 
 	@Override
-	public StockInfo getWithCompanyFamilyOnly(String stockCode) {
-		return stockInfoRepo.getWithCompanyFamilyOnly(stockCode);
+	public StockInfo getStockInfo(String stockCode) {
+		try {
+			return stockInfoRepo.get(stockCode);
+		} catch (Exception e) {
+			logger.error("Get stock info(" + stockCode + ") fail !!!");
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@Override
@@ -99,10 +105,9 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 			MarketType marketType = MarketType.getMopsMarketType(fnStrArr[0]);
 			IndustryType industryType = IndustryType
 					.getMopsIndustryType(getString(fnStrArr[1]));
-			
-			
+
 			System.err.println(file.getAbsolutePath());
-			
+
 			for (CSVRecord record : parser) {
 				if (record.size() <= 1) {
 					break;

@@ -5,5 +5,5 @@ import idv.hsiehpinghan.stockdao.entity.StockInfo;
 public interface ICompanyBasicInfoManager {
 	boolean updateCompanyBasicInfo();
 
-	StockInfo getWithCompanyFamilyOnly(String stockCode);
+	StockInfo getStockInfo(String stockCode);
 }

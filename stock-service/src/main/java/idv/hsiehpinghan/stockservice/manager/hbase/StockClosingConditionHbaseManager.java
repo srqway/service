@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +36,7 @@ import com.google.common.base.Charsets;
 @Service
 public class StockClosingConditionHbaseManager implements
 		IStockClosingConditionManager, InitializingBean {
+	private final long SIXTY_DAYS_MILLISECONDS = 60 * DateUtility.DAY_MILLISECONDS;
 	private final String[] EXTENSIONS = { "csv" };
 	private final String BIG5 = "big5";
 	private final String SPACE_STRING = StringUtility.SPACE_STRING;
@@ -84,6 +86,25 @@ public class StockClosingConditionHbaseManager implements
 			result = false;
 		}
 		return result;
+	}
+
+	@Override
+	public DailyData getLatestDailyData(String stockCode) {
+		Date now = Calendar.getInstance().getTime();
+		Date targetDate = now;
+		try {
+			while ((now.getTime() - targetDate.getTime()) < SIXTY_DAYS_MILLISECONDS) {
+				if(dailyRepo.exists(stockCode, targetDate)) {
+					return dailyRepo.get(stockCode, targetDate);
+				}
+				targetDate = DateUtils.addDays(targetDate, -1);
+			}
+			return null;
+		} catch (Exception e) {
+			logger.error("Get latest daily data(" + stockCode + ") fail !!!");
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	boolean updateStockClosingConditionOfTwse() throws NoSuchFieldException,
@@ -186,10 +207,9 @@ public class StockClosingConditionHbaseManager implements
 				.readLinesAsHashSet(processedLogOfGretai);
 		// ex. SQUOTE_EW_1020107.csv
 		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
-			
-//			System.err.println(file.getAbsolutePath());
-			
-			
+
+			// System.err.println(file.getAbsolutePath());
+
 			if (isProcessed(processedSet, file)) {
 				continue;
 			}
