@@ -1,6 +1,7 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
-import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
+import idv.hsiehpinghan.datatypeutility.utility.CharsetUtility;
+import idv.hsiehpinghan.resourceutility.utility.CsvUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.StockInfo;
 import idv.hsiehpinghan.stockdao.entity.StockInfo.CompanyFamily;
@@ -14,11 +15,15 @@ import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -30,10 +35,8 @@ import org.springframework.stereotype.Service;
 public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 		InitializingBean {
 	private final String[] EXTENSIONS = { "csv" };
-	private final String BIG5 = "big5";
-	private final String COMMA_STRING = StringUtility.COMMA_STRING;
-	private final String EMPTY_STRING = StringUtility.EMPTY_STRING;
-	private final String DOUBLE_UOTATION_STRING = StringUtility.DOUBLE_UOTATION_STRING;
+	private final Charset BIG5 = CharsetUtility.BIG5;
+	private final CSVFormat EXCEL = CSVFormat.EXCEL;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
 	private File processedLog;
@@ -89,50 +92,52 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 			if (isProcessed(processedSet, file)) {
 				continue;
 			}
-			List<String> lines = FileUtils.readLines(file, BIG5);
-			int startRow = getStartRow(file, lines);
-			int size = lines.size();
-			List<StockInfo> entities = new ArrayList<StockInfo>(size - startRow);
+			CSVParser parser = CsvUtility.getParserAtDataStartRow(file, BIG5,
+					EXCEL, getTargetTitles(file));
+			List<StockInfo> entities = new ArrayList<StockInfo>();
 			String[] fnStrArr = file.getName().split("[_.]");
 			MarketType marketType = MarketType.getMopsMarketType(fnStrArr[0]);
 			IndustryType industryType = IndustryType
 					.getMopsIndustryType(getString(fnStrArr[1]));
-			for (int i = startRow; i < size; ++i) {
-				String line = lines.get(i).replace(DOUBLE_UOTATION_STRING,
-						EMPTY_STRING);
-				String[] strArr = line.split(COMMA_STRING);
-				if (strArr.length <= 1) {
+			
+			
+			System.err.println(file.getAbsolutePath());
+			
+			for (CSVRecord record : parser) {
+				if (record.size() <= 1) {
 					break;
 				}
-				String stockCode = getString(strArr[0]);
-				String chineseName = getString(strArr[1]);
-				String englishBriefName = getString(strArr[24]);
-				String unifiedBusinessNumber = getString(strArr[3]);
-				String establishmentDate = getString(strArr[10]);
-				String listingDate = getString(strArr[11]);
-				String chairman = getString(strArr[4]);
-				String generalManager = getString(strArr[5]);
-				String spokesperson = getString(strArr[6]);
-				String jobTitleOfSpokesperson = getString(strArr[7]);
-				String actingSpokesman = getString(strArr[8]);
-				String chineseAddress = getString(strArr[2]);
-				String telephone = getString(strArr[9]);
-				String stockTransferAgency = getString(strArr[18]);
-				String telephoneOfStockTransferAgency = getString(strArr[19]);
-				String addressOfStockTransferAgency = getString(strArr[20]);
-				String englishAddress = getString(strArr[25]);
-				String faxNumber = getString(strArr[26]);
-				String email = getString(strArr[27]);
-				String webSite = getString(strArr[28]);
-				String financialReportType = getString(strArr[17]);
-				String parValueOfOrdinaryShares = getString(strArr[12]);
-				String paidInCapital = getString(strArr[13]);
-				String amountOfOrdinaryShares = getString(strArr[14]);
-				String privatePlacementAmountOfOrdinaryShares = getString(strArr[15]);
-				String amountOfPreferredShares = getString(strArr[16]);
-				String accountingFirm = getString(strArr[21]);
-				String accountant1 = getString(strArr[22]);
-				String accountant2 = getString(strArr[23]);
+				String stockCode = getString(record.get(0));
+				String chineseName = getString(record.get(1));
+				String englishBriefName = getString(record.get(24));
+				String unifiedBusinessNumber = getString(record.get(3));
+				String establishmentDate = getString(record.get(10));
+				String listingDate = getString(record.get(11));
+				String chairman = getString(record.get(4));
+				String generalManager = getString(record.get(5));
+				String spokesperson = getString(record.get(6));
+				String jobTitleOfSpokesperson = getString(record.get(7));
+				String actingSpokesman = getString(record.get(8));
+				String chineseAddress = getString(record.get(2));
+				String telephone = getString(record.get(9));
+				String stockTransferAgency = getString(record.get(18));
+				String telephoneOfStockTransferAgency = getString(record
+						.get(19));
+				String addressOfStockTransferAgency = getString(record.get(20));
+				String englishAddress = getString(record.get(25));
+				String faxNumber = getString(record.get(26));
+				String email = getString(record.get(27));
+				String webSite = getString(record.get(28));
+				String financialReportType = getString(record.get(17));
+				String parValueOfOrdinaryShares = getString(record.get(12));
+				String paidInCapital = getString(record.get(13));
+				String amountOfOrdinaryShares = getString(record.get(14));
+				String privatePlacementAmountOfOrdinaryShares = getString(record
+						.get(15));
+				String amountOfPreferredShares = getString(record.get(16));
+				String accountingFirm = getString(record.get(21));
+				String accountant1 = getString(record.get(22));
+				String accountant2 = getString(record.get(23));
 				StockInfo entity = generateEntity(stockCode, ver, marketType,
 						industryType, chineseName, englishBriefName,
 						unifiedBusinessNumber, establishmentDate, listingDate,
@@ -160,29 +165,6 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 
 	void truncateProcessedLog() throws IOException {
 		FileUtils.write(processedLog, "", Charsets.UTF_8);
-	}
-
-	private String getTargetStartRowString(File file) {
-		String fileName = file.getName();
-		if (fileName.startsWith("sii")) {
-			return "\"公司代號\",\"公司名稱\",\"住址\",\"營利事業統一編號\",\"董事長\",\"總經理\",\"發言人\",\"發言人職稱\",\"代理發言人\",\"總機電話\",\"成立日期\",\"上市日期\",\"普通股每股面額\",\"實收資本額(元)\",\"已發行普通股數或TDR原發行股數\",\"私募普通股(股)\",\"特別股(股)\",\"編製財務報告類型\",\"股票過戶機構\",\"過戶電話\",\"過戶地址\",\"簽證會計師事務所\",\"簽證會計師1\",\"簽證會計師2\",\"英文簡稱\",\"英文通訊地址\",\"傳真機號碼\",\"電子郵件信箱\",\"網址\"";
-		} else if (fileName.startsWith("otc")) {
-			return "\"公司代號\",\"公司名稱\",\"住址\",\"營利事業統一編號\",\"董事長\",\"總經理\",\"發言人\",\"發言人職稱\",\"代理發言人\",\"總機電話\",\"成立日期\",\"上櫃日期\",\"普通股每股面額\",\"實收資本額(元)\",\"已發行普通股數或TDR原發行股數\",\"私募普通股(股)\",\"特別股(股)\",\"編製財務報告類型\",\"股票過戶機構\",\"過戶電話\",\"過戶地址\",\"簽證會計師事務所\",\"簽證會計師1\",\"簽證會計師2\",\"英文簡稱\",\"英文通訊地址\",\"傳真機號碼\",\"電子郵件信箱\",\"網址\"";
-		} else {
-			throw new RuntimeException("Filename(" + file.getAbsolutePath()
-					+ ") unexpected.");
-		}
-	}
-
-	private int getStartRow(File file, List<String> lines) {
-		String targetStr = getTargetStartRowString(file);
-		for (int i = 0, size = lines.size(); i < size; ++i) {
-			if (targetStr.equals(lines.get(i))) {
-				return i + 1;
-			}
-		}
-		throw new RuntimeException("File(" + file.getAbsolutePath()
-				+ ") cannot find line(" + targetStr + ") !!!");
 	}
 
 	private String getString(String str) {
@@ -309,4 +291,25 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 		}
 	}
 
+	private String[] getTargetTitles(File file) {
+		String fileName = file.getName();
+		if (fileName.startsWith("sii")) {
+			return new String[] { "公司代號", "公司名稱", "住址", "營利事業統一編號", "董事長",
+					"總經理", "發言人", "發言人職稱", "代理發言人", "總機電話", "成立日期", "上市日期",
+					"普通股每股面額", "實收資本額(元)", "已發行普通股數或TDR原發行股數", "私募普通股(股)",
+					"特別股(股)", "編製財務報告類型", "股票過戶機構", "過戶電話", "過戶地址", "簽證會計師事務所",
+					"簽證會計師1", "簽證會計師2", "英文簡稱", "英文通訊地址", "傳真機號碼", "電子郵件信箱",
+					"網址" };
+		} else if (fileName.startsWith("otc")) {
+			return new String[] { "公司代號", "公司名稱", "住址", "營利事業統一編號", "董事長",
+					"總經理", "發言人", "發言人職稱", "代理發言人", "總機電話", "成立日期", "上櫃日期",
+					"普通股每股面額", "實收資本額(元)", "已發行普通股數或TDR原發行股數", "私募普通股(股)",
+					"特別股(股)", "編製財務報告類型", "股票過戶機構", "過戶電話", "過戶地址", "簽證會計師事務所",
+					"簽證會計師1", "簽證會計師2", "英文簡稱", "英文通訊地址", "傳真機號碼", "電子郵件信箱",
+					"網址" };
+		} else {
+			throw new RuntimeException("Filename(" + file.getAbsolutePath()
+					+ ") unexpected.");
+		}
+	}
 }

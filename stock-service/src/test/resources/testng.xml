@@ -44,8 +44,8 @@
 
 			<!-- Test manager -->
 			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.CompanyBasicInfoHbaseManagerTest" 
-				/> -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.CompanyBasicInfoHbaseManagerTest" -->
+			<!-- /> -->
 		</classes>
 	</test>
 	<test name="monthlyOperatingIncome">
