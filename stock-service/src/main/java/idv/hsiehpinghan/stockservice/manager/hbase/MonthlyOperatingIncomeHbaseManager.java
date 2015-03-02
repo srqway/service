@@ -71,6 +71,11 @@ public class MonthlyOperatingIncomeHbaseManager implements
 		return true;
 	}
 
+	@Override
+	public List<MonthlyData> getAll(String stockCode) {
+		return monthlyRepo.fuzzyScan(stockCode, null, null);
+	}
+
 	private CurrencyType getCurrencyType(String str) {
 		switch (str) {
 		case EMPTY_STRING:

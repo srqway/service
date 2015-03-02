@@ -35,7 +35,6 @@ import com.google.common.base.Charsets;
 @Service
 public class StockClosingConditionHbaseManager implements
 		IStockClosingConditionManager, InitializingBean {
-	private final long SIXTY_DAYS_MILLISECONDS = 60 * DateUtility.DAY_MILLISECONDS;
 	private final String[] EXTENSIONS = { "csv" };
 	private final String BIG5 = "big5";
 	private final String SPACE_STRING = StringUtility.SPACE_STRING;
@@ -89,7 +88,7 @@ public class StockClosingConditionHbaseManager implements
 
 	@Override
 	public List<DailyData> getAll(String stockCode) {
-		return dailyRepo.fuzzyGet(stockCode, null);
+		return dailyRepo.fuzzyScan(stockCode, null);
 	}
 
 	boolean updateStockClosingConditionOfTwse() throws NoSuchFieldException,
