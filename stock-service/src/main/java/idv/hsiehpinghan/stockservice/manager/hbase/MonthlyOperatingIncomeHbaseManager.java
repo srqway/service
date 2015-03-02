@@ -1,5 +1,6 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
+import idv.hsiehpinghan.datatypeutility.utility.BigDecimalUtility;
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.MonthlyData;
@@ -84,23 +85,35 @@ public class MonthlyOperatingIncomeHbaseManager implements
 		case "功能性貨幣(新)":
 		case "功能性貨幣(新台幣)":
 		case "功能性貨幣(NTD)":
+		case "功能性貨幣(TWD)":
 			return CurrencyType.TWD;
 		case "功能性貨幣(美元)":
 		case "功能性貨幣(美金)":
 		case "功能性貨幣(USD)":
+		case "功能性貨幣(USD仟元)":
+		case "功能性貨幣(usd)":
+		case "功能性貨幣(USD 仟元)":
+		case "功能性貨幣(美金仟元)":
 			return CurrencyType.USD;
 		case "功能性貨幣(人民幣)":
 		case "功能性貨幣(RMB)":
 		case "功能性貨幣(CNY)":
+		case "功能性貨幣(RNB)":
+		case "功能性貨幣(人民幣))":
 			return CurrencyType.CNY;
 		case "功能性貨幣(日圓)":
+		case "功能性貨幣(日幣仟圓)":
+		case "功能性貨幣(日幣千圓)":
 			return CurrencyType.JPY;
 		case "功能性貨幣(SGD)":
 		case "功能性貨幣(新加坡幣)":
+		case "功能性貨幣(新加坡)":
 			return CurrencyType.SGD;
 		case "功能性貨幣(港幣)":
+		case "功能性貨幣(HKD)":
 			return CurrencyType.HKD;
 		case "功能性貨幣(泰銖)":
+		case "功能性貨幣(泰珠)":
 			return CurrencyType.THB;
 		case "功能性貨幣(馬幣)":
 			return CurrencyType.MYR;
@@ -108,6 +121,23 @@ public class MonthlyOperatingIncomeHbaseManager implements
 			throw new RuntimeException("String(" + str
 					+ ") not match any currencyType !!!");
 		}
+	}
+
+	private BigDecimal getUnit(String str) {
+		switch (str) {
+		case "功能性貨幣(USD仟元)":
+		case "功能性貨幣(USD 仟元)":
+		case "功能性貨幣(美金仟元)":
+		case "功能性貨幣(日幣仟圓)":
+		case "功能性貨幣(日幣千圓)":
+			return BigDecimalUtility.ONE_THOUSAND;
+		default:
+			return BigDecimal.ONE;
+		}
+	}
+
+	private BigDecimal getMultiplied(BigDecimal value, BigDecimal unit) {
+		return value.multiply(unit);
 	}
 
 	int saveMonthlyOperatingIncomeToHBase(Date ver, File dir)
@@ -125,6 +155,9 @@ public class MonthlyOperatingIncomeHbaseManager implements
 			readProcessedLogAndUpdateProcessedSet(dir);
 			// ex. 1101_201301.csv
 			for (File file : FileUtils.listFiles(dir, EXTENSIONS, false)) {
+
+				System.err.println(file.getAbsolutePath());
+
 				if (isProcessed(file)) {
 					continue;
 				}
@@ -141,17 +174,20 @@ public class MonthlyOperatingIncomeHbaseManager implements
 					String line = lines.get(i);
 					String[] strArr = line.split(COMMA_STRING, -1);
 					CurrencyType currency = getCurrencyType(strArr[0]);
-					BigDecimal currentMonth = new BigDecimal(strArr[1]);
-					BigDecimal currentMonthOfLastYear = new BigDecimal(
-							strArr[2]);
-					BigDecimal differentAmount = new BigDecimal(strArr[3]);
+					BigDecimal unit = getUnit(strArr[0]);
+					BigDecimal currentMonth = getMultiplied(new BigDecimal(
+							strArr[1]), unit);
+					BigDecimal currentMonthOfLastYear = getMultiplied(
+							new BigDecimal(strArr[2]), unit);
+					BigDecimal differentAmount = getMultiplied(new BigDecimal(
+							strArr[3]), unit);
 					BigDecimal differentPercent = new BigDecimal(strArr[4]);
-					BigDecimal cumulativeAmountOfThisYear = new BigDecimal(
-							strArr[5]);
-					BigDecimal cumulativeAmountOfLastYear = new BigDecimal(
-							strArr[6]);
-					BigDecimal cumulativeDifferentAmount = new BigDecimal(
-							strArr[7]);
+					BigDecimal cumulativeAmountOfThisYear = getMultiplied(
+							new BigDecimal(strArr[5]), unit);
+					BigDecimal cumulativeAmountOfLastYear = getMultiplied(
+							new BigDecimal(strArr[6]), unit);
+					BigDecimal cumulativeDifferentAmount = getMultiplied(
+							new BigDecimal(strArr[7]), unit);
 					BigDecimal cumulativeDifferentPercent = new BigDecimal(
 							strArr[8]);
 					BigDecimal exchangeRateOfCurrentMonth = getBigDecimal(strArr[9]);
@@ -276,7 +312,7 @@ public class MonthlyOperatingIncomeHbaseManager implements
 	private boolean isProcessed(File file) throws IOException {
 		String processedInfo = generateProcessedInfo(file);
 		if (processedSet.contains(processedInfo)) {
-			logger.info(processedInfo + " processed before.");
+			logger.debug(processedInfo + " processed before.");
 			return true;
 		}
 		return false;

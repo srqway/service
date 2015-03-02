@@ -226,7 +226,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private boolean repeatTryDownloadSubsidiary(Date targetDate) {
 		SubsidiaryTable tab = getSubsidiaryTable();
 		// i = 0 is title.
-		for (int i = tab.getRowSize() - 1, endRow = 2; i >= endRow; --i) {
+		for (int i = tab.getRowSize() - 1, endRowIndex = 1; i >= endRowIndex; --i) {
 			boolean hasClickedQueryButton = false;
 			int tryAmount = 0;
 			while (true) {
@@ -349,7 +349,7 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	}
 
 	private Date generateBeginDataDate() {
-		return DateUtility.getDate(2013, 1, 1);
+		return DateUtility.getDate(2013, 11, 1);
 	}
 
 	private String getDownloadInfo(String stockCode, Date date) {
