@@ -144,6 +144,11 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		return stockCodes;
 	}
 
+	@Override
+	public List<Xbrl> getAll(String stockCode, ReportType reportType) {
+		return xbrlRepo.fuzzyScan(stockCode, reportType, null, null);
+	}
+
 	// @Override
 	// public boolean updateExchangeRate() {
 	// File exchangeDir = downloadExchangeRate();
