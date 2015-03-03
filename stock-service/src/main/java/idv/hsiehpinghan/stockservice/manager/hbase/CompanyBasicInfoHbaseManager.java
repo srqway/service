@@ -105,9 +105,6 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 			MarketType marketType = MarketType.getMopsMarketType(fnStrArr[0]);
 			IndustryType industryType = IndustryType
 					.getMopsIndustryType(getString(fnStrArr[1]));
-
-			System.err.println(file.getAbsolutePath());
-
 			for (CSVRecord record : parser) {
 				if (record.size() <= 1) {
 					break;
