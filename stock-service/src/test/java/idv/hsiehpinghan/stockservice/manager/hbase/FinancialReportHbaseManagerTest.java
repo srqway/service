@@ -40,10 +40,10 @@ public class FinancialReportHbaseManagerTest {
 		manager = applicationContext.getBean(FinancialReportHbaseManager.class);
 		taxonomyRepo = applicationContext.getBean(TaxonomyRepository.class);
 		xbrlRepo = applicationContext.getBean(XbrlRepository.class);
-		dropAndCreateTable();
+//		dropAndCreateTable();
 	}
 
-	@Test
+//	@Test
 	public void updateTaxonomyPresentation() throws Exception {
 		String tableName = taxonomyRepo.getTargetTableName();
 		if (taxonomyRepo.isTableExists(tableName)) {
@@ -60,7 +60,7 @@ public class FinancialReportHbaseManagerTest {
 		}
 	}
 
-	@Test
+	@Test(groups="FinancialReportHbaseManagerTest")
 	public void processXbrlFiles() throws Exception {
 		File instanceFile = SystemResourceUtility
 				.getFileResource("xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml");

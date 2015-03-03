@@ -12,6 +12,8 @@
 			<!-- <class -->
 			<!-- name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" 
 				/> -->
+			<class
+				name="idv.hsiehpinghan.stockservice.operator.FinancialReportJsonMakerTest" />
 
 			<!-- Test manager -->
 			<!-- <class -->
@@ -56,8 +58,9 @@
 				/> -->
 
 			<!-- Test manager -->
-			<class
-				name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" 
+				/> -->
 		</classes>
 	</test>
 	<test name="exchangeRate">

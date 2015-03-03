@@ -154,13 +154,20 @@ public class XbrlInstanceConverter {
 				BigDecimal growthRatio = getGrowthRatio(value,
 						oneYearBeforeValue);
 				growthFamily.setRatio(elementId, periodType, instant,
-						startDate, endDate, ver, growthRatio);
+						startDate, endDate, ver, getGrowthRate(growthRatio));
 				BigDecimal growthRatioLn = getGrowthRatioNaturalLogarithm(growthRatio);
 				growthFamily.setNaturalLogarithm(elementId, periodType,
 						instant, startDate, endDate, ver, growthRatioLn);
 			}
 			OldElementId = elementId;
 		}
+	}
+
+	private BigDecimal getGrowthRate(BigDecimal growthRatio) {
+		if(growthRatio == null) {
+			return null;
+		}
+		return growthRatio.subtract(BigDecimal.ONE);
 	}
 
 	private BigDecimal getGrowthRatio(BigDecimal value,

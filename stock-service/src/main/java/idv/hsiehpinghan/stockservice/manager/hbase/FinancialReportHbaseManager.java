@@ -10,8 +10,8 @@ import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockdao.repository.TaxonomyRepository;
 import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
 import idv.hsiehpinghan.stockservice.manager.IFinancialReportManager;
+import idv.hsiehpinghan.stockservice.operator.FinancialReportDetailJsonMaker;
 import idv.hsiehpinghan.stockservice.operator.FinancialReportDownloader;
-import idv.hsiehpinghan.stockservice.operator.FinancialReportJsonMaker;
 import idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverter;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
@@ -57,7 +57,7 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	// @Autowired
 	// private FinancialReportCalculator calculator;
 	@Autowired
-	private FinancialReportJsonMaker jsonMaker;
+	private FinancialReportDetailJsonMaker detailJsonMaker;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 	@Autowired
@@ -170,8 +170,8 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 			String stockCode, ReportType reportType, Integer year,
 			Integer season) {
 		try {
-			return jsonMaker.getPresentationJsonMap(presentIds, stockCode,
-					reportType, year, season);
+			return detailJsonMaker.getPresentationJsonMap(presentIds,
+					stockCode, reportType, year, season);
 		} catch (Exception e) {
 			logger.error("Get presentation json map fail !!!");
 			e.printStackTrace();
