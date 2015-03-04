@@ -43,7 +43,7 @@ public class FinancialReportHbaseManagerTest {
 //		dropAndCreateTable();
 	}
 
-//	@Test
+	@Test
 	public void updateTaxonomyPresentation() throws Exception {
 		String tableName = taxonomyRepo.getTargetTableName();
 		if (taxonomyRepo.isTableExists(tableName)) {
@@ -60,7 +60,7 @@ public class FinancialReportHbaseManagerTest {
 		}
 	}
 
-//	@Test(groups="FinancialReportHbaseManagerTest")
+	@Test(groups="FinancialReportHbaseManagerTest")
 	public void processXbrlFiles() throws Exception {
 		File instanceFile = SystemResourceUtility
 				.getFileResource("xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml");
@@ -85,8 +85,7 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(val.getValue().toString(), "-120107000");
 	}
 
-//	@Test(dependsOnMethods = { "processXbrlFiles" })
-	@Test
+	@Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
 		File xbrlDir = stockServiceProperty.getFinancialReportExtractDir();
 		int actual = manager.saveFinancialReportToHBase(xbrlDir);

@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -135,9 +136,9 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	}
 
 	@Override
-	public List<String> getStockCodes() {
-		List<RowKey> rowKeys = infoRepo.getRowKeys();
-		List<String> stockCodes = new ArrayList<String>(rowKeys.size());
+	public TreeSet<String> getStockCodes() {
+		TreeSet<RowKey> rowKeys = infoRepo.getRowKeys();
+		TreeSet<String> stockCodes = new TreeSet<String>();
 		for (RowKey rowKey : rowKeys) {
 			stockCodes.add(rowKey.getStockCode());
 		}
@@ -145,7 +146,7 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	}
 
 	@Override
-	public List<Xbrl> getAll(String stockCode, ReportType reportType) {
+	public TreeSet<Xbrl> getAll(String stockCode, ReportType reportType) {
 		return xbrlRepo.fuzzyScan(stockCode, reportType, null, null);
 	}
 

@@ -3,9 +3,9 @@ package idv.hsiehpinghan.stockservice.manager.hbase;
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
-import idv.hsiehpinghan.stockdao.entity.DailyData;
-import idv.hsiehpinghan.stockdao.entity.DailyData.ClosingConditionFamily;
-import idv.hsiehpinghan.stockdao.repository.DailyDataRepository;
+import idv.hsiehpinghan.stockdao.entity.StockClosingCondition;
+import idv.hsiehpinghan.stockdao.entity.StockClosingCondition.ClosingConditionFamily;
+import idv.hsiehpinghan.stockdao.repository.StockClosingConditionRepository;
 import idv.hsiehpinghan.stockservice.manager.IStockClosingConditionManager;
 import idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfGretaiDownloader;
 import idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfTwseDownloader;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -55,7 +56,7 @@ public class StockClosingConditionHbaseManager implements
 	@Autowired
 	private StockClosingConditionOfGretaiDownloader downloaderOfGretai;
 	@Autowired
-	private DailyDataRepository dailyRepo;
+	private StockClosingConditionRepository conditionRepo;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -87,8 +88,8 @@ public class StockClosingConditionHbaseManager implements
 	}
 
 	@Override
-	public List<DailyData> getAll(String stockCode) {
-		return dailyRepo.fuzzyScan(stockCode, null);
+	public TreeSet<StockClosingCondition> getAll(String stockCode) {
+		return conditionRepo.fuzzyScan(stockCode, null);
 	}
 
 	boolean updateStockClosingConditionOfTwse() throws NoSuchFieldException,
@@ -102,7 +103,7 @@ public class StockClosingConditionHbaseManager implements
 		}
 		int processFilesAmt = saveStockClosingConditionOfTwseToHBase(dir);
 		logger.info("Saved " + processFilesAmt + " files to "
-				+ dailyRepo.getTargetTableName() + ".");
+				+ conditionRepo.getTargetTableName() + ".");
 		return true;
 	}
 
@@ -117,7 +118,7 @@ public class StockClosingConditionHbaseManager implements
 		}
 		int processFilesAmt = saveStockClosingConditionOfGretaiToHBase(dir);
 		logger.info("Saved " + processFilesAmt + " files to "
-				+ dailyRepo.getTargetTableName() + ".");
+				+ conditionRepo.getTargetTableName() + ".");
 		return true;
 	}
 
@@ -143,7 +144,7 @@ public class StockClosingConditionHbaseManager implements
 			}
 			int startRow = getStartRowOfTwse(file, lines);
 			int size = lines.size();
-			List<DailyData> entities = new ArrayList<DailyData>(size - startRow);
+			List<StockClosingCondition> entities = new ArrayList<StockClosingCondition>(size - startRow);
 			for (int i = startRow; i < size; ++i) {
 				String line = lines.get(i).replace(DOUBLE_UOTATION_STRING,
 						EMPTY_STRING);
@@ -152,7 +153,7 @@ public class StockClosingConditionHbaseManager implements
 					break;
 				}
 				String stockCode = getString(strArr[0]);
-				if (dailyRepo.exists(stockCode, date)) {
+				if (conditionRepo.exists(stockCode, date)) {
 					continue;
 				}
 				BigDecimal openingPrice = getBigDecimalOfTwse(strArr[5]);
@@ -165,16 +166,16 @@ public class StockClosingConditionHbaseManager implements
 				BigInteger stockAmount = getBigIntegerOfTwse(strArr[2]);
 				BigInteger moneyAmount = getBigIntegerOfTwse(strArr[4]);
 				BigInteger transactionAmount = getBigIntegerOfTwse(strArr[3]);
-				DailyData entity = generateEntity(stockCode, date, ver, change,
+				StockClosingCondition entity = generateEntity(stockCode, date, ver, change,
 						closingPrice, finalPurchasePrice, finalSellingPrice,
 						highestPrice, lowestPrice, moneyAmount, openingPrice,
 						stockAmount, transactionAmount);
 				entities.add(entity);
 			}
-			dailyRepo.put(entities);
+			conditionRepo.put(entities);
 			writeToProcessedFileOfTwse(file);
 			logger.info(file.getName() + " saved to "
-					+ dailyRepo.getTargetTableName() + ".");
+					+ conditionRepo.getTargetTableName() + ".");
 			++count;
 		}
 		return count;
@@ -205,7 +206,7 @@ public class StockClosingConditionHbaseManager implements
 			}
 			int startRow = getStartRowOfGretai(file, lines);
 			int size = lines.size();
-			List<DailyData> entities = new ArrayList<DailyData>(size - startRow);
+			List<StockClosingCondition> entities = new ArrayList<StockClosingCondition>(size - startRow);
 			for (int i = startRow; i < size; ++i) {
 				String[] strArr = lines.get(i).split("\",\"");
 				if (strArr.length <= 1) {
@@ -213,7 +214,7 @@ public class StockClosingConditionHbaseManager implements
 				}
 				String stockCode = getString(strArr[0].replace(
 						DOUBLE_UOTATION_STRING, EMPTY_STRING));
-				if (dailyRepo.exists(stockCode, date)) {
+				if (conditionRepo.exists(stockCode, date)) {
 					continue;
 				}
 				BigDecimal openingPrice = getBigDecimalOfGretai(strArr[4]);
@@ -227,16 +228,16 @@ public class StockClosingConditionHbaseManager implements
 				BigInteger stockAmount = getBigIntegerOfGretai(strArr[7]);
 				BigInteger moneyAmount = getBigIntegerOfGretai(strArr[8]);
 				BigInteger transactionAmount = getBigIntegerOfGretai(strArr[9]);
-				DailyData entity = generateEntity(stockCode, date, ver, change,
+				StockClosingCondition entity = generateEntity(stockCode, date, ver, change,
 						closingPrice, finalPurchasePrice, finalSellingPrice,
 						highestPrice, lowestPrice, moneyAmount, openingPrice,
 						stockAmount, transactionAmount);
 				entities.add(entity);
 			}
-			dailyRepo.put(entities);
+			conditionRepo.put(entities);
 			writeToProcessedFileOfGretai(file);
 			logger.info(file.getName() + " saved to "
-					+ dailyRepo.getTargetTableName() + ".");
+					+ conditionRepo.getTargetTableName() + ".");
 			++count;
 		}
 		return count;
@@ -366,13 +367,13 @@ public class StockClosingConditionHbaseManager implements
 		FileUtils.write(processedLogOfGretai, infoLine, Charsets.UTF_8, true);
 	}
 
-	private DailyData generateEntity(String stockCode, Date date, Date ver,
+	private StockClosingCondition generateEntity(String stockCode, Date date, Date ver,
 			BigDecimal change, BigDecimal closingPrice,
 			BigDecimal finalPurchasePrice, BigDecimal finalSellingPrice,
 			BigDecimal highestPrice, BigDecimal lowestPrice,
 			BigInteger moneyAmount, BigDecimal openingPrice,
 			BigInteger stockAmount, BigInteger transactionAmount) {
-		DailyData entity = new DailyData();
+		StockClosingCondition entity = new StockClosingCondition();
 		entity.new RowKey(stockCode, date, entity);
 		generateClosingConditionFamilyContent(entity, ver, change,
 				closingPrice, finalPurchasePrice, finalSellingPrice,
@@ -381,7 +382,7 @@ public class StockClosingConditionHbaseManager implements
 		return entity;
 	}
 
-	private void generateClosingConditionFamilyContent(DailyData entity,
+	private void generateClosingConditionFamilyContent(StockClosingCondition entity,
 			Date ver, BigDecimal change, BigDecimal closingPrice,
 			BigDecimal finalPurchasePrice, BigDecimal finalSellingPrice,
 			BigDecimal highestPrice, BigDecimal lowestPrice,

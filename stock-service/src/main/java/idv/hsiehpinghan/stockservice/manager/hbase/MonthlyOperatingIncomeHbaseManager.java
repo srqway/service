@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
@@ -73,7 +74,7 @@ public class MonthlyOperatingIncomeHbaseManager implements
 	}
 
 	@Override
-	public List<MonthlyOperatingIncome> getAll(String stockCode,
+	public TreeSet<MonthlyOperatingIncome> getAll(String stockCode,
 			boolean isFunctionalCurrency) {
 		return incomeRepo.fuzzyScan(stockCode, isFunctionalCurrency, null,
 				null, null);

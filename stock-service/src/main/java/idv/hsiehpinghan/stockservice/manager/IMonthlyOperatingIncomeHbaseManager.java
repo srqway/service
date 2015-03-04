@@ -2,11 +2,11 @@ package idv.hsiehpinghan.stockservice.manager;
 
 import idv.hsiehpinghan.stockdao.entity.MonthlyOperatingIncome;
 
-import java.util.List;
+import java.util.TreeSet;
 
 public interface IMonthlyOperatingIncomeHbaseManager {
 	boolean updateMonthlyOperatingIncome();
 
-	List<MonthlyOperatingIncome> getAll(String stockCode,
+	TreeSet<MonthlyOperatingIncome> getAll(String stockCode,
 			boolean isFunctionalCurrency);
 }

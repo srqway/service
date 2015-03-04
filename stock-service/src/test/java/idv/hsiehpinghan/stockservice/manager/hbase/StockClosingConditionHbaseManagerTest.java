@@ -1,7 +1,7 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
 import idv.hsiehpinghan.hbaseassistant.utility.HbaseEntityTestUtility;
-import idv.hsiehpinghan.stockdao.repository.DailyDataRepository;
+import idv.hsiehpinghan.stockdao.repository.StockClosingConditionRepository;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
@@ -17,7 +17,7 @@ import org.testng.annotations.Test;
 public class StockClosingConditionHbaseManagerTest {
 	private StockClosingConditionHbaseManager manager;
 	private StockServiceProperty stockServiceProperty;
-	private DailyDataRepository dailyRepo;
+	private StockClosingConditionRepository conditionRepo;
 
 	@BeforeClass
 	public void beforeClass() throws Exception {
@@ -27,7 +27,8 @@ public class StockClosingConditionHbaseManagerTest {
 				.getBean(StockServiceProperty.class);
 		manager = applicationContext
 				.getBean(StockClosingConditionHbaseManager.class);
-		dailyRepo = applicationContext.getBean(DailyDataRepository.class);
+		conditionRepo = applicationContext
+				.getBean(StockClosingConditionRepository.class);
 
 		// dropAndCreateTable();
 	}
@@ -57,6 +58,6 @@ public class StockClosingConditionHbaseManagerTest {
 	}
 
 	private void dropAndCreateTable() throws Exception {
-		HbaseEntityTestUtility.dropAndCreateTargetTable(dailyRepo);
+		HbaseEntityTestUtility.dropAndCreateTargetTable(conditionRepo);
 	}
 }

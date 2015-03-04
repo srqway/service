@@ -1,11 +1,11 @@
 package idv.hsiehpinghan.stockservice.manager;
 
-import idv.hsiehpinghan.stockdao.entity.DailyData;
+import idv.hsiehpinghan.stockdao.entity.StockClosingCondition;
 
-import java.util.List;
+import java.util.TreeSet;
 
 public interface IStockClosingConditionManager {
 	boolean updateStockClosingCondition();
 
-	List<DailyData> getAll(String stockCode);
+	TreeSet<StockClosingCondition> getAll(String stockCode);
 }
