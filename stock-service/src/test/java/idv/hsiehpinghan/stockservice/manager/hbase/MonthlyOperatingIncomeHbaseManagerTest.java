@@ -1,7 +1,7 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
 import idv.hsiehpinghan.hbaseassistant.utility.HbaseEntityTestUtility;
-import idv.hsiehpinghan.stockdao.repository.MonthlyDataRepository;
+import idv.hsiehpinghan.stockdao.repository.MonthlyOperatingIncomeRepository;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
@@ -19,7 +19,7 @@ import org.testng.annotations.Test;
 public class MonthlyOperatingIncomeHbaseManagerTest {
 	private MonthlyOperatingIncomeHbaseManager manager;
 	private StockServiceProperty stockServiceProperty;
-	private MonthlyDataRepository monthlyRepo;
+	private MonthlyOperatingIncomeRepository incomeRepo;
 	private Date ver = Calendar.getInstance().getTime();
 
 	@BeforeClass
@@ -30,7 +30,7 @@ public class MonthlyOperatingIncomeHbaseManagerTest {
 				.getBean(StockServiceProperty.class);
 		manager = applicationContext
 				.getBean(MonthlyOperatingIncomeHbaseManager.class);
-		monthlyRepo = applicationContext.getBean(MonthlyDataRepository.class);
+		incomeRepo = applicationContext.getBean(MonthlyOperatingIncomeRepository.class);
 
 		// dropAndCreateTable();
 	}
@@ -40,7 +40,7 @@ public class MonthlyOperatingIncomeHbaseManagerTest {
 		File dir = stockServiceProperty.getMonthlyOperatingIncomeDownloadDir();
 //		truncateProcessedLogFle(dir);
 		manager.saveMonthlyOperatingIncomeToHBase(ver, dir);
-		Assert.assertTrue(monthlyRepo.getRowAmount() > 0);
+		Assert.assertTrue(incomeRepo.getRowAmount() > 0);
 	}
 
 //	private void truncateProcessedLogFle(File dir) throws IOException {
@@ -49,6 +49,6 @@ public class MonthlyOperatingIncomeHbaseManagerTest {
 //	}
 
 	private void dropAndCreateTable() throws Exception {
-		HbaseEntityTestUtility.dropAndCreateTargetTable(monthlyRepo);
+		HbaseEntityTestUtility.dropAndCreateTargetTable(incomeRepo);
 	}
 }

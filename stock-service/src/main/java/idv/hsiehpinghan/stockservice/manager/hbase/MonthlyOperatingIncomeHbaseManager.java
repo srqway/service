@@ -3,10 +3,10 @@ package idv.hsiehpinghan.stockservice.manager.hbase;
 import idv.hsiehpinghan.datatypeutility.utility.BigDecimalUtility;
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
-import idv.hsiehpinghan.stockdao.entity.MonthlyData;
-import idv.hsiehpinghan.stockdao.entity.MonthlyData.OperatingIncomeFamily;
+import idv.hsiehpinghan.stockdao.entity.MonthlyOperatingIncome;
+import idv.hsiehpinghan.stockdao.entity.MonthlyOperatingIncome.IncomeFamily;
 import idv.hsiehpinghan.stockdao.enumeration.CurrencyType;
-import idv.hsiehpinghan.stockdao.repository.MonthlyDataRepository;
+import idv.hsiehpinghan.stockdao.repository.MonthlyOperatingIncomeRepository;
 import idv.hsiehpinghan.stockservice.manager.IMonthlyOperatingIncomeHbaseManager;
 import idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloader;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
@@ -44,7 +44,7 @@ public class MonthlyOperatingIncomeHbaseManager implements
 	@Autowired
 	private MonthlyOperatingIncomeDownloader downloader;
 	@Autowired
-	private MonthlyDataRepository monthlyRepo;
+	private MonthlyOperatingIncomeRepository incomeRepo;
 
 	// @Override
 	// public void afterPropertiesSet() throws Exception {
@@ -63,7 +63,7 @@ public class MonthlyOperatingIncomeHbaseManager implements
 		try {
 			int processFilesAmt = saveMonthlyOperatingIncomeToHBase(ver, dir);
 			logger.info("Saved " + processFilesAmt + " files to "
-					+ monthlyRepo.getTargetTableName() + ".");
+					+ incomeRepo.getTargetTableName() + ".");
 		} catch (Exception e) {
 			logger.error("Update monthly operating income fail !!!");
 			e.printStackTrace();
@@ -73,8 +73,14 @@ public class MonthlyOperatingIncomeHbaseManager implements
 	}
 
 	@Override
-	public List<MonthlyData> getAll(String stockCode) {
-		return monthlyRepo.fuzzyScan(stockCode, null, null);
+	public List<MonthlyOperatingIncome> getAll(String stockCode,
+			boolean isFunctionalCurrency) {
+		return incomeRepo.fuzzyScan(stockCode, isFunctionalCurrency, null,
+				null, null);
+	}
+
+	private boolean isFunctionalCurrency(String str) {
+		return str.startsWith("功能性貨幣");
 	}
 
 	private CurrencyType getCurrencyType(String str) {
@@ -155,9 +161,6 @@ public class MonthlyOperatingIncomeHbaseManager implements
 			readProcessedLogAndUpdateProcessedSet(dir);
 			// ex. 1101_201301.csv
 			for (File file : FileUtils.listFiles(dir, EXTENSIONS, false)) {
-
-				System.err.println(file.getAbsolutePath());
-
 				if (isProcessed(file)) {
 					continue;
 				}
@@ -168,11 +171,12 @@ public class MonthlyOperatingIncomeHbaseManager implements
 				int year = Integer.valueOf(fnStrArr[1].substring(0, 4));
 				int month = Integer.valueOf(fnStrArr[1].substring(4));
 				int size = lines.size();
-				List<MonthlyData> entities = new ArrayList<MonthlyData>(size
-						- startRow);
+				List<MonthlyOperatingIncome> entities = new ArrayList<MonthlyOperatingIncome>(
+						size - startRow);
 				for (int i = startRow; i < size; ++i) {
 					String line = lines.get(i);
 					String[] strArr = line.split(COMMA_STRING, -1);
+					boolean isFunctionalCurrency = isFunctionalCurrency(strArr[0]);
 					CurrencyType currency = getCurrencyType(strArr[0]);
 					BigDecimal unit = getUnit(strArr[0]);
 					BigDecimal currentMonth = getMultiplied(new BigDecimal(
@@ -193,10 +197,11 @@ public class MonthlyOperatingIncomeHbaseManager implements
 					BigDecimal exchangeRateOfCurrentMonth = getBigDecimal(strArr[9]);
 					BigDecimal cumulativeExchangeRateOfThisYear = getBigDecimal(strArr[10]);
 					String comment = strArr[11];
-					MonthlyData entity = generateEntity(stockCode, year, month,
-							ver, currency, currentMonth,
-							currentMonthOfLastYear, differentAmount,
-							differentPercent, cumulativeAmountOfThisYear,
+					MonthlyOperatingIncome entity = generateEntity(stockCode,
+							isFunctionalCurrency, currency, year, month, ver,
+							currentMonth, currentMonthOfLastYear,
+							differentAmount, differentPercent,
+							cumulativeAmountOfThisYear,
 							cumulativeAmountOfLastYear,
 							cumulativeDifferentAmount,
 							cumulativeDifferentPercent,
@@ -204,9 +209,9 @@ public class MonthlyOperatingIncomeHbaseManager implements
 							cumulativeExchangeRateOfThisYear, comment);
 					entities.add(entity);
 				}
-				monthlyRepo.put(entities);
+				incomeRepo.put(entities);
 				logger.info(file.getName() + " saved to "
-						+ monthlyRepo.getTargetTableName() + ".");
+						+ incomeRepo.getTargetTableName() + ".");
 				writeToProcessedLogAndProcessedSet(file);
 				++count;
 			}
@@ -229,8 +234,9 @@ public class MonthlyOperatingIncomeHbaseManager implements
 	// FileUtils.write(processedLog, infoLine, Charsets.UTF_8, true);
 	// }
 
-	private MonthlyData generateEntity(String stockCode, int year, int month,
-			Date ver, CurrencyType currency, BigDecimal currentMonth,
+	private MonthlyOperatingIncome generateEntity(String stockCode,
+			boolean isFunctionalCurrency, CurrencyType currency, int year,
+			int month, Date ver, BigDecimal currentMonth,
 			BigDecimal currentMonthOfLastYear, BigDecimal differentAmount,
 			BigDecimal differentPercent, BigDecimal cumulativeAmountOfThisYear,
 			BigDecimal cumulativeAmountOfLastYear,
@@ -238,10 +244,11 @@ public class MonthlyOperatingIncomeHbaseManager implements
 			BigDecimal cumulativeDifferentPercent,
 			BigDecimal exchangeRateOfCurrentMonth,
 			BigDecimal cumulativeExchangeRateOfThisYear, String comment) {
-		MonthlyData entity = new MonthlyData();
-		entity.new RowKey(stockCode, year, month, entity);
-		generateOperatingIncomeFamilyContent(entity, ver, currency,
-				currentMonth, currentMonthOfLastYear, differentAmount,
+		MonthlyOperatingIncome entity = new MonthlyOperatingIncome();
+		entity.new RowKey(stockCode, isFunctionalCurrency, currency, year,
+				month, entity);
+		generateOperatingIncomeFamilyContent(entity, ver, currentMonth,
+				currentMonthOfLastYear, differentAmount,
 				cumulativeDifferentPercent, cumulativeAmountOfThisYear,
 				cumulativeAmountOfLastYear, cumulativeDifferentAmount,
 				cumulativeDifferentPercent, exchangeRateOfCurrentMonth,
@@ -249,8 +256,8 @@ public class MonthlyOperatingIncomeHbaseManager implements
 		return entity;
 	}
 
-	private void generateOperatingIncomeFamilyContent(MonthlyData entity,
-			Date ver, CurrencyType currency, BigDecimal currentMonth,
+	private void generateOperatingIncomeFamilyContent(
+			MonthlyOperatingIncome entity, Date ver, BigDecimal currentMonth,
 			BigDecimal currentMonthOfLastYear, BigDecimal differentAmount,
 			BigDecimal differentPercent, BigDecimal cumulativeAmountOfThisYear,
 			BigDecimal cumulativeAmountOfLastYear,
@@ -258,8 +265,7 @@ public class MonthlyOperatingIncomeHbaseManager implements
 			BigDecimal cumulativeDifferentPercent,
 			BigDecimal exchangeRateOfCurrentMonth,
 			BigDecimal cumulativeExchangeRateOfThisYear, String comment) {
-		OperatingIncomeFamily fam = entity.getOperatingIncomeFamily();
-		fam.setCurrency(ver, currency);
+		IncomeFamily fam = entity.getIncomeFamily();
 		fam.setCurrentMonth(ver, currentMonth);
 		fam.setCurrentMonthOfLastYear(ver, currentMonthOfLastYear);
 		fam.setDifferentAmount(ver, differentAmount);

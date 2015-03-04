@@ -43,8 +43,9 @@
 				/> -->
 
 			<!-- Test manager -->
-			<class
-				name="idv.hsiehpinghan.stockservice.manager.hbase.CompanyBasicInfoHbaseManagerTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.CompanyBasicInfoHbaseManagerTest" 
+				/> -->
 		</classes>
 	</test>
 	<test name="monthlyOperatingIncome">
@@ -55,9 +56,8 @@
 				/> -->
 
 			<!-- Test manager -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" 
-				/> -->
+			<class
+				name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" />
 		</classes>
 	</test>
 	<test name="exchangeRate">
