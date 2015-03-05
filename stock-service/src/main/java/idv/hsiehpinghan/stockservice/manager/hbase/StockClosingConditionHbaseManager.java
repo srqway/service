@@ -192,9 +192,6 @@ public class StockClosingConditionHbaseManager implements
 				.readLinesAsHashSet(processedLogOfGretai);
 		// ex. SQUOTE_EW_1020107.csv
 		for (File file : FileUtils.listFiles(dir, EXTENSIONS, true)) {
-
-			// System.err.println(file.getAbsolutePath());
-
 			if (isProcessed(processedSet, file)) {
 				continue;
 			}
