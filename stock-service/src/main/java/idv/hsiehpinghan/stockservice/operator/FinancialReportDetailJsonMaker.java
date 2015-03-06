@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -39,6 +40,7 @@ public class FinancialReportDetailJsonMaker {
 	private static final String DEEP = "deep";
 	private static final String LABEL = "label";
 	private static final String CHINESE_LABEL = "chinese_label";
+	private static final String ENGLISH_LABEL = "english_label";
 	public static final String TITLE = "title";
 
 	@Autowired
@@ -50,8 +52,9 @@ public class FinancialReportDetailJsonMaker {
 
 	public Map<String, ObjectNode> getPresentationJsonMap(
 			List<String> presentIds, String stockCode, ReportType reportType,
-			Integer year, Integer season) throws IllegalAccessException,
-			NoSuchMethodException, SecurityException, InstantiationException,
+			Integer year, Integer season, Locale locale)
+			throws IllegalAccessException, NoSuchMethodException,
+			SecurityException, InstantiationException,
 			IllegalArgumentException, InvocationTargetException, IOException,
 			NoSuchFieldException, ParseException {
 		if (xbrlRepo.exists(stockCode, reportType, year, season) == false) {
@@ -70,7 +73,7 @@ public class FinancialReportDetailJsonMaker {
 				String jsonStr = presentFamily.getBalanceSheet();
 				String[] periods = infoFam.getBalanceSheetContext().split(
 						COMMA_STRING);
-				objNode = generateJsonObject(presentId, jsonStr,
+				objNode = generateJsonObject(locale, presentId, jsonStr,
 						PeriodType.INSTANT, periods, xbrl);
 			} else if (Presentation.Id.StatementOfComprehensiveIncome
 					.equals(presentId)) {
@@ -79,13 +82,13 @@ public class FinancialReportDetailJsonMaker {
 				String[] periods = infoFam
 						.getStatementOfComprehensiveIncomeContext().split(
 								COMMA_STRING);
-				objNode = generateJsonObject(presentId, jsonStr,
+				objNode = generateJsonObject(locale, presentId, jsonStr,
 						PeriodType.DURATION, periods, xbrl);
 			} else if (Presentation.Id.StatementOfCashFlows.equals(presentId)) {
 				String jsonStr = presentFamily.getStatementOfCashFlows();
 				String[] periods = infoFam.getStatementOfCashFlowsContext()
 						.split(COMMA_STRING);
-				objNode = generateJsonObject(presentId, jsonStr,
+				objNode = generateJsonObject(locale, presentId, jsonStr,
 						PeriodType.DURATION, periods, xbrl);
 			} else if (Presentation.Id.StatementOfChangesInEquity
 					.equals(presentId)) {
@@ -93,7 +96,7 @@ public class FinancialReportDetailJsonMaker {
 				String[] periods = infoFam
 						.getStatementOfChangesInEquityContext().split(
 								COMMA_STRING);
-				objNode = generateJsonObject(presentId, jsonStr,
+				objNode = generateJsonObject(locale, presentId, jsonStr,
 						PeriodType.DURATION, periods, xbrl);
 			} else {
 				throw new RuntimeException("Presentation id(" + presentId
@@ -104,14 +107,15 @@ public class FinancialReportDetailJsonMaker {
 		return map;
 	}
 
-	private ObjectNode generateJsonObject(String presentId, String jsonString,
-			PeriodType periodType, String[] periods, Xbrl xbrl)
-			throws JsonProcessingException, IOException, ParseException {
+	private ObjectNode generateJsonObject(Locale locale, String presentId,
+			String jsonString, PeriodType periodType, String[] periods,
+			Xbrl xbrl) throws JsonProcessingException, IOException,
+			ParseException {
 		ObjectNode srcNode = (ObjectNode) objectMapper.readTree(jsonString);
 		ObjectNode targetNode = objectMapper.createObjectNode();
 		generateTitleNode(targetNode, periodType, periods);
-		generateContentNodes(srcNode, targetNode, presentId, periodType,
-				periods, xbrl);
+		generateContentNodes(locale, srcNode, targetNode, presentId,
+				periodType, periods, xbrl);
 		return targetNode;
 	}
 
@@ -146,14 +150,14 @@ public class FinancialReportDetailJsonMaker {
 				+ DateFormatUtils.format(endDate, YYYY_MM_DD);
 	}
 
-	private void generateContentNodes(ObjectNode srcNode,
+	private void generateContentNodes(Locale locale, ObjectNode srcNode,
 			ObjectNode targetNode, String presentId, PeriodType periodType,
 			String[] periods, Xbrl xbrl) throws ParseException {
-		generateContentNode(srcNode, targetNode, presentId, periodType,
+		generateContentNode(locale, srcNode, targetNode, presentId, periodType,
 				periods, xbrl, 0);
 	}
 
-	private boolean generateContentNode(ObjectNode srcNode,
+	private boolean generateContentNode(Locale locale, ObjectNode srcNode,
 			ObjectNode targetNode, String presentId, PeriodType periodType,
 			String[] periods, Xbrl xbrl, int deep) throws ParseException {
 		boolean hasContent = false;
@@ -168,8 +172,11 @@ public class FinancialReportDetailJsonMaker {
 				ObjectNode objNode = objectMapper.createObjectNode();
 				targetNode.set(key, objNode);
 				objNode.put(DEEP, deep);
-				objNode.put(LABEL, node.get(CHINESE_LABEL).asText());
-
+				if (Locale.ENGLISH.getLanguage().equals(locale.getLanguage())) {
+					objNode.put(LABEL, node.get(ENGLISH_LABEL).asText());
+				} else {
+					objNode.put(LABEL, node.get(CHINESE_LABEL).asText());
+				}
 				if (PeriodType.INSTANT.equals(periodType)) {
 					for (String period : periods) {
 						BigDecimal itemValue = getInstantItemValue(key, period,
@@ -194,7 +201,7 @@ public class FinancialReportDetailJsonMaker {
 					throw new RuntimeException("Period type(" + periodType
 							+ ") not implement !!!");
 				}
-				hasContent |= generateContentNode((ObjectNode) node,
+				hasContent |= generateContentNode(locale, (ObjectNode) node,
 						targetNode, presentId, periodType, periods, xbrl,
 						deep + 1);
 				if (hasContent == false) {

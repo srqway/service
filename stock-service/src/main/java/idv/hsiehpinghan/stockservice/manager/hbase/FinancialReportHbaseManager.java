@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -174,10 +175,10 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	@Override
 	public Map<String, ObjectNode> getFinancialReportDetailJsonMap(
 			String stockCode, ReportType reportType, Integer year,
-			Integer season) {
+			Integer season, Locale locale) {
 		try {
 			return detailJsonMaker.getPresentationJsonMap(presentIds,
-					stockCode, reportType, year, season);
+					stockCode, reportType, year, season, locale);
 		} catch (Exception e) {
 			logger.error("Get presentation json map fail !!!");
 			e.printStackTrace();
