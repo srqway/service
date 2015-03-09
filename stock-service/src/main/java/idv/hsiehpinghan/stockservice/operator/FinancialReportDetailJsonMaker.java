@@ -40,8 +40,6 @@ public class FinancialReportDetailJsonMaker {
 	public static final String YEAR = "year";
 	public static final String SEASON = "season";
 	public static final String LOCALE = "locale";
-	private static final int BR_TAG_SPAN_OF_ENGLISH_LABEL = 30;
-	private static final int BR_TAG_SPAN_OF_CHINESE_LABEL = 15;
 	private static final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private static final String YYYYMMDD = "yyyyMMdd";
 	private static final String YYYY_MM_DD = "yyyy/MM/dd";
@@ -178,60 +176,6 @@ public class FinancialReportDetailJsonMaker {
 				periods, xbrl, 0);
 	}
 
-	private String replaceSpecialCharacter(String str) {
-		return str.replace("'", "&apos;");
-	}
-
-	private String addBrTagsOfEnglishLabel(String str) {
-		String[] strArr = str.split(StringUtility.SPACE_STRING);
-		StringBuilder sb = new StringBuilder();
-		int charAmt = 0;
-		for (int i = 0, size = strArr.length; i < size; ++i) {
-			int length = strArr[i].length();
-			if (charAmt == 0) {
-				charAmt = charAmt + length + 1;
-			} else if ((charAmt + length + 1) < BR_TAG_SPAN_OF_ENGLISH_LABEL) {
-				charAmt = charAmt + length + 1;
-			} else {
-				sb.append("<br>");
-				charAmt = length + 1;
-			}
-			sb.append(strArr[i]);
-			sb.append(StringUtility.SPACE_STRING);
-		}
-		return sb.toString();
-	}
-
-	private String addBrTagsOfChineseLabel(String str) {
-		char[] cArr = str.toCharArray();
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0, size = cArr.length; i < size; ++i) {
-			if (i == 0) {
-				sb.append(cArr[i]);
-			} else if (i == size - 1) {
-				sb.append(cArr[i]);
-			} else if ((i % BR_TAG_SPAN_OF_CHINESE_LABEL) == 0) {
-				sb.append(cArr[i]);
-				sb.append("<br>");
-			} else {
-				sb.append(cArr[i]);
-			}
-		}
-		return sb.toString();
-	}
-
-	private String getEnglishLabel(JsonNode node) {
-		String label = node.get(ENGLISH_LABEL).asText();
-		String replacedLabel = replaceSpecialCharacter(label);
-		return addBrTagsOfEnglishLabel(replacedLabel);
-	}
-
-	private String getChineseLabel(JsonNode node) {
-		String label = node.get(CHINESE_LABEL).asText();
-		String replacedLabel = replaceSpecialCharacter(label);
-		return addBrTagsOfChineseLabel(replacedLabel);
-	}
-
 	private boolean generateContentNode(Locale locale, ObjectNode srcNode,
 			ObjectNode targetNode, String presentId, PeriodType periodType,
 			String[] periods, Xbrl xbrl, int deep) throws ParseException {
@@ -248,9 +192,9 @@ public class FinancialReportDetailJsonMaker {
 				targetNode.set(key, objNode);
 				objNode.put(DEEP, deep);
 				if (Locale.ENGLISH.getLanguage().equals(locale.getLanguage())) {
-					objNode.put(LABEL, getEnglishLabel(node));
+					objNode.put(LABEL, node.get(ENGLISH_LABEL).asText());
 				} else {
-					objNode.put(LABEL, getChineseLabel(node));
+					objNode.put(LABEL, node.get(CHINESE_LABEL).asText());
 				}
 				if (PeriodType.INSTANT.equals(periodType)) {
 					for (String period : periods) {
