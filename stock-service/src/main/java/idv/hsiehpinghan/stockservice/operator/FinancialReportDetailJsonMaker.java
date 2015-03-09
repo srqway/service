@@ -33,15 +33,23 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
 public class FinancialReportDetailJsonMaker {
-	private static final String COMMA_STRING = StringUtility.COMMA_STRING;
 	// private Logger logger = Logger.getLogger(this.getClass().getName());
+	public static final String INFO = "info";
+	public static final String STOCK_CODE = "stockCode";
+	public static final String REPORT_TYPE = "reportType";
+	public static final String YEAR = "year";
+	public static final String SEASON = "season";
+	public static final String LOCALE = "locale";
+	private static final int BR_TAG_SPAN_OF_ENGLISH_LABEL = 30;
+	private static final int BR_TAG_SPAN_OF_CHINESE_LABEL = 15;
+	private static final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private static final String YYYYMMDD = "yyyyMMdd";
 	private static final String YYYY_MM_DD = "yyyy/MM/dd";
 	private static final String DEEP = "deep";
 	private static final String LABEL = "label";
 	private static final String CHINESE_LABEL = "chinese_label";
 	private static final String ENGLISH_LABEL = "english_label";
-	public static final String TITLE = "title";
+	private static final String TITLE = "title";
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -49,6 +57,17 @@ public class FinancialReportDetailJsonMaker {
 	private XbrlRepository xbrlRepo;
 	@Autowired
 	private TaxonomyRepository taxoRepo;
+
+	private ObjectNode generateInfoJsonObject(String stockCode,
+			ReportType reportType, Integer year, Integer season, Locale locale) {
+		ObjectNode infoNode = objectMapper.createObjectNode();
+		infoNode.put(STOCK_CODE, stockCode);
+		infoNode.put(REPORT_TYPE, reportType.name());
+		infoNode.put(YEAR, year);
+		infoNode.put(SEASON, season);
+		infoNode.put(LOCALE, locale.getLanguage());
+		return infoNode;
+	}
 
 	public Map<String, ObjectNode> getPresentationJsonMap(
 			List<String> presentIds, String stockCode, ReportType reportType,
@@ -64,9 +83,11 @@ public class FinancialReportDetailJsonMaker {
 		InfoFamily infoFam = xbrl.getInfoFamily();
 		PresentationFamily presentFamily = taxoRepo.get(infoFam.getVersion())
 				.getPresentationFamily();
-
 		Map<String, ObjectNode> map = new HashMap<String, ObjectNode>(
 				presentIds.size());
+		map.put(INFO,
+				generateInfoJsonObject(stockCode, reportType, year, season,
+						locale));
 		for (String presentId : presentIds) {
 			ObjectNode objNode = null;
 			if (Presentation.Id.BalanceSheet.equals(presentId)) {
@@ -157,6 +178,60 @@ public class FinancialReportDetailJsonMaker {
 				periods, xbrl, 0);
 	}
 
+	private String replaceSpecialCharacter(String str) {
+		return str.replace("'", "&apos;");
+	}
+
+	private String addBrTagsOfEnglishLabel(String str) {
+		String[] strArr = str.split(StringUtility.SPACE_STRING);
+		StringBuilder sb = new StringBuilder();
+		int charAmt = 0;
+		for (int i = 0, size = strArr.length; i < size; ++i) {
+			int length = strArr[i].length();
+			if (charAmt == 0) {
+				charAmt = charAmt + length + 1;
+			} else if ((charAmt + length + 1) < BR_TAG_SPAN_OF_ENGLISH_LABEL) {
+				charAmt = charAmt + length + 1;
+			} else {
+				sb.append("<br>");
+				charAmt = length + 1;
+			}
+			sb.append(strArr[i]);
+			sb.append(StringUtility.SPACE_STRING);
+		}
+		return sb.toString();
+	}
+
+	private String addBrTagsOfChineseLabel(String str) {
+		char[] cArr = str.toCharArray();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0, size = cArr.length; i < size; ++i) {
+			if (i == 0) {
+				sb.append(cArr[i]);
+			} else if (i == size - 1) {
+				sb.append(cArr[i]);
+			} else if ((i % BR_TAG_SPAN_OF_CHINESE_LABEL) == 0) {
+				sb.append(cArr[i]);
+				sb.append("<br>");
+			} else {
+				sb.append(cArr[i]);
+			}
+		}
+		return sb.toString();
+	}
+
+	private String getEnglishLabel(JsonNode node) {
+		String label = node.get(ENGLISH_LABEL).asText();
+		String replacedLabel = replaceSpecialCharacter(label);
+		return addBrTagsOfEnglishLabel(replacedLabel);
+	}
+
+	private String getChineseLabel(JsonNode node) {
+		String label = node.get(CHINESE_LABEL).asText();
+		String replacedLabel = replaceSpecialCharacter(label);
+		return addBrTagsOfChineseLabel(replacedLabel);
+	}
+
 	private boolean generateContentNode(Locale locale, ObjectNode srcNode,
 			ObjectNode targetNode, String presentId, PeriodType periodType,
 			String[] periods, Xbrl xbrl, int deep) throws ParseException {
@@ -173,9 +248,9 @@ public class FinancialReportDetailJsonMaker {
 				targetNode.set(key, objNode);
 				objNode.put(DEEP, deep);
 				if (Locale.ENGLISH.getLanguage().equals(locale.getLanguage())) {
-					objNode.put(LABEL, node.get(ENGLISH_LABEL).asText());
+					objNode.put(LABEL, getEnglishLabel(node));
 				} else {
-					objNode.put(LABEL, node.get(CHINESE_LABEL).asText());
+					objNode.put(LABEL, getChineseLabel(node));
 				}
 				if (PeriodType.INSTANT.equals(periodType)) {
 					for (String period : periods) {
