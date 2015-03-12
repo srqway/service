@@ -55,18 +55,7 @@ public class FinancialReportDetailJsonMaker {
 	private XbrlRepository xbrlRepo;
 	@Autowired
 	private TaxonomyRepository taxoRepo;
-
-	private ObjectNode generateInfoJsonObject(String stockCode,
-			ReportType reportType, Integer year, Integer season, Locale locale) {
-		ObjectNode infoNode = objectMapper.createObjectNode();
-		infoNode.put(STOCK_CODE, stockCode);
-		infoNode.put(REPORT_TYPE, reportType.name());
-		infoNode.put(YEAR, year);
-		infoNode.put(SEASON, season);
-		infoNode.put(LOCALE, locale.getLanguage());
-		return infoNode;
-	}
-
+	
 	public Map<String, ObjectNode> getPresentationJsonMap(
 			List<String> presentIds, String stockCode, ReportType reportType,
 			Integer year, Integer season, Locale locale)
@@ -124,6 +113,17 @@ public class FinancialReportDetailJsonMaker {
 			map.put(presentId, objNode);
 		}
 		return map;
+	}
+
+	private ObjectNode generateInfoJsonObject(String stockCode,
+			ReportType reportType, Integer year, Integer season, Locale locale) {
+		ObjectNode infoNode = objectMapper.createObjectNode();
+		infoNode.put(STOCK_CODE, stockCode);
+		infoNode.put(REPORT_TYPE, reportType.name());
+		infoNode.put(YEAR, year);
+		infoNode.put(SEASON, season);
+		infoNode.put(LOCALE, locale.getLanguage());
+		return infoNode;
 	}
 
 	private ObjectNode generateJsonObject(Locale locale, String presentId,

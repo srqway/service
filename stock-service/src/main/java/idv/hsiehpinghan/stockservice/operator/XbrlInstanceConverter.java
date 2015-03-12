@@ -2,9 +2,11 @@ package idv.hsiehpinghan.stockservice.operator;
 
 import idv.hsiehpinghan.datatypeutility.utility.BigDecimalUtility;
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
+import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnQualifier;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
+import idv.hsiehpinghan.stockdao.entity.Taxonomy.PresentationFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.GrowthFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily;
@@ -16,6 +18,7 @@ import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemValue;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.enumeration.UnitType;
+import idv.hsiehpinghan.stockdao.repository.TaxonomyRepository;
 import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
 import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
@@ -52,7 +55,8 @@ public class XbrlInstanceConverter {
 	private static final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private static final String DATE_PATTERN = "yyyyMMdd";
 	// private Logger logger = Logger.getLogger(this.getClass().getName());
-
+	@Autowired
+	private TaxonomyRepository taxoRepo;
 	@Autowired
 	private XbrlRepository xbrlRepo;
 
@@ -72,6 +76,7 @@ public class XbrlInstanceConverter {
 		generateInstanceFamily(entity, objNode, ver);
 		generateItemFamily(entity, ver);
 		generateGrowthFamily(entity, ver);
+		generateRatioFamily(entity, ver);
 	}
 
 	private Date getDate(JsonNode dateNode) throws ParseException {
@@ -125,6 +130,11 @@ public class XbrlInstanceConverter {
 			if (elementId.equals(OldElementId)) {
 				continue;
 			}
+			if (PeriodType.DURATION.equals(itemQual.getPeriodType())) {
+				if (DateUtility.getMonth(itemQual.getStartDate()) != 1) {
+					continue;
+				}
+			}
 			ItemValue itemVal = (ItemValue) qualValEnt.getValue();
 			map.put(itemQual, itemVal);
 			OldElementId = elementId;
@@ -155,16 +165,22 @@ public class XbrlInstanceConverter {
 						oneYearBeforeValue);
 				growthFamily.setRatio(elementId, periodType, instant,
 						startDate, endDate, ver, getGrowthRate(growthRatio));
-				BigDecimal growthRatioLn = getGrowthRatioNaturalLogarithm(growthRatio);
-				growthFamily.setNaturalLogarithm(elementId, periodType,
-						instant, startDate, endDate, ver, growthRatioLn);
 			}
 			OldElementId = elementId;
 		}
 	}
 
+	private void generateRatioFamily(Xbrl entity, Date ver) {
+		InfoFamily infoFam = entity.getInfoFamily();
+		PresentationFamily presentFamily = taxoRepo.get(infoFam.getVersion())
+				.getPresentationFamily();
+		
+		ItemFamily itemFamily = entity.getItemFamily();
+
+	}
+	
 	private BigDecimal getGrowthRate(BigDecimal growthRatio) {
-		if(growthRatio == null) {
+		if (growthRatio == null) {
 			return null;
 		}
 		return growthRatio.subtract(BigDecimal.ONE);
@@ -173,13 +189,6 @@ public class XbrlInstanceConverter {
 	private BigDecimal getGrowthRatio(BigDecimal value,
 			BigDecimal oneYearBeforeValue) {
 		return BigDecimalUtility.divide(value, oneYearBeforeValue);
-	}
-
-	private BigDecimal getGrowthRatioNaturalLogarithm(BigDecimal growthRatio) {
-		if (growthRatio == null) {
-			return null;
-		}
-		return BigDecimalUtility.getNaturalLogarithm(growthRatio);
 	}
 
 	private void generateItemFamily(Xbrl entity, Date ver) {

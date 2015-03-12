@@ -9,9 +9,8 @@
 	<test name="financialReport">
 		<classes>
 			<!-- Test operator -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" -->
-			<!-- /> -->
+			<class
+				name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" />
 
 			<!-- Test manager -->
 			<!-- <class -->
@@ -56,8 +55,9 @@
 				/> -->
 
 			<!-- Test manager -->
-			<class
-				name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.MonthlyOperatingIncomeHbaseManagerTest" 
+				/> -->
 		</classes>
 	</test>
 	<test name="exchangeRate">
