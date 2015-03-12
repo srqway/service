@@ -15,7 +15,10 @@ import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemValue;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily.RatioQualifier;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily.RatioValue;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.enumeration.UnitType;
@@ -90,6 +93,7 @@ public class XbrlInstanceConverter {
 		generateItemFamily(entity, ver);
 		generateGrowthFamily(entity, ver);
 		generateRatioFamily(entity, ver);
+		generateRatioDifferenceFamily(entity, ver);
 	}
 
 	private Date getDate(JsonNode dateNode) throws ParseException {
@@ -346,15 +350,8 @@ public class XbrlInstanceConverter {
 				continue;
 			}
 			if (PeriodType.INSTANT.equals(periodType)) {
-
-				System.err.println(realKey + " / " + instant + " / " + percent);
-
 				ratioFam.setPercent(realKey, periodType, instant, ver, percent);
 			} else if (PeriodType.DURATION.equals(periodType)) {
-
-				System.err.println(realKey + " / " + startDate + " / "
-						+ endDate + " / " + percent);
-
 				ratioFam.setPercent(realKey, periodType, startDate, endDate,
 						ver, percent);
 			} else {
@@ -387,6 +384,30 @@ public class XbrlInstanceConverter {
 		// generateRatioContent(entity, ver,
 		// Presentation.Id.StatementOfChangesInEquity,
 		// PeriodType.DURATION, statementOfChangesInEquityPeriods);
+	}
+
+	private void generateRatioDifferenceFamily(Xbrl entity, Date ver) {
+		RatioFamily ratioFam = entity.getRatioFamily();
+		RatioDifferenceFamily diffFam = entity.getRatioDifferenceFamily();
+		String beforeElementId = null;
+		BigDecimal beforeValue = null;
+		for (Entry<HBaseColumnQualifier, HBaseValue> ent : ratioFam
+				.getLatestQualifierAndValueAsSet()) {
+			RatioQualifier qual = (RatioQualifier) ent.getKey();
+			String elementId = qual.getElementId();
+			BigDecimal value = ((RatioValue) ent.getValue()).getAsBigDecimal();
+			if (elementId.equals(beforeElementId)) {
+				PeriodType periodType = qual.getPeriodType();
+				Date instant = qual.getInstant();
+				Date startDate = qual.getStartDate();
+				Date endDate = qual.getEndDate();
+				BigDecimal difference = value.subtract(beforeValue);
+				diffFam.setDifference(elementId, periodType, instant,
+						startDate, endDate, ver, difference);
+			}
+			beforeElementId = elementId;
+			beforeValue = value;
+		}
 	}
 
 	private BigDecimal getGrowthRate(BigDecimal growthRatio) {

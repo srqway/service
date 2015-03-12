@@ -3,6 +3,7 @@ package idv.hsiehpinghan.stockservice.operator;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily.InfoQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RowKey;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
@@ -76,7 +77,7 @@ public class XbrlInstanceConverterTest {
 		testItemFamily(xbrl);
 		testGrowthFamily(xbrl);
 		testRatioFamily(xbrl);
-
+		testRatioDifferenceFamily(xbrl);
 	}
 
 	private void testRowKey(Xbrl xbrl, String stockCode) {
@@ -129,5 +130,12 @@ public class XbrlInstanceConverterTest {
 				PeriodType.DURATION, startDate, endDate);
 		Assert.assertEquals(0,
 				statementOfCashFlowsPercent.compareTo(new BigDecimal("-1.5")));
+	}
+
+	private void testRatioDifferenceFamily(Xbrl xbrl) {
+		RatioDifferenceFamily diffFam = xbrl.getRatioDifferenceFamily();
+		BigDecimal difference = diffFam.getDifference("ifrs_Inventories",
+				PeriodType.INSTANT, instant, null, null);
+		Assert.assertEquals(0, difference.compareTo(new BigDecimal("0.02")));
 	}
 }
