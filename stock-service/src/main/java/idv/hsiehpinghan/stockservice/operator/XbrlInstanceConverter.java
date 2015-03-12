@@ -56,12 +56,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 @Service
 public class XbrlInstanceConverter {
+	// private Logger logger = Logger.getLogger(this.getClass().getName());
 	private static final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private static final String YYYYMMDD = "yyyyMMdd";
 	private static final String ABSTRACT = "Abstract";
-	private static final int ABSTRACT_LENGTH = ABSTRACT.length();
 
-	// private Logger logger = Logger.getLogger(this.getClass().getName());
 	@Autowired
 	private TaxonomyRepository taxoRepo;
 	@Autowired
@@ -216,14 +215,16 @@ public class XbrlInstanceConverter {
 		generateRatio(entity, ver, presentId, periodType, periods, presentNode);
 	}
 
-	private String getRealKey(String key) {
-		if (key != null) {
-			if (key.endsWith(ABSTRACT)) {
-				int endIndex = key.length() - ABSTRACT_LENGTH;
-				return key.substring(0, endIndex);
-			}
+	private String getRealKey(String key, ObjectNode node) {
+		if (key.endsWith(ABSTRACT) == false) {
+			return key;
 		}
-		return key;
+		String realKey = null;
+		Iterator<String> iter = node.fieldNames();
+		while (iter.hasNext()) {
+			realKey = iter.next();
+		}
+		return realKey;
 	}
 
 	private BigDecimal getInstantTotalValue(Xbrl entity,
@@ -260,7 +261,7 @@ public class XbrlInstanceConverter {
 				if (PeriodType.INSTANT.equals(periodType)) {
 					for (String period : periods) {
 						Date instant = DateUtils.parseDate(period, YYYYMMDD);
-						String realKey = getRealKey(key);
+						String realKey = getRealKey(key, (ObjectNode) node);
 						BigDecimal totalValue = getInstantTotalValue(entity,
 								presentNode, realKey, instant);
 						if (totalValue == null) {
@@ -275,7 +276,7 @@ public class XbrlInstanceConverter {
 						Date startDate = DateUtils
 								.parseDate(dates[0], YYYYMMDD);
 						Date endDate = DateUtils.parseDate(dates[1], YYYYMMDD);
-						String realKey = getRealKey(key);
+						String realKey = getRealKey(key, (ObjectNode) node);
 						BigDecimal totalValue = getDurationTotalValue(entity,
 								presentNode, realKey, startDate, endDate);
 						if (totalValue == null) {
@@ -322,7 +323,7 @@ public class XbrlInstanceConverter {
 			if (realParentKey.equals(key)) {
 				continue;
 			}
-			String realKey = getRealKey(key);
+			String realKey = getRealKey(key, (ObjectNode) node);
 			BigDecimal value = null;
 			if (PeriodType.INSTANT.equals(periodType)) {
 				value = entity.getItemFamily()
@@ -339,13 +340,15 @@ public class XbrlInstanceConverter {
 				continue;
 			}
 			if (PeriodType.INSTANT.equals(periodType)) {
+
+				System.err.println(realKey + " / " + instant + " / " + percent);
+
 				ratioFam.setPercent(realKey, periodType, instant, ver, percent);
 			} else if (PeriodType.DURATION.equals(periodType)) {
-			
-				
-				System.err.println(realKey + " / " + startDate + " / " + endDate + " / " + percent);
-				
-				
+
+				System.err.println(realKey + " / " + startDate + " / "
+						+ endDate + " / " + percent);
+
 				ratioFam.setPercent(realKey, periodType, startDate, endDate,
 						ver, percent);
 			} else {

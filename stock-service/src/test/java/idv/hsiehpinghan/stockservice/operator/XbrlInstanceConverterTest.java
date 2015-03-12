@@ -51,7 +51,7 @@ public class XbrlInstanceConverterTest {
 		presentIds.add(Presentation.Id.StatementOfComprehensiveIncome);
 		presentIds.add(Presentation.Id.StatementOfCashFlows);
 		presentIds.add(Presentation.Id.StatementOfChangesInEquity);
-		instant = DateUtils.parseDate("20130331", "yyyyMMdd"); 
+		instant = DateUtils.parseDate("20130331", "yyyyMMdd");
 		startDate = DateUtils.parseDate("20130101", "yyyyMMdd");
 		endDate = DateUtils.parseDate("20130331", "yyyyMMdd");
 	}
@@ -90,7 +90,9 @@ public class XbrlInstanceConverterTest {
 				periodType, startDate, endDate);
 		Assert.assertEquals(0, ratio.compareTo(new BigDecimal("-0.10")));
 		// Test RatioFamily
-//		BigDecimal percent = xbrl.getRatioFamily().getPercent("ifrs_OtherCurrentFinancialAssets", PeriodType.INSTANT, instant);
+//		BigDecimal percent = xbrl.getRatioFamily()
+//				.getPercent("ifrs_OtherCurrentFinancialAssets",
+//						PeriodType.INSTANT, instant);
 //		Assert.assertEquals(0, percent.compareTo(new BigDecimal("0.32")));
 
 	}
