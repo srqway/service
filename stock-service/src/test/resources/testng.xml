@@ -9,13 +9,13 @@
 	<test name="financialReport">
 		<classes>
 			<!-- Test operator -->
-			<class
-				name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" 
+				/> -->
 
 			<!-- Test manager -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" 
-				/> -->
+			<class
+				name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" />
 		</classes>
 	</test>
 	<test name="stockClosingCondition">
