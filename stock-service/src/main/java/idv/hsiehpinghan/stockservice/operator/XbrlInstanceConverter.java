@@ -341,6 +341,11 @@ public class XbrlInstanceConverter {
 			if (PeriodType.INSTANT.equals(periodType)) {
 				ratioFam.setPercent(realKey, periodType, instant, ver, percent);
 			} else if (PeriodType.DURATION.equals(periodType)) {
+			
+				
+				System.err.println(realKey + " / " + startDate + " / " + endDate + " / " + percent);
+				
+				
 				ratioFam.setPercent(realKey, periodType, startDate, endDate,
 						ver, percent);
 			} else {
@@ -355,13 +360,15 @@ public class XbrlInstanceConverter {
 			SecurityException, InstantiationException,
 			IllegalArgumentException, InvocationTargetException, IOException,
 			ParseException {
-		String[] balanceSheetPeriods = entity.getInfoFamily()
-				.getBalanceSheetContext().split(COMMA_STRING);
-		generateRatioContent(entity, ver, Presentation.Id.BalanceSheet,
-				PeriodType.INSTANT, balanceSheetPeriods);
-		// generateRatioContent(entity, ver,
-		// Presentation.Id.StatementOfComprehensiveIncome,
-		// PeriodType.DURATION, balanceSheetPeriods);
+		// String[] balanceSheetPeriods = entity.getInfoFamily()
+		// .getBalanceSheetContext().split(COMMA_STRING);
+		// generateRatioContent(entity, ver, Presentation.Id.BalanceSheet,
+		// PeriodType.INSTANT, balanceSheetPeriods);
+		String[] statementOfComprehensiveIncomePeriods = entity.getInfoFamily()
+				.getStatementOfComprehensiveIncomeContext().split(COMMA_STRING);
+		generateRatioContent(entity, ver,
+				Presentation.Id.StatementOfComprehensiveIncome,
+				PeriodType.DURATION, statementOfComprehensiveIncomePeriods);
 	}
 
 	private BigDecimal getGrowthRate(BigDecimal growthRatio) {
