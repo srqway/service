@@ -3,6 +3,7 @@ package idv.hsiehpinghan.stockservice.operator;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily.InfoQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RowKey;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
@@ -69,31 +70,64 @@ public class XbrlInstanceConverterTest {
 				.getInstanceJson(file, presentIds);
 		Xbrl xbrl = converter.convert(stockCode, reportType, year, season,
 				objNode);
-		// Test rowKey.
+		testRowKey(xbrl, stockCode);
+		testInfoFamily(xbrl);
+		testInstanceFamily(xbrl);
+		testItemFamily(xbrl);
+		testGrowthFamily(xbrl);
+		testRatioFamily(xbrl);
+
+	}
+
+	private void testRowKey(Xbrl xbrl, String stockCode) {
 		RowKey rowKey = (RowKey) xbrl.getRowKey();
 		Assert.assertEquals(stockCode, rowKey.getStockCode());
-		// Test InfoFamily
+	}
+
+	private void testInfoFamily(Xbrl xbrl) {
 		Set<InfoQualifier> infoQuals = xbrl.getInfoFamily().getQualifiers();
 		Assert.assertTrue(infoQuals.size() == 5);
-		// Test InstanceFamily
+	}
+
+	private void testInstanceFamily(Xbrl xbrl) {
 		InstanceValue instVal = xbrl.getInstanceFamily().getInstanceValue(
 				elementId, periodType, startDate, endDate);
 		Assert.assertEquals(unitType, instVal.getUnitType());
 		Assert.assertEquals(value, instVal.getValue());
-		// Test ItemFamily
+	}
+
+	private void testItemFamily(Xbrl xbrl) {
 		Assert.assertEquals(
 				value,
 				xbrl.getItemFamily().get(elementId, periodType, startDate,
 						endDate));
-		// Test GrowthFamily
+	}
+
+	private void testGrowthFamily(Xbrl xbrl) {
 		BigDecimal ratio = xbrl.getGrowthFamily().getRatio(elementId,
 				periodType, startDate, endDate);
 		Assert.assertEquals(0, ratio.compareTo(new BigDecimal("-0.10")));
-		// Test RatioFamily
-//		BigDecimal percent = xbrl.getRatioFamily()
-//				.getPercent("ifrs_OtherCurrentFinancialAssets",
-//						PeriodType.INSTANT, instant);
-//		Assert.assertEquals(0, percent.compareTo(new BigDecimal("0.32")));
+	}
 
+	private void testRatioFamily(Xbrl xbrl) {
+		RatioFamily ratioFam = xbrl.getRatioFamily();
+		// Balance Sheet
+		BigDecimal balanceSheetPercent = ratioFam
+				.getPercent("ifrs_OtherCurrentFinancialAssets",
+						PeriodType.INSTANT, instant);
+		Assert.assertEquals(0,
+				balanceSheetPercent.compareTo(new BigDecimal("0.32")));
+		// Statement Of Comprehensive Income
+		BigDecimal statementOfComprehensiveIncomePercent = ratioFam.getPercent(
+				"tifrs-bsci-ci_OtherIncomeOthers", PeriodType.DURATION,
+				startDate, endDate);
+		Assert.assertEquals(0, statementOfComprehensiveIncomePercent
+				.compareTo(new BigDecimal("0.85")));
+		// Statement Of CashFlows
+		BigDecimal statementOfCashFlowsPercent = ratioFam.getPercent(
+				"tifrs-SCF_DecreaseIncreaseInNotesReceivable",
+				PeriodType.DURATION, startDate, endDate);
+		Assert.assertEquals(0,
+				statementOfCashFlowsPercent.compareTo(new BigDecimal("-1.5")));
 	}
 }

@@ -198,6 +198,12 @@ public class XbrlInstanceConverter {
 		case Presentation.Id.StatementOfComprehensiveIncome:
 			jsonStr = presentFamily.getStatementOfComprehensiveIncome();
 			break;
+		case Presentation.Id.StatementOfCashFlows:
+			jsonStr = presentFamily.getStatementOfCashFlows();
+			break;
+		case Presentation.Id.StatementOfChangesInEquity:
+			jsonStr = presentFamily.getStatementOfChangesInEquity();
+			break;
 		default:
 			throw new RuntimeException("Presentation id(" + presentId
 					+ ") not implements !!!");
@@ -363,15 +369,24 @@ public class XbrlInstanceConverter {
 			SecurityException, InstantiationException,
 			IllegalArgumentException, InvocationTargetException, IOException,
 			ParseException {
-		// String[] balanceSheetPeriods = entity.getInfoFamily()
-		// .getBalanceSheetContext().split(COMMA_STRING);
-		// generateRatioContent(entity, ver, Presentation.Id.BalanceSheet,
-		// PeriodType.INSTANT, balanceSheetPeriods);
+		String[] balanceSheetPeriods = entity.getInfoFamily()
+				.getBalanceSheetContext().split(COMMA_STRING);
+		generateRatioContent(entity, ver, Presentation.Id.BalanceSheet,
+				PeriodType.INSTANT, balanceSheetPeriods);
 		String[] statementOfComprehensiveIncomePeriods = entity.getInfoFamily()
 				.getStatementOfComprehensiveIncomeContext().split(COMMA_STRING);
 		generateRatioContent(entity, ver,
 				Presentation.Id.StatementOfComprehensiveIncome,
 				PeriodType.DURATION, statementOfComprehensiveIncomePeriods);
+		String[] statementOfCashFlowsPeriods = entity.getInfoFamily()
+				.getStatementOfCashFlowsContext().split(COMMA_STRING);
+		generateRatioContent(entity, ver, Presentation.Id.StatementOfCashFlows,
+				PeriodType.DURATION, statementOfCashFlowsPeriods);
+		// String[] statementOfChangesInEquityPeriods = entity.getInfoFamily()
+		// .getStatementOfCashFlowsContext().split(COMMA_STRING);
+		// generateRatioContent(entity, ver,
+		// Presentation.Id.StatementOfChangesInEquity,
+		// PeriodType.DURATION, statementOfChangesInEquityPeriods);
 	}
 
 	private BigDecimal getGrowthRate(BigDecimal growthRatio) {
