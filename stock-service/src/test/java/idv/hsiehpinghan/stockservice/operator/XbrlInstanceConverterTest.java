@@ -34,6 +34,7 @@ public class XbrlInstanceConverterTest {
 	private List<String> presentIds;
 	private String elementId = "ifrs_BasicEarningsLossPerShare";
 	private PeriodType periodType = PeriodType.DURATION;
+	private Date instant;
 	private Date startDate;
 	private Date endDate;
 	private UnitType unitType = UnitType.TWD;
@@ -50,6 +51,7 @@ public class XbrlInstanceConverterTest {
 		presentIds.add(Presentation.Id.StatementOfComprehensiveIncome);
 		presentIds.add(Presentation.Id.StatementOfCashFlows);
 		presentIds.add(Presentation.Id.StatementOfChangesInEquity);
+		instant = DateUtils.parseDate("20130331", "yyyyMMdd"); 
 		startDate = DateUtils.parseDate("20130101", "yyyyMMdd");
 		endDate = DateUtils.parseDate("20130331", "yyyyMMdd");
 	}
@@ -87,5 +89,9 @@ public class XbrlInstanceConverterTest {
 		BigDecimal ratio = xbrl.getGrowthFamily().getRatio(elementId,
 				periodType, startDate, endDate);
 		Assert.assertEquals(0, ratio.compareTo(new BigDecimal("-0.10")));
+		// Test RatioFamily
+		BigDecimal percent = xbrl.getRatioFamily().getPercent("ifrs_OtherCurrentFinancialAssets", PeriodType.INSTANT, instant);
+		Assert.assertEquals(0, percent.compareTo(new BigDecimal("0.32")));
+
 	}
 }

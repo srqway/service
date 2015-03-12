@@ -5,8 +5,8 @@ import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnQualifier;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseValue;
-import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy.PresentationFamily;
+import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.GrowthFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily;
@@ -15,6 +15,7 @@ import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemValue;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.enumeration.UnitType;
@@ -25,6 +26,8 @@ import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 import idv.hsiehpinghan.xbrlassistant.xbrl.Instance;
 import idv.hsiehpinghan.xbrlassistant.xbrl.Presentation;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Calendar;
@@ -41,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -53,15 +57,23 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Service
 public class XbrlInstanceConverter {
 	private static final String COMMA_STRING = StringUtility.COMMA_STRING;
-	private static final String DATE_PATTERN = "yyyyMMdd";
+	private static final String YYYYMMDD = "yyyyMMdd";
+	private static final String ABSTRACT = "Abstract";
+	private static final int ABSTRACT_LENGTH = ABSTRACT.length();
+
 	// private Logger logger = Logger.getLogger(this.getClass().getName());
 	@Autowired
 	private TaxonomyRepository taxoRepo;
 	@Autowired
 	private XbrlRepository xbrlRepo;
+	@Autowired
+	private ObjectMapper objectMapper;
 
 	public Xbrl convert(String stockCode, ReportType reportType, int year,
-			int season, ObjectNode objNode) throws ParseException {
+			int season, ObjectNode objNode) throws ParseException,
+			IllegalAccessException, NoSuchMethodException, SecurityException,
+			InstantiationException, IllegalArgumentException,
+			InvocationTargetException, IOException {
 		Xbrl entity = xbrlRepo.generateEntity(stockCode, reportType, year,
 				season);
 		generateRowKey(entity, stockCode, reportType, year, season);
@@ -70,7 +82,9 @@ public class XbrlInstanceConverter {
 	}
 
 	private void generateColumnFamilies(Xbrl entity, ObjectNode objNode)
-			throws ParseException {
+			throws ParseException, IllegalAccessException,
+			NoSuchMethodException, SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException {
 		Date ver = Calendar.getInstance().getTime();
 		generateInfoFamily(entity, objNode, ver);
 		generateInstanceFamily(entity, objNode, ver);
@@ -83,7 +97,7 @@ public class XbrlInstanceConverter {
 		if (dateNode == null) {
 			return null;
 		}
-		return DateUtils.parseDate(dateNode.textValue(), DATE_PATTERN);
+		return DateUtils.parseDate(dateNode.textValue(), YYYYMMDD);
 	}
 
 	private BigDecimal getTwdValue(UnitType unitType, BigDecimal value) {
@@ -170,15 +184,186 @@ public class XbrlInstanceConverter {
 		}
 	}
 
-	private void generateRatioFamily(Xbrl entity, Date ver) {
+	private ObjectNode getPresentationJson(Xbrl entity, String presentId)
+			throws IllegalAccessException, NoSuchMethodException,
+			SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException {
 		InfoFamily infoFam = entity.getInfoFamily();
 		PresentationFamily presentFamily = taxoRepo.get(infoFam.getVersion())
 				.getPresentationFamily();
-		
-		ItemFamily itemFamily = entity.getItemFamily();
-
+		String jsonStr = null;
+		switch (presentId) {
+		case Presentation.Id.BalanceSheet:
+			jsonStr = presentFamily.getBalanceSheet();
+			break;
+		case Presentation.Id.StatementOfComprehensiveIncome:
+			jsonStr = presentFamily.getStatementOfComprehensiveIncome();
+			break;
+		default:
+			throw new RuntimeException("Presentation id(" + presentId
+					+ ") not implements !!!");
+		}
+		return (ObjectNode) objectMapper.readTree(jsonStr);
 	}
-	
+
+	private void generateRatioContent(Xbrl entity, Date ver, String presentId,
+			PeriodType periodType, String[] periods)
+			throws IllegalAccessException, NoSuchMethodException,
+			SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException,
+			ParseException {
+		ObjectNode presentNode = getPresentationJson(entity, presentId);
+		generateRatio(entity, ver, presentId, periodType, periods, presentNode);
+	}
+
+	private String getRealKey(String key) {
+		if (key != null) {
+			if (key.endsWith(ABSTRACT)) {
+				int endIndex = key.length() - ABSTRACT_LENGTH;
+				return key.substring(0, endIndex);
+			}
+		}
+		return key;
+	}
+
+	private BigDecimal getInstantTotalValue(Xbrl entity,
+			ObjectNode presentNode, String realKey, Date instant)
+			throws ParseException {
+		if (realKey == null) {
+			return null;
+		}
+		return entity.getItemFamily().get(realKey, PeriodType.INSTANT, instant);
+	}
+
+	private BigDecimal getDurationTotalValue(Xbrl entity,
+			ObjectNode presentNode, String realKey, Date startDate, Date endDate)
+			throws ParseException {
+		if (realKey == null) {
+			return null;
+		}
+		return entity.getItemFamily().get(realKey, PeriodType.DURATION,
+				startDate, endDate);
+	}
+
+	private void generateRatio(Xbrl entity, Date ver, String presentId,
+			PeriodType periodType, String[] periods, ObjectNode presentNode)
+			throws IllegalAccessException, NoSuchMethodException,
+			SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException,
+			ParseException {
+		Iterator<Map.Entry<String, JsonNode>> iter = presentNode.fields();
+		while (iter.hasNext()) {
+			Map.Entry<String, JsonNode> ent = iter.next();
+			String key = ent.getKey();
+			JsonNode node = ent.getValue();
+			if (node.isObject()) {
+				if (PeriodType.INSTANT.equals(periodType)) {
+					for (String period : periods) {
+						Date instant = DateUtils.parseDate(period, YYYYMMDD);
+						String realKey = getRealKey(key);
+						BigDecimal totalValue = getInstantTotalValue(entity,
+								presentNode, realKey, instant);
+						if (totalValue == null) {
+							continue;
+						}
+						setInstantRatio(entity, ver, (ObjectNode) node,
+								realKey, totalValue, instant);
+					}
+				} else if (PeriodType.DURATION.equals(periodType)) {
+					for (String period : periods) {
+						String[] dates = period.split("~");
+						Date startDate = DateUtils
+								.parseDate(dates[0], YYYYMMDD);
+						Date endDate = DateUtils.parseDate(dates[1], YYYYMMDD);
+						String realKey = getRealKey(key);
+						BigDecimal totalValue = getDurationTotalValue(entity,
+								presentNode, realKey, startDate, endDate);
+						if (totalValue == null) {
+							continue;
+						}
+						setDurationRatio(entity, ver, (ObjectNode) node,
+								realKey, totalValue, startDate, endDate);
+					}
+				} else {
+					throw new RuntimeException("Period type(" + periodType
+							+ ") not implement !!!");
+				}
+				generateRatio(entity, ver, presentId, periodType, periods,
+						(ObjectNode) node);
+			}
+		}
+	}
+
+	private void setInstantRatio(Xbrl entity, Date ver, ObjectNode objNode,
+			String realParentKey, BigDecimal parentValue, Date instant) {
+		setRatio(entity, ver, objNode, realParentKey, parentValue,
+				PeriodType.INSTANT, instant, null, null);
+	}
+
+	private void setDurationRatio(Xbrl entity, Date ver, ObjectNode objNode,
+			String realParentKey, BigDecimal parentValue, Date startDate,
+			Date endDate) {
+		setRatio(entity, ver, objNode, realParentKey, parentValue,
+				PeriodType.DURATION, null, startDate, endDate);
+	}
+
+	private void setRatio(Xbrl entity, Date ver, ObjectNode objNode,
+			String realParentKey, BigDecimal parentValue,
+			PeriodType periodType, Date instant, Date startDate, Date endDate) {
+		RatioFamily ratioFam = entity.getRatioFamily();
+		Iterator<Map.Entry<String, JsonNode>> iter = objNode.fields();
+		while (iter.hasNext()) {
+			Map.Entry<String, JsonNode> ent = iter.next();
+			String key = ent.getKey();
+			JsonNode node = ent.getValue();
+			if (node.isObject() == false) {
+				continue;
+			}
+			if (realParentKey.equals(key)) {
+				continue;
+			}
+			String realKey = getRealKey(key);
+			BigDecimal value = null;
+			if (PeriodType.INSTANT.equals(periodType)) {
+				value = entity.getItemFamily()
+						.get(realKey, periodType, instant);
+			} else if (PeriodType.DURATION.equals(periodType)) {
+				value = entity.getItemFamily().get(realKey, periodType,
+						startDate, endDate);
+			} else {
+				throw new RuntimeException("Period type(" + periodType
+						+ ") undefined !!!");
+			}
+			BigDecimal percent = BigDecimalUtility.divide(value, parentValue);
+			if (percent == null) {
+				continue;
+			}
+			if (PeriodType.INSTANT.equals(periodType)) {
+				ratioFam.setPercent(realKey, periodType, instant, ver, percent);
+			} else if (PeriodType.DURATION.equals(periodType)) {
+				ratioFam.setPercent(realKey, periodType, startDate, endDate,
+						ver, percent);
+			} else {
+				throw new RuntimeException("Period type(" + periodType
+						+ ") undefined !!!");
+			}
+		}
+	}
+
+	private void generateRatioFamily(Xbrl entity, Date ver)
+			throws IllegalAccessException, NoSuchMethodException,
+			SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException,
+			ParseException {
+		String[] balanceSheetPeriods = entity.getInfoFamily()
+				.getBalanceSheetContext().split(COMMA_STRING);
+		generateRatioContent(entity, ver, Presentation.Id.BalanceSheet,
+				PeriodType.INSTANT, balanceSheetPeriods);
+		// generateRatioContent(entity, ver,
+		// Presentation.Id.StatementOfComprehensiveIncome,
+		// PeriodType.DURATION, balanceSheetPeriods);
+	}
+
 	private BigDecimal getGrowthRate(BigDecimal growthRatio) {
 		if (growthRatio == null) {
 			return null;
