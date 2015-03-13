@@ -12,10 +12,12 @@
 			<!-- <class -->
 			<!-- name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" 
 				/> -->
-
-			<!-- Test manager -->
 			<class
-				name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" />
+				name="idv.hsiehpinghan.stockservice.operator.DataTransporterTest" />
+				
+			<!-- Test manager -->
+<!-- 			<class -->
+<!-- 				name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" /> -->
 		</classes>
 	</test>
 	<test name="stockClosingCondition">

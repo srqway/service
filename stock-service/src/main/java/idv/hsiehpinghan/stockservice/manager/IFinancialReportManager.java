@@ -26,4 +26,5 @@ public interface IFinancialReportManager {
 			ReportType reportType, Integer year, Integer season, Locale locale);
 
 	TreeSet<Xbrl> getAll(String stockCode, ReportType reportType);
+
 }
