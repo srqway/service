@@ -1,6 +1,7 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
 import idv.hsiehpinghan.datatypeutility.utility.BigDecimalUtility;
+import idv.hsiehpinghan.datatypeutility.utility.CharsetUtility;
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.MonthlyOperatingIncome;
@@ -15,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -34,7 +36,7 @@ public class MonthlyOperatingIncomeHbaseManager implements
 	private final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private final String EMPTY_STRING = StringUtility.EMPTY_STRING;
 	private final String[] EXTENSIONS = { "csv" };
-	private final String UTF8 = "utf8";
+	private final Charset UTF8 = CharsetUtility.UTF_8;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	// private File downloadDir;
 	private File processedLog;

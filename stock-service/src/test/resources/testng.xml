@@ -14,13 +14,13 @@
 				/> -->
 			<!-- <class name="idv.hsiehpinghan.stockservice.operator.XbrlTransporterTest" 
 				/> -->
-			<class
-				name="idv.hsiehpinghan.stockservice.operator.FinancialReportAnalyzerTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.operator.FinancialReportAnalyzerTest" 
+				/> -->
 
 			<!-- Test manager -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" 
-				/> -->
+			<class
+				name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" />
 		</classes>
 	</test>
 	<test name="stockClosingCondition">

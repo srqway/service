@@ -24,12 +24,13 @@ import java.util.TreeSet;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XbrlTransporter {
-	// private Logger logger = Logger.getLogger(this.getClass().getName());
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private final String YYYY_MM_DD = "yyyy-MM-dd";
 	private final Charset UTF_8 = Charsets.UTF_8;
 	private final String NA = StringUtility.NA_STRING;
@@ -38,15 +39,22 @@ public class XbrlTransporter {
 	@Autowired
 	private XbrlRepository xbrlRepo;
 
-	public void saveHbaseDataToFile(String stockCode, ReportType reportType,
+	public boolean saveHbaseDataToFile(String stockCode, ReportType reportType,
 			File targetDirectory) throws IOException {
 		TreeSet<Xbrl> entities = xbrlRepo.fuzzyScan(stockCode, reportType,
 				null, null);
+		if (entities.size() <= 0) {
+			logger.info(String
+					.format("XbrlRepository fuzzyScan get nothing.[StockCode(%s), ReportType(%s)]",
+							stockCode, reportType));
+			return false;
+		}
 		File targetFile = FileUtility.getOrCreateFile(targetDirectory, XBRL);
 		FileUtils.write(targetFile, generateTitle(), UTF_8, false);
 		for (Xbrl entity : entities) {
 			writeToFile(targetFile, entity);
 		}
+		return true;
 	}
 
 	private void writeToFile(File targetFile, Xbrl entity) throws IOException {

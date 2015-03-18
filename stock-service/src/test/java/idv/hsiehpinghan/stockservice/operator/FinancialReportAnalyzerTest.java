@@ -5,14 +5,15 @@ import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.io.FileUtils;
+import junit.framework.Assert;
+
 import org.springframework.context.ApplicationContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class FinancialReportAnalyzerTest {
 	private FinancialReportAnalyzer analyzer;
-	
+
 	@BeforeClass
 	public void beforeClass() throws IOException {
 		ApplicationContext applicationContext = TestngSuitSetting
@@ -23,7 +24,13 @@ public class FinancialReportAnalyzerTest {
 	@Test
 	public void analyzeRatioDifference() throws Exception {
 		File targetDirectory = new File("/tmp/getXbrlFromHbase");
-		File logFile = new File(FileUtils.getTempDirectory(), "analyzeRatioDifference.log");
-		analyzer.analyzeRatioDifference(targetDirectory, logFile);
+		deleteResultFile(targetDirectory);
+		File resultFile = analyzer.analyzeRatioDifference(targetDirectory);
+		Assert.assertTrue(resultFile.exists());
+	}
+
+	private void deleteResultFile(File targetDirectory) {
+		File resultFile = new File(targetDirectory, "result.csv");
+		resultFile.delete();
 	}
 }

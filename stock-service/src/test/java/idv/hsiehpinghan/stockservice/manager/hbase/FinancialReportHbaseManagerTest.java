@@ -86,7 +86,6 @@ public class FinancialReportHbaseManagerTest {
 	}
 
 //	@Test(dependsOnMethods = { "processXbrlFiles" })
-	@Test
 	public void saveFinancialReportToHBase() throws Exception {
 		File xbrlDir = stockServiceProperty.getFinancialReportExtractDir();
 		int actual = manager.saveFinancialReportToHBase(xbrlDir);
@@ -101,16 +100,13 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertTrue(result);
 	}
 
-	// @Test(dependsOnMethods = { "updateFinancialReportInstance" })
-	// public void calculateFinancialReport() throws Exception {
-	// reportManager.calculateFinancialReport();
-	// int actual = hbaseAssistant
-	// .getRowAmount(dataRepo.getTargetTableClass());
-	// int expected = hbaseAssistant.getRowAmount(instanceRepo
-	// .getTargetTableClass());
-	// Assert.assertEquals(actual, expected);
-	// }
-
+//	@Test(dependsOnMethods = { "updateXbrlInstance" })
+	@Test
+	public void updateAnalyzedData() throws Exception {
+		boolean result = manager.updateAnalyzedData();
+		Assert.assertTrue(result);
+	}
+	
 	private void dropAndCreateTable() throws Exception {
 		HbaseEntityTestUtility.dropAndCreateTargetTable(xbrlRepo);
 	}
