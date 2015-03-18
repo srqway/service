@@ -22,7 +22,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.context.ApplicationContext;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 public class FinancialReportHbaseManagerTest {
 	private final String DATE_PATTERN = "yyyyMMdd";
@@ -40,10 +39,10 @@ public class FinancialReportHbaseManagerTest {
 		manager = applicationContext.getBean(FinancialReportHbaseManager.class);
 		taxonomyRepo = applicationContext.getBean(TaxonomyRepository.class);
 		xbrlRepo = applicationContext.getBean(XbrlRepository.class);
-//		dropAndCreateTable();
+		// dropAndCreateTable();
 	}
 
-//	@Test
+	// @Test
 	public void updateTaxonomyPresentation() throws Exception {
 		String tableName = taxonomyRepo.getTargetTableName();
 		if (taxonomyRepo.isTableExists(tableName)) {
@@ -60,7 +59,7 @@ public class FinancialReportHbaseManagerTest {
 		}
 	}
 
-//	@Test(groups="FinancialReportHbaseManagerTest")
+	// @Test(groups="FinancialReportHbaseManagerTest")
 	public void processXbrlFiles() throws Exception {
 		File instanceFile = SystemResourceUtility
 				.getFileResource("xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml");
@@ -85,7 +84,7 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(val.getValue().toString(), "-120107000");
 	}
 
-//	@Test(dependsOnMethods = { "processXbrlFiles" })
+	// @Test(dependsOnMethods = { "processXbrlFiles" })
 	public void saveFinancialReportToHBase() throws Exception {
 		File xbrlDir = stockServiceProperty.getFinancialReportExtractDir();
 		int actual = manager.saveFinancialReportToHBase(xbrlDir);
@@ -94,19 +93,12 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(actual, expected);
 	}
 
-//	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+	// @Test(dependsOnMethods = { "saveFinancialReportToHBase" })
 	public void updateXbrlInstance() throws Exception {
 		boolean result = manager.updateXbrlInstance();
 		Assert.assertTrue(result);
 	}
 
-//	@Test(dependsOnMethods = { "updateXbrlInstance" })
-	@Test
-	public void updateAnalyzedData() throws Exception {
-		boolean result = manager.updateAnalyzedData();
-		Assert.assertTrue(result);
-	}
-	
 	private void dropAndCreateTable() throws Exception {
 		HbaseEntityTestUtility.dropAndCreateTargetTable(xbrlRepo);
 	}

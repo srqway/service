@@ -37,6 +37,7 @@
 		<xbrl-assistant.version>1.0.0</xbrl-assistant.version>
 		<compress-utility.version>1.0.0</compress-utility.version>
 		<r-assistant.version>1.0.0</r-assistant.version>
+		<mail-assistant.version>1.0.0</mail-assistant.version>
 		<datetime-utility.version>1.0.0</datetime-utility.version>
 		<thread-utility.version>1.0.0</thread-utility.version>
 		<test-utility.version>1.0.0</test-utility.version>
@@ -105,6 +106,13 @@
 			<groupId>idv.hsiehpinghan</groupId>
 			<artifactId>r-assistant</artifactId>
 			<version>${r-assistant.version}</version>
+		</dependency>
+
+		<!-- mail-assistant -->
+		<dependency>
+			<groupId>idv.hsiehpinghan</groupId>
+			<artifactId>mail-assistant</artifactId>
+			<version>${mail-assistant.version}</version>
 		</dependency>
 
 		<!-- datetime-utility -->

@@ -3,7 +3,6 @@ package idv.hsiehpinghan.stockservice.manager;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
@@ -14,8 +13,6 @@ public interface IFinancialReportManager {
 	boolean updateTaxonomyPresentation();
 
 	boolean updateXbrlInstance();
-
-	boolean updateAnalyzedData() throws IOException;
 
 	TreeSet<String> getStockCodes();
 

@@ -15,10 +15,6 @@ if(exists('resultFile') == FALSE) {
 			'year'='integer', 
 			'season'='integer', 
 			'elementId'='character', 
-			'periodType'='character', 
-			'instant'='Date', 
-			'startDate'='Date', 
-			'endDate'='Date', 
 			'ratioDifference'='numeric'
 		)
 	)
@@ -35,11 +31,7 @@ if(exists('resultFile') == FALSE) {
 		reportType = character(length),
 		year = integer(length),
 		season = integer(length),
-		elementId = character(length),
-		periodType = character(length),
-		instant = seq(as.Date('1-01-01'), by=0, len=length),
-		startDate = seq(as.Date('1-01-01'), by=0, len=length),
-		endDate = seq(as.Date('1-01-01'), by=0, len=length),			
+		elementId = character(length),		
 		statistic = numeric(length),
 		degreeOfFreedom = numeric(length),
 		confidenceInterval = numeric(length),
@@ -67,18 +59,14 @@ if(exists('resultFile') == FALSE) {
 		tempDf$year[i] <- targetRow$year
 		tempDf$season[i] <- targetRow$season
 		tempDf$elementId[i] <- targetRow$elementId
-		tempDf$periodType[i] <- targetRow$periodType
-		tempDf$instant[i] <- targetRow$instant
-		tempDf$startDate[i] <- targetRow$startDate
-		tempDf$endDate[i] <- targetRow$endDate
-		tempDf$statistic[i] <- htest$statistic;
-		tempDf$degreeOfFreedom[i] <- htest$parameter;
-		tempDf$confidenceInterval[i] <- htest$conf.int;
-		tempDf$sampleMean[i] <- htest$estimate;
-		tempDf$hypothesizedMean[i] <- htest$null.value;
+		tempDf$statistic[i] <- htest$statistic
+		tempDf$degreeOfFreedom[i] <- htest$parameter
+		tempDf$confidenceInterval[i] <- htest$conf.int
+		tempDf$sampleMean[i] <- htest$estimate
+		tempDf$hypothesizedMean[i] <- htest$null.value
 		tempDf$pValue[i] <- pValue
 	}
-	resultDf <- subset(tempDf, subset=(stockCode != ''));
+	resultDf <- subset(tempDf, subset=(stockCode != ''))
 	write.csv(resultDf, file=resultFile, row.names = FALSE)
 	rm(resultDf)
 })()

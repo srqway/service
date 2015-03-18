@@ -1,5 +1,6 @@
 package idv.hsiehpinghan.stockservice.operator;
 
+import idv.hsiehpinghan.datatypeutility.utility.CharsetUtility;
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnQualifier;
@@ -22,7 +23,6 @@ import java.util.Date;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service;
 public class XbrlTransporter {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private final String YYYY_MM_DD = "yyyy-MM-dd";
-	private final Charset UTF_8 = Charsets.UTF_8;
+	private final Charset UTF_8 = CharsetUtility.UTF_8;
 	private final String NA = StringUtility.NA_STRING;
 	private final String XBRL = "xbrl";
 
