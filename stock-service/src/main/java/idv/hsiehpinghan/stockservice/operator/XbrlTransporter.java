@@ -6,6 +6,7 @@ import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnQualifier;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseValue;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
+import idv.hsiehpinghan.stockdao.entity.Taxonomy.NameFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily.RatioDifferenceQualifier;
@@ -13,10 +14,13 @@ import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily.RatioDifferen
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RowKey;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
+import idv.hsiehpinghan.stockdao.repository.TaxonomyRepository;
 import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
+import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -38,9 +42,14 @@ public class XbrlTransporter {
 
 	@Autowired
 	private XbrlRepository xbrlRepo;
+	@Autowired
+	private TaxonomyRepository taxonomyRepo;
 
 	public boolean saveHbaseDataToFile(String stockCode, ReportType reportType,
-			File targetDirectory) throws IOException {
+			XbrlTaxonomyVersion version, File targetDirectory)
+			throws IOException, IllegalAccessException, NoSuchMethodException,
+			SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException {
 		TreeSet<Xbrl> entities = xbrlRepo.fuzzyScan(stockCode, reportType,
 				null, null);
 		if (entities.size() <= 0) {
@@ -51,13 +60,15 @@ public class XbrlTransporter {
 		}
 		File targetFile = FileUtility.getOrCreateFile(targetDirectory, XBRL);
 		FileUtils.write(targetFile, generateTitle(), UTF_8, false);
+		NameFamily nameFam = taxonomyRepo.get(version).getNameFamily();
 		for (Xbrl entity : entities) {
-			writeToFile(targetFile, entity);
+			writeToFile(targetFile, entity, nameFam);
 		}
 		return true;
 	}
 
-	private void writeToFile(File targetFile, Xbrl entity) throws IOException {
+	private void writeToFile(File targetFile, Xbrl entity, NameFamily nameFam)
+			throws IOException {
 		RowKey rowKey = (RowKey) entity.getRowKey();
 		String stockCode = rowKey.getStockCode();
 		ReportType reportType = rowKey.getReportType();
@@ -73,11 +84,13 @@ public class XbrlTransporter {
 			Date instant = qual.getInstant();
 			Date startDate = qual.getStartDate();
 			Date endDate = qual.getEndDate();
+			String chineseName = nameFam.getChineseName(elementId);
+			String englishName = nameFam.getEnglishName(elementId);
 			RatioDifferenceValue val = (RatioDifferenceValue) ent.getValue();
 			BigDecimal ratioDifference = val.getAsBigDecimal();
 			String record = generateRecord(stockCode, reportType, year, season,
 					elementId, periodType, instant, startDate, endDate,
-					ratioDifference);
+					chineseName, englishName, ratioDifference);
 			FileUtils.write(targetFile, record, UTF_8, true);
 		}
 	}
@@ -89,16 +102,16 @@ public class XbrlTransporter {
 
 	private String generateRecord(String stockCode, ReportType reportType,
 			int year, int season, String elementId, PeriodType periodType,
-			Date instant, Date startDate, Date endDate,
-			BigDecimal ratioDifference) {
+			Date instant, Date startDate, Date endDate, String chineseName,
+			String englishName, BigDecimal ratioDifference) {
 		String instantStr = DateUtility.getDateString(instant, YYYY_MM_DD, NA);
 		String startDateStr = DateUtility.getDateString(startDate, YYYY_MM_DD,
 				NA);
 		String endDateStr = DateUtility.getDateString(endDate, YYYY_MM_DD, NA);
-		return stockCode + "," + reportType + "," + year + "," + season + ","
-				+ elementId + "," + periodType + "," + instantStr + ","
-				+ startDateStr + "," + endDateStr + "," + ratioDifference
-				+ System.lineSeparator();
+		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", stockCode,
+				reportType, year, season, elementId, periodType, instantStr,
+				startDateStr, endDateStr, chineseName, englishName,
+				ratioDifference, System.lineSeparator());
 	}
 
 }

@@ -8,7 +8,7 @@ import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.RatioDifference;
 import idv.hsiehpinghan.stockdao.entity.RatioDifference.TTestFamily;
 import idv.hsiehpinghan.stockdao.entity.RatioDifference.TTestFamily.TTestValue;
-import idv.hsiehpinghan.stockdao.entity.StockInfo;
+import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.repository.RatioDifferenceRepository;
 import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
@@ -17,6 +17,7 @@ import idv.hsiehpinghan.stockservice.manager.IAnalysisManager;
 import idv.hsiehpinghan.stockservice.operator.RatioDifferenceAnalyzer;
 import idv.hsiehpinghan.stockservice.operator.XbrlTransporter;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
+import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,32 +71,32 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 
 	@Override
 	public boolean updateAnalyzedData() throws IOException {
-//		TreeSet<String> stockCodes = getStockCodes(infoRepo);
-		
-	
-		
-//		Set<String> transportedSet = FileUtility
-//				.readLinesAsHashSet(transportedLog);
-//		Set<String> analyzedSet = FileUtility.readLinesAsHashSet(analyzedLog);
-//		try {
-//			for (String stockCode : stockCodes) {
-//				for (ReportType reportType : ReportType.values()) {
-//					File targetDirectory = transport(transportedSet, stockCode,
-//							reportType);
-//					if (targetDirectory == null) {
-//						continue;
-//					}
-//					File analyzeFile = analyze(analyzedSet, stockCode,
-//							reportType, targetDirectory);
-//					saveRatioDifferenceToHBase(analyzeFile);
-//					writeToAnalyzedFile(stockCode, reportType);
-//				}
-//			}
-//		} catch (Exception e) {
-//			logger.error("Update analyzed data fail !!!");
-//			e.printStackTrace();
-//			return false;
-//		}
+		TreeSet<Xbrl> entities = xbrlRepo.scanWithInfoFamilyOnly();
+		Set<String> transportedSet = FileUtility
+				.readLinesAsHashSet(transportedLog);
+		Set<String> analyzedSet = FileUtility.readLinesAsHashSet(analyzedLog);
+		try {
+			for (Xbrl entity : entities) {
+				Xbrl.RowKey rowKey = (Xbrl.RowKey) entity.getRowKey();
+				String stockCode = rowKey.getStockCode();
+				ReportType reportType = rowKey.getReportType();
+				XbrlTaxonomyVersion version = entity.getInfoFamily()
+						.getVersion();
+				File targetDirectory = transportXbrl(transportedSet, stockCode,
+						reportType, version);
+				if (targetDirectory == null) {
+					continue;
+				}
+				File analyzeFile = analyzeRatioDifference(analyzedSet,
+						stockCode, reportType, targetDirectory);
+				saveRatioDifferenceToHBase(analyzeFile);
+				writeToAnalyzedFile(stockCode, reportType);
+			}
+		} catch (Exception e) {
+			logger.error("Update analyzed data fail !!!");
+			e.printStackTrace();
+			return false;
+		}
 		return true;
 	}
 
@@ -182,14 +183,14 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 				+ diffRepo.getTargetTableName() + ".");
 	}
 
-//	private TreeSet<String> getStockCodes(StockInfoRepository infoRepo) {
-//		TreeSet<StockInfo.RowKey> rowKeys = infoRepo.getRowKeys();
-//		TreeSet<String> stockCodes = new TreeSet<String>();
-//		for (StockInfo.RowKey rowKey : rowKeys) {
-//			stockCodes.add(rowKey.getStockCode());
-//		}
-//		return stockCodes;
-//	}
+	// private TreeSet<String> getStockCodes(StockInfoRepository infoRepo) {
+	// TreeSet<StockInfo.RowKey> rowKeys = infoRepo.getRowKeys();
+	// TreeSet<String> stockCodes = new TreeSet<String>();
+	// for (StockInfo.RowKey rowKey : rowKeys) {
+	// stockCodes.add(rowKey.getStockCode());
+	// }
+	// return stockCodes;
+	// }
 
 	private RatioDifference generateEntity(String stockCode,
 			ReportType reportType, int year, int season, String elementId,
@@ -274,8 +275,9 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		return String.format("%s_%s", stockCode, reportType);
 	}
 
-	private File analyze(Set<String> analyzedSet, String stockCode,
-			ReportType reportType, File targetDirectory) throws IOException {
+	private File analyzeRatioDifference(Set<String> analyzedSet,
+			String stockCode, ReportType reportType, File targetDirectory)
+			throws IOException {
 		if (isAnalyzed(analyzedSet, stockCode, reportType)) {
 			return null;
 		}
@@ -286,8 +288,9 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		return resultFile;
 	}
 
-	private File transport(Set<String> transportedSet, String stockCode,
-			ReportType reportType) throws IOException {
+	private File transportXbrl(Set<String> transportedSet, String stockCode,
+			ReportType reportType, XbrlTaxonomyVersion version)
+			throws IOException {
 		File targetDirectory = null;
 		if (isTransported(transportedSet, stockCode, reportType)) {
 			return null;
@@ -295,8 +298,15 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		targetDirectory = FileUtility.getOrCreateDirectory(
 				stockServiceProperty.getTransportDir(), stockCode,
 				reportType.name());
-		boolean transRst = transporter.saveHbaseDataToFile(stockCode,
-				reportType, targetDirectory);
+		boolean transRst = false;
+		try {
+			transRst = transporter.saveHbaseDataToFile(stockCode, reportType,
+					version, targetDirectory);
+		} catch (Exception e) {
+			logger.error("Transport xbrl fail !!!");
+			e.printStackTrace();
+			return null;
+		}
 		writeToTransportedFile(stockCode, reportType);
 		if (transRst == false) {
 			return null;
