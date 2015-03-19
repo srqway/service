@@ -12,6 +12,9 @@
 			<!-- <class -->
 			<!-- name="idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverterTest" 
 				/> -->
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.operator.FinancialReportDownloaderTest" 
+				/> -->
 
 			<!-- Test manager -->
 			<!-- <class -->
@@ -51,9 +54,8 @@
 	<test name="monthlyOperatingIncome">
 		<classes>
 			<!-- Test operator -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" 
-				/> -->
+			<class
+				name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" />
 
 			<!-- Test manager -->
 			<!-- <class -->
@@ -81,8 +83,9 @@
 				/> -->
 
 			<!-- Test manager -->
-			<class
-				name="idv.hsiehpinghan.stockservice.manager.hbase.AnalysisHbaseManagerTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.AnalysisHbaseManagerTest" 
+				/> -->
 		</classes>
 	</test>
 </suite>

@@ -44,7 +44,7 @@ public class FinancialReportHbaseManagerTest {
 		// dropAndCreateTable();
 	}
 
-	@Test
+	// @Test
 	public void updateTaxonomy() throws Exception {
 		String tableName = taxonomyRepo.getTargetTableName();
 		if (taxonomyRepo.isTableExists(tableName)) {
