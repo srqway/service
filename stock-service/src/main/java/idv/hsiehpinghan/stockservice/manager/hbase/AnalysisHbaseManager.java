@@ -13,7 +13,7 @@ import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.repository.RatioDifferenceRepository;
 import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockservice.manager.IAnalysisManager;
-import idv.hsiehpinghan.stockservice.operator.FinancialReportAnalyzer;
+import idv.hsiehpinghan.stockservice.operator.RatioDifferenceAnalyzer;
 import idv.hsiehpinghan.stockservice.operator.XbrlTransporter;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 
@@ -47,7 +47,7 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 	@Autowired
 	private XbrlTransporter transporter;
 	@Autowired
-	private FinancialReportAnalyzer analyzer;
+	private RatioDifferenceAnalyzer analyzer;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 	@Autowired

@@ -11,14 +11,14 @@ import org.springframework.context.ApplicationContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class FinancialReportAnalyzerTest {
-	private FinancialReportAnalyzer analyzer;
+public class RatioDifferenceTest {
+	private RatioDifferenceAnalyzer analyzer;
 
 	@BeforeClass
 	public void beforeClass() throws IOException {
 		ApplicationContext applicationContext = TestngSuitSetting
 				.getApplicationContext();
-		analyzer = applicationContext.getBean(FinancialReportAnalyzer.class);
+		analyzer = applicationContext.getBean(RatioDifferenceAnalyzer.class);
 	}
 
 	@Test

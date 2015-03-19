@@ -27,13 +27,13 @@ public class AnalysisHbaseManagerTest {
 		// dropAndCreateTable();
 	}
 
-//	@Test
+	@Test
 	public void updateAnalyzedData() throws Exception {
 		boolean result = manager.updateAnalyzedData();
 		Assert.assertTrue(result);
 	}
 
-	@Test
+//	@Test
 	public void getRatioDifferences() throws Exception {
 //		TreeSet<RatioDifference> entities = manager.getBeyondThresholdRatioDifferences(pValueThreshold);
 //		

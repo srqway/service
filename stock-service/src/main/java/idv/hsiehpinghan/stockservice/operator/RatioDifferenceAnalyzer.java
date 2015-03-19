@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FinancialReportAnalyzer {
+public class RatioDifferenceAnalyzer {
 	// private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	@Autowired
