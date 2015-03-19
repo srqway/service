@@ -40,15 +40,15 @@ public class FinancialReportDetailJsonMaker {
 	public static final String YEAR = "year";
 	public static final String SEASON = "season";
 	public static final String LOCALE = "locale";
+	public static final String CHINESE_LABEL = "chinese_label";
+	public static final String ENGLISH_LABEL = "english_label";
 	private static final String COMMA_STRING = StringUtility.COMMA_STRING;
 	private static final String YYYYMMDD = "yyyyMMdd";
 	private static final String YYYY_MM_DD = "yyyy/MM/dd";
 	private static final String DEEP = "deep";
 	private static final String LABEL = "label";
-	private static final String CHINESE_LABEL = "chinese_label";
-	private static final String ENGLISH_LABEL = "english_label";
 	private static final String TITLE = "title";
-
+	
 	@Autowired
 	private ObjectMapper objectMapper;
 	@Autowired

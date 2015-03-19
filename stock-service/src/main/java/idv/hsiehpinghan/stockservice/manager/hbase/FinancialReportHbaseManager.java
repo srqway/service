@@ -3,6 +3,7 @@ package idv.hsiehpinghan.stockservice.manager.hbase;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.StockInfo.RowKey;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy;
+import idv.hsiehpinghan.stockdao.entity.Taxonomy.NameFamily;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy.PresentationFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
@@ -13,7 +14,6 @@ import idv.hsiehpinghan.stockservice.manager.IFinancialReportManager;
 import idv.hsiehpinghan.stockservice.operator.FinancialReportDetailJsonMaker;
 import idv.hsiehpinghan.stockservice.operator.FinancialReportDownloader;
 import idv.hsiehpinghan.stockservice.operator.XbrlInstanceConverter;
-import idv.hsiehpinghan.stockservice.operator.XbrlTransporter;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
 import idv.hsiehpinghan.xbrlassistant.assistant.TaxonomyAssistant;
@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,11 +39,14 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
 public class FinancialReportHbaseManager implements IFinancialReportManager,
 		InitializingBean {
+	public final String CHINESE_LABEL = FinancialReportDetailJsonMaker.CHINESE_LABEL;
+	public final String ENGLISH_LABEL = FinancialReportDetailJsonMaker.ENGLISH_LABEL;
 	private final String[] EXTENSIONS = { "xml" };
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private List<String> presentIds;
@@ -54,8 +58,6 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	private FinancialReportDownloader downloader;
 	@Autowired
 	private XbrlInstanceConverter converter;
-	@Autowired
-	private XbrlTransporter transporter;
 
 	// @Autowired
 	// private ExchangeRateDownloader exchangeRateDownloader;
@@ -92,7 +94,7 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	}
 
 	@Override
-	public boolean updateTaxonomyPresentation() {
+	public boolean updateTaxonomy() {
 		XbrlTaxonomyVersion[] versions = XbrlTaxonomyVersion.values();
 		XbrlTaxonomyVersion version = null;
 		Date ver = Calendar.getInstance().getTime();
@@ -107,6 +109,7 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 				}
 				Taxonomy entity = taxonomyRepo.generateEntity(version);
 				generatePresentationFamilyContent(entity, ver, presentNode);
+				generateNameFamilyContent(entity, ver, presentNode);
 				taxonomyRepo.put(entity);
 				logger.info(version + " updated.");
 			}
@@ -254,5 +257,35 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 		fam.setStatementOfComprehensiveIncome(ver,
 				presentNode.get(Presentation.Id.StatementOfComprehensiveIncome)
 						.toString());
+	}
+
+	private void generateNameFamilyContent(Taxonomy entity, Date ver,
+			ObjectNode presentNode) {
+		NameFamily fam = entity.getNameFamily();
+		addName(fam, ver,
+				(ObjectNode) presentNode.get(Presentation.Id.BalanceSheet));
+		addName(fam, ver,
+				(ObjectNode) presentNode
+						.get(Presentation.Id.StatementOfCashFlows));
+		addName(fam, ver,
+				(ObjectNode) presentNode
+						.get(Presentation.Id.StatementOfChangesInEquity));
+		addName(fam, ver,
+				(ObjectNode) presentNode
+						.get(Presentation.Id.StatementOfComprehensiveIncome));
+	}
+
+	private void addName(NameFamily fam, Date ver, ObjectNode srcNode) {
+		Iterator<Map.Entry<String, JsonNode>> iter = srcNode.fields();
+		while (iter.hasNext()) {
+			Map.Entry<String, JsonNode> ent = iter.next();
+			String key = ent.getKey();
+			JsonNode node = ent.getValue();
+			if (node.isObject()) {
+				fam.setChineseName(key, ver, node.get(CHINESE_LABEL).asText());
+				fam.setEnglishName(key, ver, node.get(ENGLISH_LABEL).asText());
+				addName(fam, ver, (ObjectNode) node);
+			}
+		}
 	}
 }

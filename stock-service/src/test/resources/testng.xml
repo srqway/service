@@ -74,15 +74,15 @@
 	<test name="analysis">
 		<classes>
 			<!-- Test operator -->
-			<!-- <class name="idv.hsiehpinghan.stockservice.operator.XbrlTransporterTest" 
-				/> -->
+			<class name="idv.hsiehpinghan.stockservice.operator.XbrlTransporterTest" />
 			<!-- <class -->
 			<!-- name="idv.hsiehpinghan.stockservice.operator.RatioDifferenceTest" 
 				/> -->
 
 			<!-- Test manager -->
-			<class
-				name="idv.hsiehpinghan.stockservice.manager.hbase.AnalysisHbaseManagerTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.AnalysisHbaseManagerTest" 
+				/> -->
 		</classes>
 	</test>
 </suite>

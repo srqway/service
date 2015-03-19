@@ -1,6 +1,7 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
 import idv.hsiehpinghan.hbaseassistant.utility.HbaseEntityTestUtility;
+import idv.hsiehpinghan.stockdao.entity.Taxonomy;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.context.ApplicationContext;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 public class FinancialReportHbaseManagerTest {
 	private final String DATE_PATTERN = "yyyyMMdd";
@@ -42,8 +44,8 @@ public class FinancialReportHbaseManagerTest {
 		// dropAndCreateTable();
 	}
 
-	// @Test
-	public void updateTaxonomyPresentation() throws Exception {
+	@Test
+	public void updateTaxonomy() throws Exception {
 		String tableName = taxonomyRepo.getTargetTableName();
 		if (taxonomyRepo.isTableExists(tableName)) {
 			taxonomyRepo.dropTable(tableName);
@@ -53,10 +55,14 @@ public class FinancialReportHbaseManagerTest {
 		for (XbrlTaxonomyVersion taxVer : versions) {
 			Assert.assertFalse(taxonomyRepo.exists(taxVer));
 		}
-		manager.updateTaxonomyPresentation();
+		manager.updateTaxonomy();
 		for (XbrlTaxonomyVersion ver : versions) {
 			Assert.assertTrue(taxonomyRepo.exists(ver));
 		}
+		Taxonomy taxonomy = taxonomyRepo
+				.get(XbrlTaxonomyVersion.TIFRS_BASI_CR_2013_03_31);
+		Assert.assertTrue(taxonomy.getNameFamily()
+				.getLatestQualifierAndValueAsMap().size() > 0);
 	}
 
 	// @Test(groups="FinancialReportHbaseManagerTest")

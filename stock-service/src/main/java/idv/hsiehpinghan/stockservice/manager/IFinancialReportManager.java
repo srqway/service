@@ -10,7 +10,7 @@ import java.util.TreeSet;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface IFinancialReportManager {
-	boolean updateTaxonomyPresentation();
+	boolean updateTaxonomy();
 
 	boolean updateXbrlInstance();
 

@@ -12,6 +12,7 @@ import idv.hsiehpinghan.stockdao.entity.StockInfo;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.repository.RatioDifferenceRepository;
 import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
+import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
 import idv.hsiehpinghan.stockservice.manager.IAnalysisManager;
 import idv.hsiehpinghan.stockservice.operator.RatioDifferenceAnalyzer;
 import idv.hsiehpinghan.stockservice.operator.XbrlTransporter;
@@ -51,6 +52,8 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 	@Autowired
+	private XbrlRepository xbrlRepo;
+	@Autowired
 	private StockInfoRepository infoRepo;
 	@Autowired
 	private RatioDifferenceRepository diffRepo;
@@ -67,29 +70,32 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 
 	@Override
 	public boolean updateAnalyzedData() throws IOException {
-		TreeSet<String> stockCodes = getStockCodes(infoRepo);
-		Set<String> transportedSet = FileUtility
-				.readLinesAsHashSet(transportedLog);
-		Set<String> analyzedSet = FileUtility.readLinesAsHashSet(analyzedLog);
-		try {
-			for (String stockCode : stockCodes) {
-				for (ReportType reportType : ReportType.values()) {
-					File targetDirectory = transport(transportedSet, stockCode,
-							reportType);
-					if (targetDirectory == null) {
-						continue;
-					}
-					File analyzeFile = analyze(analyzedSet, stockCode,
-							reportType, targetDirectory);
-					saveRatioDifferenceToHBase(analyzeFile);
-					writeToAnalyzedFile(stockCode, reportType);
-				}
-			}
-		} catch (Exception e) {
-			logger.error("Update analyzed data fail !!!");
-			e.printStackTrace();
-			return false;
-		}
+//		TreeSet<String> stockCodes = getStockCodes(infoRepo);
+		
+	
+		
+//		Set<String> transportedSet = FileUtility
+//				.readLinesAsHashSet(transportedLog);
+//		Set<String> analyzedSet = FileUtility.readLinesAsHashSet(analyzedLog);
+//		try {
+//			for (String stockCode : stockCodes) {
+//				for (ReportType reportType : ReportType.values()) {
+//					File targetDirectory = transport(transportedSet, stockCode,
+//							reportType);
+//					if (targetDirectory == null) {
+//						continue;
+//					}
+//					File analyzeFile = analyze(analyzedSet, stockCode,
+//							reportType, targetDirectory);
+//					saveRatioDifferenceToHBase(analyzeFile);
+//					writeToAnalyzedFile(stockCode, reportType);
+//				}
+//			}
+//		} catch (Exception e) {
+//			logger.error("Update analyzed data fail !!!");
+//			e.printStackTrace();
+//			return false;
+//		}
 		return true;
 	}
 
@@ -176,14 +182,14 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 				+ diffRepo.getTargetTableName() + ".");
 	}
 
-	private TreeSet<String> getStockCodes(StockInfoRepository infoRepo) {
-		TreeSet<StockInfo.RowKey> rowKeys = infoRepo.getRowKeys();
-		TreeSet<String> stockCodes = new TreeSet<String>();
-		for (StockInfo.RowKey rowKey : rowKeys) {
-			stockCodes.add(rowKey.getStockCode());
-		}
-		return stockCodes;
-	}
+//	private TreeSet<String> getStockCodes(StockInfoRepository infoRepo) {
+//		TreeSet<StockInfo.RowKey> rowKeys = infoRepo.getRowKeys();
+//		TreeSet<String> stockCodes = new TreeSet<String>();
+//		for (StockInfo.RowKey rowKey : rowKeys) {
+//			stockCodes.add(rowKey.getStockCode());
+//		}
+//		return stockCodes;
+//	}
 
 	private RatioDifference generateEntity(String stockCode,
 			ReportType reportType, int year, int season, String elementId,
