@@ -15,7 +15,7 @@ import idv.hsiehpinghan.stockdao.repository.RatioDifferenceRepository;
 import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
 import idv.hsiehpinghan.stockservice.manager.IAnalysisManager;
-import idv.hsiehpinghan.stockservice.operator.RatioDifferenceComputer;
+import idv.hsiehpinghan.stockservice.operator.MainRatioComputer;
 import idv.hsiehpinghan.stockservice.operator.XbrlTransporter;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
@@ -51,7 +51,7 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 	@Autowired
 	private XbrlTransporter transporter;
 	@Autowired
-	private RatioDifferenceComputer computer;
+	private MainRatioComputer computer;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 	@Autowired
@@ -293,7 +293,7 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 			return null;
 		}
 		logger.info(String.format("Begin analyze %s %s", stockCode, reportType));
-		File resultFile = computer.computeRatioDifference(targetDirectory);
+		File resultFile = computer.tTestMainRatio(targetDirectory);
 		logger.info(String
 				.format("Finish analyze %s %s", stockCode, reportType));
 		return resultFile;

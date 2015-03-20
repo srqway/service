@@ -90,7 +90,8 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(val.getValue().toString(), "-120107000");
 	}
 
-	// @Test(dependsOnMethods = { "processXbrlFiles" })
+//	@Test(dependsOnMethods = { "processXbrlFiles" })
+	@Test
 	public void saveFinancialReportToHBase() throws Exception {
 		File xbrlDir = stockServiceProperty.getFinancialReportExtractDir();
 		int actual = manager.saveFinancialReportToHBase(xbrlDir);

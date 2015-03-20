@@ -15,7 +15,7 @@ import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemValue;
-import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.MainRatioFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily.RatioQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily.RatioValue;
@@ -93,7 +93,7 @@ public class XbrlInstanceConverter {
 		generateItemFamily(entity, ver);
 		generateGrowthFamily(entity, ver);
 		generateRatioFamily(entity, ver);
-		generateRatioDifferenceFamily(entity, ver);
+		generateMainRatioFamily(entity, ver);
 	}
 
 	private Date getDate(JsonNode dateNode) throws ParseException {
@@ -277,10 +277,10 @@ public class XbrlInstanceConverter {
 				continue;
 			}
 			if (PeriodType.INSTANT.equals(periodType)) {
-				ratioFam.setPercent(realKey, periodType, instant, ver, percent);
+				ratioFam.setRatio(realKey, periodType, instant, ver, percent);
 			} else if (PeriodType.DURATION.equals(periodType)) {
-				ratioFam.setPercent(realKey, periodType, startDate, endDate,
-						ver, percent);
+				ratioFam.setRatio(realKey, periodType, startDate, endDate, ver,
+						percent);
 			} else {
 				throw new RuntimeException("Period type(" + periodType
 						+ ") undefined !!!");
@@ -341,9 +341,9 @@ public class XbrlInstanceConverter {
 		}
 	}
 
-	private void generateRatioDifferenceFamily(Xbrl entity, Date ver) {
+	private void generateMainRatioFamily(Xbrl entity, Date ver) {
 		RatioFamily ratioFam = entity.getRatioFamily();
-		RatioDifferenceFamily diffFam = entity.getRatioDifferenceFamily();
+		MainRatioFamily mainRatioFam = entity.getMainRatioFamily();
 		String oldElementId = null;
 		for (Entry<RatioQualifier, RatioValue> qualValEnt : getLatestElementIdRecord(ratioFam)) {
 			RatioQualifier qual = (RatioQualifier) qualValEnt.getKey();
@@ -355,15 +355,10 @@ public class XbrlInstanceConverter {
 			Date instant = qual.getInstant();
 			Date startDate = qual.getStartDate();
 			Date endDate = qual.getEndDate();
-			BigDecimal oneYearBeforeValue = getOneYearBeforeValue(ratioFam,
-					elementId, periodType, instant, startDate, endDate);
-			if (oneYearBeforeValue != null) {
-				BigDecimal value = ((RatioValue) qualValEnt.getValue())
-						.getAsBigDecimal();
-				BigDecimal difference = value.subtract(oneYearBeforeValue);
-				diffFam.setDifference(elementId, periodType, instant,
-						startDate, endDate, ver, difference);
-			}
+			BigDecimal percent = ((RatioValue) qualValEnt.getValue())
+					.getAsBigDecimal();
+			mainRatioFam.setRatio(elementId, periodType, instant, startDate,
+					endDate, ver, percent);
 			oldElementId = elementId;
 		}
 	}
@@ -380,26 +375,6 @@ public class XbrlInstanceConverter {
 			Date oneYearBeforeStartDate = DateUtils.addYears(startDate, -1);
 			Date oneYearBeforeEndDate = DateUtils.addYears(endDate, -1);
 			itemValue = itemFamily.get(elementId, periodType,
-					oneYearBeforeStartDate, oneYearBeforeEndDate);
-		} else {
-			throw new RuntimeException("PeriodType(" + periodType
-					+ ") not implements !!!");
-		}
-		return itemValue;
-	}
-
-	private BigDecimal getOneYearBeforeValue(RatioFamily ratioFamily,
-			String elementId, PeriodType periodType, Date instant,
-			Date startDate, Date endDate) {
-		BigDecimal itemValue = null;
-		if (PeriodType.INSTANT.equals(periodType)) {
-			Date oneYearBeforeInstant = DateUtils.addYears(instant, -1);
-			itemValue = ratioFamily.getPercent(elementId, periodType,
-					oneYearBeforeInstant);
-		} else if (PeriodType.DURATION.equals(periodType)) {
-			Date oneYearBeforeStartDate = DateUtils.addYears(startDate, -1);
-			Date oneYearBeforeEndDate = DateUtils.addYears(endDate, -1);
-			itemValue = ratioFamily.getPercent(elementId, periodType,
 					oneYearBeforeStartDate, oneYearBeforeEndDate);
 		} else {
 			throw new RuntimeException("PeriodType(" + periodType

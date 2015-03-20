@@ -8,9 +8,9 @@ import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseValue;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy.NameFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
-import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily;
-import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily.RatioDifferenceQualifier;
-import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily.RatioDifferenceValue;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.MainRatioFamily;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.MainRatioFamily.MainRatioQualifier;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.MainRatioFamily.MainRatioValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RowKey;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
@@ -74,11 +74,10 @@ public class XbrlTransporter {
 		ReportType reportType = rowKey.getReportType();
 		int year = rowKey.getYear();
 		int season = rowKey.getSeason();
-		RatioDifferenceFamily diffFam = entity.getRatioDifferenceFamily();
-		for (Entry<HBaseColumnQualifier, HBaseValue> ent : diffFam
+		MainRatioFamily mainRatioFam = entity.getMainRatioFamily();
+		for (Entry<HBaseColumnQualifier, HBaseValue> ent : mainRatioFam
 				.getLatestQualifierAndValueAsSet()) {
-			RatioDifferenceQualifier qual = (RatioDifferenceQualifier) ent
-					.getKey();
+			MainRatioQualifier qual = (MainRatioQualifier) ent.getKey();
 			String elementId = qual.getElementId();
 			PeriodType periodType = qual.getPeriodType();
 			Date instant = qual.getInstant();
@@ -86,33 +85,33 @@ public class XbrlTransporter {
 			Date endDate = qual.getEndDate();
 			String chineseName = nameFam.getChineseName(elementId);
 			String englishName = nameFam.getEnglishName(elementId);
-			RatioDifferenceValue val = (RatioDifferenceValue) ent.getValue();
-			BigDecimal ratioDifference = val.getAsBigDecimal();
+			MainRatioValue val = (MainRatioValue) ent.getValue();
+			BigDecimal ratio = val.getAsBigDecimal();
 			String record = generateRecord(stockCode, reportType, year, season,
 					elementId, periodType, instant, startDate, endDate,
-					chineseName, englishName, ratioDifference);
+					chineseName, englishName, ratio);
 			FileUtils.write(targetFile, record, UTF_8, true);
 		}
 	}
 
 	private String generateTitle() {
-		return "stockCode\treportType\tyear\tseason\telementId\tperiodType\tinstant\tstartDate\tendDate\tchineseName\tenglishName\tratioDifference"
+		return "stockCode\treportType\tyear\tseason\telementId\tperiodType\tinstant\tstartDate\tendDate\tchineseName\tenglishName\tratio"
 				+ System.lineSeparator();
 	}
 
 	private String generateRecord(String stockCode, ReportType reportType,
 			int year, int season, String elementId, PeriodType periodType,
 			Date instant, Date startDate, Date endDate, String chineseName,
-			String englishName, BigDecimal ratioDifference) {
+			String englishName, BigDecimal ratio) {
 		String instantStr = DateUtility.getDateString(instant, YYYY_MM_DD, NA);
 		String startDateStr = DateUtility.getDateString(startDate, YYYY_MM_DD,
 				NA);
 		String endDateStr = DateUtility.getDateString(endDate, YYYY_MM_DD, NA);
 		return String.format(
-				"%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%s",
-				stockCode, reportType, year, season, elementId, periodType,
-				instantStr, startDateStr, endDateStr, chineseName, englishName,
-				ratioDifference, System.lineSeparator());
+				"%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%s", stockCode,
+				reportType, year, season, elementId, periodType, instantStr,
+				startDateStr, endDateStr, chineseName, englishName, ratio,
+				System.lineSeparator());
 	}
 
 }

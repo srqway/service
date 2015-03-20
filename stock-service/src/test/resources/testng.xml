@@ -18,8 +18,8 @@
 
 			<!-- Test manager -->
 			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" -->
-			<!-- /> -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManagerTest" 
+				/> -->
 		</classes>
 	</test>
 	<test name="stockClosingCondition">
@@ -77,16 +77,15 @@
 	<test name="analysis">
 		<classes>
 			<!-- Test operator -->
-			<!-- <class name="idv.hsiehpinghan.stockservice.operator.XbrlTransporterTest" -->
-			<!-- /> -->
+			<!-- <class name="idv.hsiehpinghan.stockservice.operator.XbrlTransporterTest" 
+				/> -->
 			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.operator.RatioDifferenceComputerTest" 
+			<!-- name="idv.hsiehpinghan.stockservice.operator.MainRatioComputerTest" 
 				/> -->
 
 			<!-- Test manager -->
-			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.AnalysisHbaseManagerTest" 
-				/> -->
+			<class
+				name="idv.hsiehpinghan.stockservice.manager.hbase.AnalysisHbaseManagerTest" />
 		</classes>
 	</test>
 </suite>

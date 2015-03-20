@@ -3,7 +3,7 @@ package idv.hsiehpinghan.stockservice.operator;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily.InfoQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
-import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioDifferenceFamily;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.MainRatioFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RowKey;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
@@ -114,18 +114,18 @@ public class XbrlInstanceConverterTest {
 		RatioFamily ratioFam = xbrl.getRatioFamily();
 		// Balance Sheet
 		BigDecimal balanceSheetPercent = ratioFam
-				.getPercent("ifrs_OtherCurrentFinancialAssets",
+				.getRatio("ifrs_OtherCurrentFinancialAssets",
 						PeriodType.INSTANT, instant);
 		Assert.assertEquals(0,
 				balanceSheetPercent.compareTo(new BigDecimal("0.32")));
 		// Statement Of Comprehensive Income
-		BigDecimal statementOfComprehensiveIncomePercent = ratioFam.getPercent(
+		BigDecimal statementOfComprehensiveIncomePercent = ratioFam.getRatio(
 				"tifrs-bsci-ci_OtherIncomeOthers", PeriodType.DURATION,
 				startDate, endDate);
 		Assert.assertEquals(0, statementOfComprehensiveIncomePercent
 				.compareTo(new BigDecimal("0.85")));
 		// Statement Of CashFlows
-		BigDecimal statementOfCashFlowsPercent = ratioFam.getPercent(
+		BigDecimal statementOfCashFlowsPercent = ratioFam.getRatio(
 				"tifrs-SCF_DecreaseIncreaseInNotesReceivable",
 				PeriodType.DURATION, startDate, endDate);
 		Assert.assertEquals(0,
@@ -133,9 +133,9 @@ public class XbrlInstanceConverterTest {
 	}
 
 	private void testRatioDifferenceFamily(Xbrl xbrl) {
-		RatioDifferenceFamily diffFam = xbrl.getRatioDifferenceFamily();
-		BigDecimal difference = diffFam.getDifference("ifrs_Inventories",
+		MainRatioFamily mainRatioFam = xbrl.getMainRatioFamily();
+		BigDecimal percent = mainRatioFam.getRatio("ifrs_Inventories",
 				PeriodType.INSTANT, instant, null, null);
-		Assert.assertEquals(0, difference.compareTo(new BigDecimal("0.02")));
+		Assert.assertEquals(0, percent.compareTo(new BigDecimal("0.13")));
 	}
 }
