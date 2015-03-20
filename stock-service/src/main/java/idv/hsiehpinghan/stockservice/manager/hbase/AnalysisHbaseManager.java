@@ -7,6 +7,7 @@ import idv.hsiehpinghan.resourceutility.utility.CsvUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.RatioDifference;
 import idv.hsiehpinghan.stockdao.entity.RatioDifference.TTestFamily;
+import idv.hsiehpinghan.stockdao.entity.RatioDifference.TTestFamily.TTestQualifier;
 import idv.hsiehpinghan.stockdao.entity.RatioDifference.TTestFamily.TTestValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
@@ -14,7 +15,7 @@ import idv.hsiehpinghan.stockdao.repository.RatioDifferenceRepository;
 import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
 import idv.hsiehpinghan.stockservice.manager.IAnalysisManager;
-import idv.hsiehpinghan.stockservice.operator.RatioDifferenceAnalyzer;
+import idv.hsiehpinghan.stockservice.operator.RatioDifferenceComputer;
 import idv.hsiehpinghan.stockservice.operator.XbrlTransporter;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
@@ -50,7 +51,7 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 	@Autowired
 	private XbrlTransporter transporter;
 	@Autowired
-	private RatioDifferenceAnalyzer analyzer;
+	private RatioDifferenceComputer computer;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 	@Autowired
@@ -121,28 +122,28 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		return true;
 	}
 
-	// public TreeSet<RatioDifference> getBeyondThresholdRatioDifferences(
-	// BigDecimal pValueThreshold) throws IllegalAccessException,
-	// NoSuchMethodException, SecurityException, InstantiationException,
-	// IllegalArgumentException, InvocationTargetException, IOException {
-	// TreeSet<RatioDifference.RowKey> rowKeys = diffRepo.getRowKeys();
-	// TreeSet<RatioDifference> results = new TreeSet<RatioDifference>();
-	// for (RatioDifference.RowKey rowKey : rowKeys) {
-	// RatioDifference entity = (RatioDifference) diffRepo.get(rowKey);
-	// for (Entry<HBaseColumnQualifier, HBaseValue> ent : entity
-	// .getTTestFamily().getLatestQualifierAndValueAsSet()) {
-	// TTestQualifier qual = (TTestQualifier) ent.getKey();
-	// if (TTestFamily.P_VALUE.equals(qual.getColumnName()) == false) {
-	// continue;
-	// }
-	// if (isBeyondThreshold(ent, pValueThreshold) == false) {
-	// continue;
-	// }
-	// results.add(entity);
-	// }
-	// }
-	// return results;
-	// }
+	public TreeSet<RatioDifference> getBeyondThresholdRatioDifferences(
+			BigDecimal pValueThreshold) throws IllegalAccessException,
+			NoSuchMethodException, SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException, IOException {
+		TreeSet<RatioDifference.RowKey> rowKeys = diffRepo.getRowKeys();
+		TreeSet<RatioDifference> results = new TreeSet<RatioDifference>();
+		for (RatioDifference.RowKey rowKey : rowKeys) {
+			RatioDifference entity = (RatioDifference) diffRepo.get(rowKey);
+			for (Entry<HBaseColumnQualifier, HBaseValue> ent : entity
+					.getTTestFamily().getLatestQualifierAndValueAsSet()) {
+				TTestQualifier qual = (TTestQualifier) ent.getKey();
+				if (TTestFamily.P_VALUE.equals(qual.getColumnName()) == false) {
+					continue;
+				}
+				if (isBeyondThreshold(ent, pValueThreshold) == false) {
+					continue;
+				}
+				results.add(entity);
+			}
+		}
+		return results;
+	}
 
 	private boolean isBeyondThreshold(
 			Entry<HBaseColumnQualifier, HBaseValue> ent,
@@ -292,7 +293,7 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 			return null;
 		}
 		logger.info(String.format("Begin analyze %s %s", stockCode, reportType));
-		File resultFile = analyzer.analyzeRatioDifference(targetDirectory);
+		File resultFile = computer.computeRatioDifference(targetDirectory);
 		logger.info(String
 				.format("Finish analyze %s %s", stockCode, reportType));
 		return resultFile;

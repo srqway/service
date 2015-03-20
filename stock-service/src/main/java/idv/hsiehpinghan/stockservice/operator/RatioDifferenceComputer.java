@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RatioDifferenceAnalyzer {
+public class RatioDifferenceComputer {
 	// private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	@Autowired
@@ -18,7 +18,7 @@ public class RatioDifferenceAnalyzer {
 	@Autowired
 	private Rengine rengine;
 
-	public File analyzeRatioDifference(File targetDirectory) throws IOException {
+	public File computeRatioDifference(File targetDirectory) throws IOException {
 		File script = new File(stockServiceProperty.getRScriptDir(),
 				"analyzeRatioDifference.R");
 		try {

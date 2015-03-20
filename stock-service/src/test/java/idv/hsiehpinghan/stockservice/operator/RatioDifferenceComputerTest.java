@@ -11,21 +11,21 @@ import org.springframework.context.ApplicationContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class RatioDifferenceAnalyzerTest {
-	private RatioDifferenceAnalyzer analyzer;
+public class RatioDifferenceComputerTest {
+	private RatioDifferenceComputer computer;
 
 	@BeforeClass
 	public void beforeClass() throws IOException {
 		ApplicationContext applicationContext = TestngSuitSetting
 				.getApplicationContext();
-		analyzer = applicationContext.getBean(RatioDifferenceAnalyzer.class);
+		computer = applicationContext.getBean(RatioDifferenceComputer.class);
 	}
 
 	@Test
-	public void analyzeRatioDifference() throws Exception {
+	public void computeRatioDifference() throws Exception {
 		File targetDirectory = new File("/tmp/getXbrlFromHbase");
 		deleteResultFile(targetDirectory);
-		File resultFile = analyzer.analyzeRatioDifference(targetDirectory);
+		File resultFile = computer.computeRatioDifference(targetDirectory);
 		Assert.assertTrue(resultFile.exists());
 	}
 

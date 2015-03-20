@@ -80,7 +80,7 @@
 			<!-- <class name="idv.hsiehpinghan.stockservice.operator.XbrlTransporterTest" -->
 			<!-- /> -->
 			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.operator.RatioDifferenceAnalyzerTest" 
+			<!-- name="idv.hsiehpinghan.stockservice.operator.RatioDifferenceComputerTest" 
 				/> -->
 
 			<!-- Test manager -->
