@@ -1,4 +1,4 @@
-stock_service_download_dir=/home/hsiehpinghan/Desktop/stock_test/download
-stock_service_extract_dir=/home/hsiehpinghan/Desktop/stock_test/extract
-stock_service_transport_dir=/home/hsiehpinghan/Desktop/stock_test/transport
-stock_service_r_script_dir=/home/hsiehpinghan/git/service/stock-service/src/main/r_script
+stock_service_download_dir=/home/centos/Desktop/stock_test/download
+stock_service_extract_dir=/home/centos/Desktop/stock_test/extract
+stock_service_transport_dir=/home/centos/Desktop/stock_test/transport
+stock_service_r_script_dir=/home/centos/git/service/stock-service/src/main/r_script

@@ -54,8 +54,9 @@
 	<test name="monthlyOperatingIncome">
 		<classes>
 			<!-- Test operator -->
-			<class
-				name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.operator.MonthlyOperatingIncomeDownloaderTest" 
+				/> -->
 
 			<!-- Test manager -->
 			<!-- <class -->
@@ -76,10 +77,10 @@
 	<test name="analysis">
 		<classes>
 			<!-- Test operator -->
-			<!-- <class name="idv.hsiehpinghan.stockservice.operator.XbrlTransporterTest" 
-				/> -->
+			<!-- <class name="idv.hsiehpinghan.stockservice.operator.XbrlTransporterTest" -->
+			<!-- /> -->
 			<!-- <class -->
-			<!-- name="idv.hsiehpinghan.stockservice.operator.RatioDifferenceTest" 
+			<!-- name="idv.hsiehpinghan.stockservice.operator.RatioDifferenceAnalyzerTest" 
 				/> -->
 
 			<!-- Test manager -->

@@ -11,7 +11,7 @@ import org.springframework.context.ApplicationContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class RatioDifferenceTest {
+public class RatioDifferenceAnalyzerTest {
 	private RatioDifferenceAnalyzer analyzer;
 
 	@BeforeClass

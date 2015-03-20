@@ -252,7 +252,7 @@ public class MonthlyOperatingIncomeHbaseManager implements
 				month, entity);
 		generateOperatingIncomeFamilyContent(entity, ver, currentMonth,
 				currentMonthOfLastYear, differentAmount,
-				cumulativeDifferentPercent, cumulativeAmountOfThisYear,
+				differentPercent, cumulativeAmountOfThisYear,
 				cumulativeAmountOfLastYear, cumulativeDifferentAmount,
 				cumulativeDifferentPercent, exchangeRateOfCurrentMonth,
 				cumulativeExchangeRateOfThisYear, comment);

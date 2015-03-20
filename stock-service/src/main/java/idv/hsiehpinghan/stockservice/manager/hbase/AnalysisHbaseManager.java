@@ -21,6 +21,7 @@ import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -78,12 +79,14 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		try {
 			for (Xbrl entity : entities) {
 				Xbrl.RowKey rowKey = (Xbrl.RowKey) entity.getRowKey();
+				int year = rowKey.getYear();
+				int season = rowKey.getSeason();
 				String stockCode = rowKey.getStockCode();
 				ReportType reportType = rowKey.getReportType();
 				XbrlTaxonomyVersion version = entity.getInfoFamily()
 						.getVersion();
-				File targetDirectory = transportXbrl(transportedSet, stockCode,
-						reportType, version);
+				File targetDirectory = transportXbrl(transportedSet, year,
+						season, stockCode, reportType, version);
 				if (targetDirectory == null) {
 					continue;
 				}
@@ -167,15 +170,18 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 			int year = Integer.valueOf(getString(record.get(2)));
 			int season = Integer.valueOf(getString(record.get(3)));
 			String elementId = getString(record.get(4));
-			BigDecimal statistic = getBigDecimal(record.get(5));
-			BigDecimal degreeOfFreedom = getBigDecimal(record.get(6));
-			BigDecimal confidenceInterval = getBigDecimal(record.get(7));
-			BigDecimal sampleMean = getBigDecimal(record.get(8));
-			BigDecimal hypothesizedMean = getBigDecimal(record.get(9));
-			BigDecimal pValue = getBigDecimal(record.get(10));
+			String chineseName = getString(record.get(5));
+			String englishName = getString(record.get(6));
+			BigDecimal statistic = getBigDecimal(record.get(7));
+			BigDecimal degreeOfFreedom = getBigDecimal(record.get(8));
+			BigDecimal confidenceInterval = getBigDecimal(record.get(9));
+			BigDecimal sampleMean = getBigDecimal(record.get(10));
+			BigDecimal hypothesizedMean = getBigDecimal(record.get(11));
+			BigDecimal pValue = getBigDecimal(record.get(12));
 			RatioDifference entity = generateEntity(stockCode, reportType,
-					year, season, elementId, ver, statistic, degreeOfFreedom,
-					confidenceInterval, sampleMean, hypothesizedMean, pValue);
+					year, season, elementId, ver, chineseName, englishName,
+					statistic, degreeOfFreedom, confidenceInterval, sampleMean,
+					hypothesizedMean, pValue);
 			entities.add(entity);
 		}
 		diffRepo.put(entities);
@@ -194,22 +200,26 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 
 	private RatioDifference generateEntity(String stockCode,
 			ReportType reportType, int year, int season, String elementId,
-			Date ver, BigDecimal statistic, BigDecimal degreeOfFreedom,
+			Date ver, String chineseName, String englishName,
+			BigDecimal statistic, BigDecimal degreeOfFreedom,
 			BigDecimal confidenceInterval, BigDecimal sampleMean,
 			BigDecimal hypothesizedMean, BigDecimal pValue) {
 		RatioDifference entity = diffRepo.generateEntity(stockCode, reportType,
 				year, season);
-		generateTTestFamilyContent(entity, ver, elementId, statistic,
-				degreeOfFreedom, confidenceInterval, sampleMean,
-				hypothesizedMean, pValue);
+		generateTTestFamilyContent(entity, ver, elementId, chineseName,
+				englishName, statistic, degreeOfFreedom, confidenceInterval,
+				sampleMean, hypothesizedMean, pValue);
 		return entity;
 	}
 
 	private void generateTTestFamilyContent(RatioDifference entity, Date ver,
-			String elementId, BigDecimal statistic, BigDecimal degreeOfFreedom,
+			String elementId, String chineseName, String englishName,
+			BigDecimal statistic, BigDecimal degreeOfFreedom,
 			BigDecimal confidenceInterval, BigDecimal sampleMean,
 			BigDecimal hypothesizedMean, BigDecimal pValue) {
 		TTestFamily fam = entity.getTTestFamily();
+		fam.setChineseName(elementId, ver, chineseName);
+		fam.setEnglishName(elementId, ver, englishName);
 		fam.setStatistic(elementId, ver, statistic);
 		fam.setDegreeOfFreedom(elementId, ver, degreeOfFreedom);
 		fam.setConfidenceInterval(elementId, ver, confidenceInterval);
@@ -288,37 +298,33 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		return resultFile;
 	}
 
-	private File transportXbrl(Set<String> transportedSet, String stockCode,
-			ReportType reportType, XbrlTaxonomyVersion version)
-			throws IOException {
-		File targetDirectory = null;
+	private File transportXbrl(Set<String> transportedSet, int year,
+			int season, String stockCode, ReportType reportType,
+			XbrlTaxonomyVersion version) throws IOException,
+			IllegalAccessException, NoSuchMethodException, SecurityException,
+			InstantiationException, IllegalArgumentException,
+			InvocationTargetException {
+		File targetDirectory = FileUtility.getOrCreateDirectory(
+				stockServiceProperty.getTransportDir(), String.valueOf(year),
+				String.valueOf(season), stockCode, reportType.name());
 		if (isTransported(transportedSet, stockCode, reportType)) {
-			return null;
+			return targetDirectory;
 		}
-		targetDirectory = FileUtility.getOrCreateDirectory(
-				stockServiceProperty.getTransportDir(), stockCode,
-				reportType.name());
-		boolean transRst = false;
-		try {
-			transRst = transporter.saveHbaseDataToFile(stockCode, reportType,
-					version, targetDirectory);
-		} catch (Exception e) {
-			logger.error("Transport xbrl fail !!!");
-			e.printStackTrace();
-			return null;
-		}
-		writeToTransportedFile(stockCode, reportType);
+		// False means no data in hbase.
+		boolean transRst = transporter.saveHbaseDataToFile(stockCode,
+				reportType, version, targetDirectory);
 		if (transRst == false) {
 			return null;
 		}
+		writeToTransportedFile(stockCode, reportType);
 		return targetDirectory;
 	}
 
 	private String[] getRatioDifferenceTargetTitles(File file) {
 		return new String[] { "stockCode", "reportType", "year", "season",
-				"elementId", "statistic", "degreeOfFreedom",
-				"confidenceInterval", "sampleMean", "hypothesizedMean",
-				"pValue" };
+				"elementId", "chineseName", "englishName", "statistic",
+				"degreeOfFreedom", "confidenceInterval", "sampleMean",
+				"hypothesizedMean", "pValue" };
 	}
 
 	private String getString(String str) {

@@ -96,7 +96,7 @@ public class XbrlTransporter {
 	}
 
 	private String generateTitle() {
-		return "stockCode,reportType,year,season,elementId,periodType,instant,startDate,endDate,ratioDifference"
+		return "stockCode\treportType\tyear\tseason\telementId\tperiodType\tinstant\tstartDate\tendDate\tchineseName\tenglishName\tratioDifference"
 				+ System.lineSeparator();
 	}
 
@@ -108,9 +108,10 @@ public class XbrlTransporter {
 		String startDateStr = DateUtility.getDateString(startDate, YYYY_MM_DD,
 				NA);
 		String endDateStr = DateUtility.getDateString(endDate, YYYY_MM_DD, NA);
-		return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", stockCode,
-				reportType, year, season, elementId, periodType, instantStr,
-				startDateStr, endDateStr, chineseName, englishName,
+		return String.format(
+				"%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%s",
+				stockCode, reportType, year, season, elementId, periodType,
+				instantStr, startDateStr, endDateStr, chineseName, englishName,
 				ratioDifference, System.lineSeparator());
 	}
 
