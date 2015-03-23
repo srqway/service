@@ -8,8 +8,7 @@ import java.io.IOException;
 public interface IAnalysisManager {
 	boolean updateAnalyzedData() throws IOException;
 
-	MainRatioAnalysis getMainRatioAnalysis(String stockCode, ReportType reportType,
-			int year, int season);
+	MainRatioAnalysis getMainRatioAnalysis(String stockCode,
+			ReportType reportType, int year, int season);
 
-	boolean sendAnalysisMail();
 }

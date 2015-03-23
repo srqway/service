@@ -1,13 +1,10 @@
 package idv.hsiehpinghan.stockservice.manager.hbase;
 
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
-import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnQualifier;
-import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseValue;
 import idv.hsiehpinghan.resourceutility.utility.CsvUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.MainRatioAnalysis;
 import idv.hsiehpinghan.stockdao.entity.MainRatioAnalysis.TTestFamily;
-import idv.hsiehpinghan.stockdao.entity.MainRatioAnalysis.TTestFamily.TTestValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.repository.MainRatioAnalysisRepository;
@@ -26,7 +23,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -40,7 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean {
+public class StatisticAnalysisHbaseManager implements IAnalysisManager,
+		InitializingBean {
 	private final String NA = StringUtility.NA_STRING;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File transportedDir;
@@ -113,50 +110,6 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 			e.printStackTrace();
 			return null;
 		}
-	}
-
-	@Override
-	public boolean sendAnalysisMail() {
-
-		return true;
-	}
-
-	public TreeSet<MainRatioAnalysis> getBeyondThresholdMainRatioAnalysiss(
-			BigDecimal pValueThreshold) throws IllegalAccessException,
-			NoSuchMethodException, SecurityException, InstantiationException,
-			IllegalArgumentException, InvocationTargetException, IOException {
-		// TreeSet<MainRatioAnalysis.RowKey> rowKeys =
-		// analysisRepo.getRowKeys();
-		// TreeSet<MainRatioAnalysis> results = new
-		// TreeSet<MainRatioAnalysis>();
-		// for (MainRatioAnalysis.RowKey rowKey : rowKeys) {
-		// MainRatioAnalysis entity = (MainRatioAnalysis)
-		// analysisRepo.get(rowKey);
-		// for (Entry<HBaseColumnQualifier, HBaseValue> ent : entity
-		// .getTTestFamily().getLatestQualifierAndValueAsSet()) {
-		// TTestQualifier qual = (TTestQualifier) ent.getKey();
-		// if (TTestFamily.P_VALUE.equals(qual.getColumnName()) == false) {
-		// continue;
-		// }
-		// if (isBeyondThreshold(ent, pValueThreshold) == false) {
-		// continue;
-		// }
-		// results.add(entity);
-		// }
-		// }
-		// return results;
-		return null;
-	}
-
-	private boolean isBeyondThreshold(
-			Entry<HBaseColumnQualifier, HBaseValue> ent,
-			BigDecimal pValueThreshold) {
-		TTestValue val = (TTestValue) ent.getValue();
-		BigDecimal pValue = val.getAsBigDecimal();
-		if (pValueThreshold.compareTo(pValue) < 0) {
-			return true;
-		}
-		return false;
 	}
 
 	void saveMainRatioAnalysisToHBase(File file) throws Exception {

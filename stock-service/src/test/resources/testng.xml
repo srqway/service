@@ -81,10 +81,12 @@
 				/> -->
 			<!-- <class name="idv.hsiehpinghan.stockservice.operator.MainRatioComputerTest" 
 				/> -->
+			<class name="idv.hsiehpinghan.stockservice.operator.StatisticAnalysisMailSenderTest" />
 
 			<!-- Test manager -->
-			<class
-				name="idv.hsiehpinghan.stockservice.manager.hbase.AnalysisHbaseManagerTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.StatisticAnalysisHbaseManagerTest" 
+				/> -->
 		</classes>
 	</test>
 </suite>
