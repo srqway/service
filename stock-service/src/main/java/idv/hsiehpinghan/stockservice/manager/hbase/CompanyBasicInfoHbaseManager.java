@@ -29,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -42,10 +43,11 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 	private File processedLog;
 
 	@Autowired
-	private StockServiceProperty stockServiceProperty;
-
+	private ApplicationContext applicationContext;
 	@Autowired
-	private CompanyBasicInfoDownloader downloader;
+	private StockServiceProperty stockServiceProperty;
+	// @Autowired
+	// private CompanyBasicInfoDownloader downloader;
 
 	@Autowired
 	private StockInfoRepository stockInfoRepo;
@@ -274,6 +276,8 @@ public class CompanyBasicInfoHbaseManager implements ICompanyBasicInfoManager,
 	}
 
 	private File downloadCompanyBasicInfo() {
+		CompanyBasicInfoDownloader downloader = applicationContext
+				.getBean(CompanyBasicInfoDownloader.class);
 		try {
 			File dir = downloader.downloadCompanyBasicInfo();
 			logger.info(dir.getAbsolutePath() + " download finish.");

@@ -29,6 +29,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Charsets;
@@ -50,11 +51,13 @@ public class StockClosingConditionHbaseManager implements
 	private File processedLogOfGretai;
 
 	@Autowired
+	private ApplicationContext applicationContext;
+	@Autowired
 	private StockServiceProperty stockServiceProperty;
-	@Autowired
-	private StockClosingConditionOfTwseDownloader downloaderOfTwse;
-	@Autowired
-	private StockClosingConditionOfGretaiDownloader downloaderOfGretai;
+	// @Autowired
+	// private StockClosingConditionOfTwseDownloader downloaderOfTwse;
+	// @Autowired
+	// private StockClosingConditionOfGretaiDownloader downloaderOfGretai;
 	@Autowired
 	private StockClosingConditionRepository conditionRepo;
 
@@ -144,7 +147,8 @@ public class StockClosingConditionHbaseManager implements
 			}
 			int startRow = getStartRowOfTwse(file, lines);
 			int size = lines.size();
-			List<StockClosingCondition> entities = new ArrayList<StockClosingCondition>(size - startRow);
+			List<StockClosingCondition> entities = new ArrayList<StockClosingCondition>(
+					size - startRow);
 			for (int i = startRow; i < size; ++i) {
 				String line = lines.get(i).replace(DOUBLE_UOTATION_STRING,
 						EMPTY_STRING);
@@ -166,10 +170,11 @@ public class StockClosingConditionHbaseManager implements
 				BigInteger stockAmount = getBigIntegerOfTwse(strArr[2]);
 				BigInteger moneyAmount = getBigIntegerOfTwse(strArr[4]);
 				BigInteger transactionAmount = getBigIntegerOfTwse(strArr[3]);
-				StockClosingCondition entity = generateEntity(stockCode, date, ver, change,
-						closingPrice, finalPurchasePrice, finalSellingPrice,
-						highestPrice, lowestPrice, moneyAmount, openingPrice,
-						stockAmount, transactionAmount);
+				StockClosingCondition entity = generateEntity(stockCode, date,
+						ver, change, closingPrice, finalPurchasePrice,
+						finalSellingPrice, highestPrice, lowestPrice,
+						moneyAmount, openingPrice, stockAmount,
+						transactionAmount);
 				entities.add(entity);
 			}
 			conditionRepo.put(entities);
@@ -203,7 +208,8 @@ public class StockClosingConditionHbaseManager implements
 			}
 			int startRow = getStartRowOfGretai(file, lines);
 			int size = lines.size();
-			List<StockClosingCondition> entities = new ArrayList<StockClosingCondition>(size - startRow);
+			List<StockClosingCondition> entities = new ArrayList<StockClosingCondition>(
+					size - startRow);
 			for (int i = startRow; i < size; ++i) {
 				String[] strArr = lines.get(i).split("\",\"");
 				if (strArr.length <= 1) {
@@ -225,10 +231,11 @@ public class StockClosingConditionHbaseManager implements
 				BigInteger stockAmount = getBigIntegerOfGretai(strArr[7]);
 				BigInteger moneyAmount = getBigIntegerOfGretai(strArr[8]);
 				BigInteger transactionAmount = getBigIntegerOfGretai(strArr[9]);
-				StockClosingCondition entity = generateEntity(stockCode, date, ver, change,
-						closingPrice, finalPurchasePrice, finalSellingPrice,
-						highestPrice, lowestPrice, moneyAmount, openingPrice,
-						stockAmount, transactionAmount);
+				StockClosingCondition entity = generateEntity(stockCode, date,
+						ver, change, closingPrice, finalPurchasePrice,
+						finalSellingPrice, highestPrice, lowestPrice,
+						moneyAmount, openingPrice, stockAmount,
+						transactionAmount);
 				entities.add(entity);
 			}
 			conditionRepo.put(entities);
@@ -364,8 +371,8 @@ public class StockClosingConditionHbaseManager implements
 		FileUtils.write(processedLogOfGretai, infoLine, Charsets.UTF_8, true);
 	}
 
-	private StockClosingCondition generateEntity(String stockCode, Date date, Date ver,
-			BigDecimal change, BigDecimal closingPrice,
+	private StockClosingCondition generateEntity(String stockCode, Date date,
+			Date ver, BigDecimal change, BigDecimal closingPrice,
 			BigDecimal finalPurchasePrice, BigDecimal finalSellingPrice,
 			BigDecimal highestPrice, BigDecimal lowestPrice,
 			BigInteger moneyAmount, BigDecimal openingPrice,
@@ -379,12 +386,13 @@ public class StockClosingConditionHbaseManager implements
 		return entity;
 	}
 
-	private void generateClosingConditionFamilyContent(StockClosingCondition entity,
-			Date ver, BigDecimal change, BigDecimal closingPrice,
-			BigDecimal finalPurchasePrice, BigDecimal finalSellingPrice,
-			BigDecimal highestPrice, BigDecimal lowestPrice,
-			BigInteger moneyAmount, BigDecimal openingPrice,
-			BigInteger stockAmount, BigInteger transactionAmount) {
+	private void generateClosingConditionFamilyContent(
+			StockClosingCondition entity, Date ver, BigDecimal change,
+			BigDecimal closingPrice, BigDecimal finalPurchasePrice,
+			BigDecimal finalSellingPrice, BigDecimal highestPrice,
+			BigDecimal lowestPrice, BigInteger moneyAmount,
+			BigDecimal openingPrice, BigInteger stockAmount,
+			BigInteger transactionAmount) {
 		ClosingConditionFamily fam = entity.getClosingConditionFamily();
 		fam.setChange(ver, change);
 		fam.setClosingPrice(ver, closingPrice);
@@ -399,6 +407,8 @@ public class StockClosingConditionHbaseManager implements
 	}
 
 	private File downloadStockClosingConditionOfTwse() {
+		StockClosingConditionOfTwseDownloader downloaderOfTwse = applicationContext
+				.getBean(StockClosingConditionOfTwseDownloader.class);
 		try {
 			File dir = downloaderOfTwse.downloadStockClosingCondition();
 			logger.info(dir.getAbsolutePath() + " download finish.");
@@ -410,6 +420,8 @@ public class StockClosingConditionHbaseManager implements
 	}
 
 	private File downloadStockClosingConditionOfGretai() {
+		StockClosingConditionOfGretaiDownloader downloaderOfGretai = applicationContext
+				.getBean(StockClosingConditionOfGretaiDownloader.class);
 		try {
 			File dir = downloaderOfGretai.downloadStockClosingCondition();
 			logger.info(dir.getAbsolutePath() + " download finish.");

@@ -62,9 +62,6 @@ public class StatisticAnalysisHbaseManager implements
 	@Autowired
 	private StatisticAnalysisMailSender mailSender;
 
-	// @Autowired
-	// private MailAssistant mailAssist;
-
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		transportedDir = stockServiceProperty.getTransportDir();

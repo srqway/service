@@ -37,6 +37,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -54,11 +55,12 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 	private File extractDir;
 	private File processedLog;
 
+	// @Autowired
+	// private FinancialReportDownloader downloader;
 	@Autowired
-	private FinancialReportDownloader downloader;
+	private ApplicationContext applicationContext;
 	@Autowired
 	private XbrlInstanceConverter converter;
-
 	// @Autowired
 	// private ExchangeRateDownloader exchangeRateDownloader;
 	@Autowired
@@ -178,6 +180,8 @@ public class FinancialReportHbaseManager implements IFinancialReportManager,
 
 	File downloadFinancialReportInstance() {
 		try {
+			FinancialReportDownloader downloader = applicationContext
+					.getBean(FinancialReportDownloader.class);
 			File xbrlDir = downloader.downloadFinancialReport();
 			logger.info(xbrlDir.getAbsolutePath() + " download finish.");
 			return xbrlDir;

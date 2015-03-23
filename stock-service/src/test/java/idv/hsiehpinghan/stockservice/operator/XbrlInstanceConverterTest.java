@@ -9,6 +9,7 @@ import idv.hsiehpinghan.stockdao.entity.Xbrl.RowKey;
 import idv.hsiehpinghan.stockdao.enumeration.PeriodType;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.enumeration.UnitType;
+import idv.hsiehpinghan.stockservice.manager.hbase.FinancialReportHbaseManager;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 import idv.hsiehpinghan.testutility.utility.SystemResourceUtility;
 import idv.hsiehpinghan.xbrlassistant.assistant.InstanceAssistant;
@@ -31,6 +32,7 @@ import org.testng.annotations.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class XbrlInstanceConverterTest {
+	private FinancialReportHbaseManager manager;
 	private XbrlInstanceConverter converter;
 	private InstanceAssistant instanceAssistant;
 	private List<String> presentIds;
@@ -46,6 +48,7 @@ public class XbrlInstanceConverterTest {
 	public void beforeClass() throws Exception {
 		ApplicationContext applicationContext = TestngSuitSetting
 				.getApplicationContext();
+		manager = applicationContext.getBean(FinancialReportHbaseManager.class);
 		converter = applicationContext.getBean(XbrlInstanceConverter.class);
 		instanceAssistant = applicationContext.getBean(InstanceAssistant.class);
 		presentIds = new ArrayList<String>(4);
@@ -60,6 +63,8 @@ public class XbrlInstanceConverterTest {
 
 	@Test
 	public void convert() throws Exception {
+		manager.updateTaxonomy();
+
 		File file = SystemResourceUtility
 				.getFileResource("xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml");
 		String[] strArr = file.getName().split("-");

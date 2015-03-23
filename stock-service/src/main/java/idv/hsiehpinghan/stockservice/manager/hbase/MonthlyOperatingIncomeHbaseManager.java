@@ -27,6 +27,7 @@ import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,9 +44,11 @@ public class MonthlyOperatingIncomeHbaseManager implements
 	private Set<String> processedSet;
 
 	@Autowired
-	private StockServiceProperty stockServiceProperty;
+	private ApplicationContext applicationContext;
 	@Autowired
-	private MonthlyOperatingIncomeDownloader downloader;
+	private StockServiceProperty stockServiceProperty;
+	// @Autowired
+	// private MonthlyOperatingIncomeDownloader downloader;
 	@Autowired
 	private MonthlyOperatingIncomeRepository incomeRepo;
 
@@ -251,11 +254,11 @@ public class MonthlyOperatingIncomeHbaseManager implements
 		entity.new RowKey(stockCode, isFunctionalCurrency, currency, year,
 				month, entity);
 		generateOperatingIncomeFamilyContent(entity, ver, currentMonth,
-				currentMonthOfLastYear, differentAmount,
-				differentPercent, cumulativeAmountOfThisYear,
-				cumulativeAmountOfLastYear, cumulativeDifferentAmount,
-				cumulativeDifferentPercent, exchangeRateOfCurrentMonth,
-				cumulativeExchangeRateOfThisYear, comment);
+				currentMonthOfLastYear, differentAmount, differentPercent,
+				cumulativeAmountOfThisYear, cumulativeAmountOfLastYear,
+				cumulativeDifferentAmount, cumulativeDifferentPercent,
+				exchangeRateOfCurrentMonth, cumulativeExchangeRateOfThisYear,
+				comment);
 		return entity;
 	}
 
@@ -300,6 +303,8 @@ public class MonthlyOperatingIncomeHbaseManager implements
 
 	private File downloadMonthlyOperatingIncome() {
 		try {
+			MonthlyOperatingIncomeDownloader downloader = applicationContext
+					.getBean(MonthlyOperatingIncomeDownloader.class);
 			File dir = downloader.downloadMonthlyOperatingIncome();
 			logger.info(dir.getAbsolutePath() + " download finish.");
 			return dir;

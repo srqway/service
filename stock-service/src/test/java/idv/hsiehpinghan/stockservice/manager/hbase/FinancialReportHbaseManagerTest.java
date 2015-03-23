@@ -65,7 +65,7 @@ public class FinancialReportHbaseManagerTest {
 				.getLatestQualifierAndValueAsMap().size() > 0);
 	}
 
-	// @Test(groups="FinancialReportHbaseManagerTest")
+//	@Test
 	public void processXbrlFiles() throws Exception {
 		File instanceFile = SystemResourceUtility
 				.getFileResource("xbrl-instance/2013-01-sii-01-C/tifrs-fr0-m1-ci-cr-1101-2013Q1.xml");
@@ -90,7 +90,7 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(val.getValue().toString(), "-120107000");
 	}
 
-	// @Test(dependsOnMethods = { "processXbrlFiles" })
+//	@Test(dependsOnMethods = { "processXbrlFiles" })
 	@Test
 	public void saveFinancialReportToHBase() throws Exception {
 		File xbrlDir = stockServiceProperty.getFinancialReportExtractDir();
@@ -100,7 +100,7 @@ public class FinancialReportHbaseManagerTest {
 		Assert.assertEquals(actual, expected);
 	}
 
-	// @Test(dependsOnMethods = { "saveFinancialReportToHBase" })
+//	@Test(dependsOnMethods = { "saveFinancialReportToHBase" })
 	public void updateXbrlInstance() throws Exception {
 		boolean result = manager.updateXbrlInstance();
 		Assert.assertTrue(result);
