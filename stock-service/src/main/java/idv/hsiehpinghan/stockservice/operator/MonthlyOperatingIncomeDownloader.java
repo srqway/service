@@ -37,9 +37,12 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 @Service
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	public static final String DOWNLOADED_LOG_FILE_NAME = "downloaded.log";
 	private final String COMMA_STRING = StringUtility.COMMA_STRING;

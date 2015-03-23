@@ -24,6 +24,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 /**
@@ -33,6 +35,7 @@ import org.springframework.stereotype.Service;
  *
  */
 @Service
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class FinancialReportDownloader implements InitializingBean {
 	private final String NO_DATA_MSG_CSS_SELECTOR = "#table01 > h4 > font";
 	private final String NO_DATA_MSG = "查無符合資料！";

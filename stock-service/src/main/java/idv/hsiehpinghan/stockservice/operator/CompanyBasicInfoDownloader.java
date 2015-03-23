@@ -26,9 +26,12 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 @Service
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class CompanyBasicInfoDownloader implements InitializingBean {
 	private final String EMPTY_STRING = StringUtility.EMPTY_STRING;
 	private final int MAX_TRY_AMOUNT = 10;

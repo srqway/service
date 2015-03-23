@@ -25,9 +25,12 @@ import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 @Service
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 	private final String YYYYMMDD = "yyyyMMdd";
 	private final String ALL = "全部(不含權證、牛熊證、可展延牛熊證)";
