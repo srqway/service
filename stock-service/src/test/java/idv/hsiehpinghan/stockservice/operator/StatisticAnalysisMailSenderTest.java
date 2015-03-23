@@ -5,6 +5,8 @@ import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
 import java.io.IOException;
 
+import junit.framework.Assert;
+
 import org.springframework.context.ApplicationContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -24,6 +26,7 @@ public class StatisticAnalysisMailSenderTest {
 
 	@Test
 	public void sendMainRatioAnalysis() throws Exception {
-		mailSender.sendMainRatioAnalysis(stockCode, reportType);
+		boolean result = mailSender.sendMainRatioAnalysis(stockCode, reportType);
+		Assert.assertTrue(result);
 	}
 }

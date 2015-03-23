@@ -10,8 +10,9 @@ import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.repository.MainRatioAnalysisRepository;
 import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
-import idv.hsiehpinghan.stockservice.manager.IAnalysisManager;
+import idv.hsiehpinghan.stockservice.manager.IStatisticAnalysisManager;
 import idv.hsiehpinghan.stockservice.operator.MainRatioComputer;
+import idv.hsiehpinghan.stockservice.operator.StatisticAnalysisMailSender;
 import idv.hsiehpinghan.stockservice.operator.XbrlTransporter;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
@@ -26,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.mail.MessagingException;
+
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.Charsets;
@@ -36,8 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class StatisticAnalysisHbaseManager implements IAnalysisManager,
-		InitializingBean {
+public class StatisticAnalysisHbaseManager implements
+		IStatisticAnalysisManager, InitializingBean {
 	private final String NA = StringUtility.NA_STRING;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File transportedDir;
@@ -56,6 +59,8 @@ public class StatisticAnalysisHbaseManager implements IAnalysisManager,
 	private StockInfoRepository infoRepo;
 	@Autowired
 	private MainRatioAnalysisRepository analysisRepo;
+	@Autowired
+	private StatisticAnalysisMailSender mailSender;
 
 	// @Autowired
 	// private MailAssistant mailAssist;
@@ -109,6 +114,18 @@ public class StatisticAnalysisHbaseManager implements IAnalysisManager,
 			logger.error("Get ratio difference fail !!!");
 			e.printStackTrace();
 			return null;
+		}
+	}
+
+	@Override
+	public void sendMainRatioAnalysisMail() {
+		String stockCode = "1256";
+		ReportType reportType = ReportType.CONSOLIDATED_STATEMENT;
+		try {
+			mailSender.sendMainRatioAnalysis(stockCode, reportType);
+		} catch (MessagingException e) {
+			logger.error("Send main ratio analysis mail fail !!!");
+			e.printStackTrace();
 		}
 	}
 

@@ -81,7 +81,9 @@
 				/> -->
 			<!-- <class name="idv.hsiehpinghan.stockservice.operator.MainRatioComputerTest" 
 				/> -->
-			<class name="idv.hsiehpinghan.stockservice.operator.StatisticAnalysisMailSenderTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.operator.StatisticAnalysisMailSenderTest" 
+				/> -->
 
 			<!-- Test manager -->
 			<!-- <class -->
