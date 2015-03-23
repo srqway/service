@@ -7,7 +7,6 @@ import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnQualifier;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseValue;
 import idv.hsiehpinghan.stockdao.entity.Taxonomy.PresentationFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
-import idv.hsiehpinghan.stockdao.entity.Xbrl.GrowthFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InfoFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceQualifier;
@@ -15,6 +14,7 @@ import idv.hsiehpinghan.stockdao.entity.Xbrl.InstanceFamily.InstanceValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemQualifier;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.ItemFamily.ItemValue;
+import idv.hsiehpinghan.stockdao.entity.Xbrl.MainItemFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.MainRatioFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily;
 import idv.hsiehpinghan.stockdao.entity.Xbrl.RatioFamily.RatioQualifier;
@@ -91,7 +91,7 @@ public class XbrlInstanceConverter {
 		generateInfoFamily(entity, objNode, ver);
 		generateInstanceFamily(entity, objNode, ver);
 		generateItemFamily(entity, ver);
-		generateGrowthFamily(entity, ver);
+		generateMainItemFamily(entity, ver);
 		generateRatioFamily(entity, ver);
 		generateMainRatioFamily(entity, ver);
 	}
@@ -170,7 +170,8 @@ public class XbrlInstanceConverter {
 		if (realKey == null) {
 			return null;
 		}
-		return entity.getItemFamily().get(realKey, PeriodType.INSTANT, instant);
+		return entity.getItemFamily().get(realKey, PeriodType.INSTANT, instant,
+				null, null);
 	}
 
 	private BigDecimal getDurationTotalValue(Xbrl entity,
@@ -179,7 +180,7 @@ public class XbrlInstanceConverter {
 		if (realKey == null) {
 			return null;
 		}
-		return entity.getItemFamily().get(realKey, PeriodType.DURATION,
+		return entity.getItemFamily().get(realKey, PeriodType.DURATION, null,
 				startDate, endDate);
 	}
 
@@ -263,24 +264,25 @@ public class XbrlInstanceConverter {
 			String realKey = getRealKey(key, (ObjectNode) node);
 			BigDecimal value = null;
 			if (PeriodType.INSTANT.equals(periodType)) {
-				value = entity.getItemFamily()
-						.get(realKey, periodType, instant);
-			} else if (PeriodType.DURATION.equals(periodType)) {
 				value = entity.getItemFamily().get(realKey, periodType,
+						instant, null, null);
+			} else if (PeriodType.DURATION.equals(periodType)) {
+				value = entity.getItemFamily().get(realKey, periodType, null,
 						startDate, endDate);
 			} else {
 				throw new RuntimeException("Period type(" + periodType
 						+ ") undefined !!!");
 			}
-			BigDecimal percent = BigDecimalUtility.divide(value, parentValue);
-			if (percent == null) {
+			BigDecimal ratio = BigDecimalUtility.divide(value, parentValue);
+			if (ratio == null) {
 				continue;
 			}
 			if (PeriodType.INSTANT.equals(periodType)) {
-				ratioFam.setRatio(realKey, periodType, instant, ver, percent);
+				ratioFam.setRatio(realKey, periodType, instant, null, null,
+						ver, ratio);
 			} else if (PeriodType.DURATION.equals(periodType)) {
-				ratioFam.setRatio(realKey, periodType, startDate, endDate, ver,
-						percent);
+				ratioFam.setRatio(realKey, periodType, null, startDate,
+						endDate, ver, ratio);
 			} else {
 				throw new RuntimeException("Period type(" + periodType
 						+ ") undefined !!!");
@@ -306,37 +308,33 @@ public class XbrlInstanceConverter {
 				.getStatementOfCashFlowsContext().split(COMMA_STRING);
 		generateRatioContent(entity, ver, Presentation.Id.StatementOfCashFlows,
 				PeriodType.DURATION, statementOfCashFlowsPeriods);
-		// String[] statementOfChangesInEquityPeriods = entity.getInfoFamily()
-		// .getStatementOfCashFlowsContext().split(COMMA_STRING);
-		// generateRatioContent(entity, ver,
-		// Presentation.Id.StatementOfChangesInEquity,
-		// PeriodType.DURATION, statementOfChangesInEquityPeriods);
 	}
 
-	private void generateGrowthFamily(Xbrl entity, Date ver) {
+	private void generateMainItemFamily(Xbrl entity, Date ver) {
 		ItemFamily itemFam = entity.getItemFamily();
-		GrowthFamily growthFamily = entity.getGrowthFamily();
+		MainItemFamily mainItemFam = entity.getMainItemFamily();
 		String oldElementId = null;
-		for (Entry<ItemQualifier, ItemValue> qualValEnt : getLatestElementIdRecord(itemFam)) {
+		for (Entry<HBaseColumnQualifier, HBaseValue> qualValEnt : itemFam
+				.getLatestQualifierAndValueAsDescendingSet()) {
 			ItemQualifier qual = (ItemQualifier) qualValEnt.getKey();
 			String elementId = qual.getElementId();
 			if (elementId.equals(oldElementId)) {
 				continue;
 			}
+			// If duration item, select from 1/1 only.
+			if (PeriodType.DURATION.equals(qual.getPeriodType())) {
+				if (DateUtility.getMonth(qual.getStartDate()) != 1) {
+					continue;
+				}
+			}
 			PeriodType periodType = qual.getPeriodType();
 			Date instant = qual.getInstant();
 			Date startDate = qual.getStartDate();
 			Date endDate = qual.getEndDate();
-			BigDecimal oneYearBeforeValue = getOneYearBeforeValue(itemFam,
-					elementId, periodType, instant, startDate, endDate);
-			if (oneYearBeforeValue != null) {
-				BigDecimal value = ((ItemValue) qualValEnt.getValue())
-						.getValue();
-				BigDecimal growthRatio = BigDecimalUtility.divide(value,
-						oneYearBeforeValue);
-				growthFamily.setRatio(elementId, periodType, instant,
-						startDate, endDate, ver, getGrowthRate(growthRatio));
-			}
+			ItemValue val = (ItemValue) qualValEnt.getValue();
+			BigDecimal value = val.getValue();
+			mainItemFam.set(elementId, periodType, instant, startDate, endDate,
+					ver, value);
 			oldElementId = elementId;
 		}
 	}
@@ -363,51 +361,6 @@ public class XbrlInstanceConverter {
 		}
 	}
 
-	private BigDecimal getOneYearBeforeValue(ItemFamily itemFamily,
-			String elementId, PeriodType periodType, Date instant,
-			Date startDate, Date endDate) {
-		BigDecimal itemValue = null;
-		if (PeriodType.INSTANT.equals(periodType)) {
-			Date oneYearBeforeInstant = DateUtils.addYears(instant, -1);
-			itemValue = itemFamily.get(elementId, periodType,
-					oneYearBeforeInstant);
-		} else if (PeriodType.DURATION.equals(periodType)) {
-			Date oneYearBeforeStartDate = DateUtils.addYears(startDate, -1);
-			Date oneYearBeforeEndDate = DateUtils.addYears(endDate, -1);
-			itemValue = itemFamily.get(elementId, periodType,
-					oneYearBeforeStartDate, oneYearBeforeEndDate);
-		} else {
-			throw new RuntimeException("PeriodType(" + periodType
-					+ ") not implements !!!");
-		}
-		return itemValue;
-	}
-
-	private Set<Entry<ItemQualifier, ItemValue>> getLatestElementIdRecord(
-			ItemFamily itemFamily) {
-		String OldElementId = null;
-		Set<Entry<HBaseColumnQualifier, HBaseValue>> qualValSet = itemFamily
-				.getLatestQualifierAndValueAsDescendingSet();
-		Map<ItemQualifier, ItemValue> map = new HashMap<ItemQualifier, ItemValue>(
-				qualValSet.size());
-		for (Entry<HBaseColumnQualifier, HBaseValue> qualValEnt : qualValSet) {
-			ItemQualifier itemQual = (ItemQualifier) qualValEnt.getKey();
-			String elementId = itemQual.getElementId();
-			if (elementId.equals(OldElementId)) {
-				continue;
-			}
-			if (PeriodType.DURATION.equals(itemQual.getPeriodType())) {
-				if (DateUtility.getMonth(itemQual.getStartDate()) != 1) {
-					continue;
-				}
-			}
-			ItemValue itemVal = (ItemValue) qualValEnt.getValue();
-			map.put(itemQual, itemVal);
-			OldElementId = elementId;
-		}
-		return map.entrySet();
-	}
-
 	private Set<Entry<RatioQualifier, RatioValue>> getLatestElementIdRecord(
 			RatioFamily ratioFamily) {
 		String OldElementId = null;
@@ -431,13 +384,6 @@ public class XbrlInstanceConverter {
 			OldElementId = elementId;
 		}
 		return map.entrySet();
-	}
-
-	private BigDecimal getGrowthRate(BigDecimal growthRatio) {
-		if (growthRatio == null) {
-			return null;
-		}
-		return growthRatio.subtract(BigDecimal.ONE);
 	}
 
 	private void generateItemFamily(Xbrl entity, Date ver) {

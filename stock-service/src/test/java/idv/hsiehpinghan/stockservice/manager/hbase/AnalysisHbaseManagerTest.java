@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.util.TreeSet;
 
 import idv.hsiehpinghan.hbaseassistant.utility.HbaseEntityTestUtility;
-import idv.hsiehpinghan.stockdao.entity.RatioDifference;
-import idv.hsiehpinghan.stockdao.repository.RatioDifferenceRepository;
+import idv.hsiehpinghan.stockdao.entity.MainRatioAnalysis;
+import idv.hsiehpinghan.stockdao.repository.MainRatioAnalysisRepository;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 
 import org.springframework.context.ApplicationContext;
@@ -15,7 +15,7 @@ import org.testng.annotations.Test;
 
 public class AnalysisHbaseManagerTest {
 	private AnalysisHbaseManager manager;
-	private RatioDifferenceRepository diffRepo;
+	private MainRatioAnalysisRepository diffRepo;
 	private BigDecimal pValueThreshold = new BigDecimal("0.01");
 	
 	@BeforeClass
@@ -23,7 +23,7 @@ public class AnalysisHbaseManagerTest {
 		ApplicationContext applicationContext = TestngSuitSetting
 				.getApplicationContext();
 		manager = applicationContext.getBean(AnalysisHbaseManager.class);
-		diffRepo = applicationContext.getBean(RatioDifferenceRepository.class);
+		diffRepo = applicationContext.getBean(MainRatioAnalysisRepository.class);
 		// dropAndCreateTable();
 	}
 
@@ -34,8 +34,8 @@ public class AnalysisHbaseManagerTest {
 	}
 
 //	@Test
-	public void getRatioDifferences() throws Exception {
-//		TreeSet<RatioDifference> entities = manager.getBeyondThresholdRatioDifferences(pValueThreshold);
+	public void getMainRatioAnalysis() throws Exception {
+//		TreeSet<MainRatioAnalysis> entities = manager.getBeyondThresholdMainRatioAnalysiss(pValueThreshold);
 //		
 //		System.err.println(entities.size());
 //		

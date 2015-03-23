@@ -48,14 +48,14 @@ public class FinancialReportDetailJsonMaker {
 	private static final String DEEP = "deep";
 	private static final String LABEL = "label";
 	private static final String TITLE = "title";
-	
+
 	@Autowired
 	private ObjectMapper objectMapper;
 	@Autowired
 	private XbrlRepository xbrlRepo;
 	@Autowired
 	private TaxonomyRepository taxoRepo;
-	
+
 	public Map<String, ObjectNode> getPresentationJsonMap(
 			List<String> presentIds, String stockCode, ReportType reportType,
 			Integer year, Integer season, Locale locale)
@@ -234,14 +234,15 @@ public class FinancialReportDetailJsonMaker {
 	private BigDecimal getInstantItemValue(String elementId, String period,
 			Xbrl xbrl) throws ParseException {
 		Date instant = DateUtils.parseDate(period, YYYYMMDD);
-		return xbrl.getItemFamily().get(elementId, PeriodType.INSTANT, instant);
+		return xbrl.getItemFamily().get(elementId, PeriodType.INSTANT, instant,
+				null, null);
 	}
 
 	private BigDecimal getDurationItemValue(String elementId, String period,
 			Xbrl xbrl) throws ParseException {
 		Date startDate = getStartDate(period);
 		Date endDate = getEndDate(period);
-		return xbrl.getItemFamily().get(elementId, PeriodType.DURATION,
+		return xbrl.getItemFamily().get(elementId, PeriodType.DURATION, null,
 				startDate, endDate);
 	}
 

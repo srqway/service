@@ -54,8 +54,10 @@ if(exists('resultFile') == FALSE) {
 			}
 			try({
 				htest <- t.test(diffs, mu=ratio)
-				pValue <- htest$p.value
-				if(is.na(pValue)) {
+				if(is.na(htest$p.value)) {
+					next
+				}
+				if(is.infinite(htest$statistic)) {
 					next
 				}
 				tempDf$stockCode[i] <- targetRow$stockCode
@@ -70,7 +72,7 @@ if(exists('resultFile') == FALSE) {
 				tempDf$confidenceInterval[i] <- htest$conf.int
 				tempDf$sampleMean[i] <- htest$estimate
 				tempDf$hypothesizedMean[i] <- htest$null.value
-				tempDf$pValue[i] <- pValue
+				tempDf$pValue[i] <- htest$p.value
 			})
 		}
 		resultDf <- subset(tempDf, subset=(stockCode != ''))

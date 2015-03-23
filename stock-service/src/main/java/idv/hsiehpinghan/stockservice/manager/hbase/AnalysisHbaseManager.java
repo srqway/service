@@ -5,13 +5,12 @@ import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseColumnQualifier;
 import idv.hsiehpinghan.hbaseassistant.abstractclass.HBaseValue;
 import idv.hsiehpinghan.resourceutility.utility.CsvUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
-import idv.hsiehpinghan.stockdao.entity.RatioDifference;
-import idv.hsiehpinghan.stockdao.entity.RatioDifference.TTestFamily;
-import idv.hsiehpinghan.stockdao.entity.RatioDifference.TTestFamily.TTestQualifier;
-import idv.hsiehpinghan.stockdao.entity.RatioDifference.TTestFamily.TTestValue;
+import idv.hsiehpinghan.stockdao.entity.MainRatioAnalysis;
+import idv.hsiehpinghan.stockdao.entity.MainRatioAnalysis.TTestFamily;
+import idv.hsiehpinghan.stockdao.entity.MainRatioAnalysis.TTestFamily.TTestValue;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
-import idv.hsiehpinghan.stockdao.repository.RatioDifferenceRepository;
+import idv.hsiehpinghan.stockdao.repository.MainRatioAnalysisRepository;
 import idv.hsiehpinghan.stockdao.repository.StockInfoRepository;
 import idv.hsiehpinghan.stockdao.repository.XbrlRepository;
 import idv.hsiehpinghan.stockservice.manager.IAnalysisManager;
@@ -59,7 +58,7 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 	@Autowired
 	private StockInfoRepository infoRepo;
 	@Autowired
-	private RatioDifferenceRepository diffRepo;
+	private MainRatioAnalysisRepository analysisRepo;
 
 	// @Autowired
 	// private MailAssistant mailAssist;
@@ -91,9 +90,9 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 				if (targetDirectory == null) {
 					continue;
 				}
-				File analyzeFile = analyzeRatioDifference(analyzedSet,
+				File analyzeFile = analyzeMainRatioAnalysis(analyzedSet,
 						stockCode, reportType, targetDirectory);
-				saveRatioDifferenceToHBase(analyzeFile);
+				saveMainRatioAnalysisToHBase(analyzeFile);
 				writeToAnalyzedFile(stockCode, reportType);
 			}
 		} catch (Exception e) {
@@ -105,10 +104,10 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 	}
 
 	@Override
-	public RatioDifference getRatioDifference(String stockCode,
+	public MainRatioAnalysis getMainRatioAnalysis(String stockCode,
 			ReportType reportType, int year, int season) {
 		try {
-			return diffRepo.get(stockCode, reportType, year, season);
+			return analysisRepo.get(stockCode, reportType, year, season);
 		} catch (Exception e) {
 			logger.error("Get ratio difference fail !!!");
 			e.printStackTrace();
@@ -122,27 +121,31 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		return true;
 	}
 
-	public TreeSet<RatioDifference> getBeyondThresholdRatioDifferences(
+	public TreeSet<MainRatioAnalysis> getBeyondThresholdMainRatioAnalysiss(
 			BigDecimal pValueThreshold) throws IllegalAccessException,
 			NoSuchMethodException, SecurityException, InstantiationException,
 			IllegalArgumentException, InvocationTargetException, IOException {
-		TreeSet<RatioDifference.RowKey> rowKeys = diffRepo.getRowKeys();
-		TreeSet<RatioDifference> results = new TreeSet<RatioDifference>();
-		for (RatioDifference.RowKey rowKey : rowKeys) {
-			RatioDifference entity = (RatioDifference) diffRepo.get(rowKey);
-			for (Entry<HBaseColumnQualifier, HBaseValue> ent : entity
-					.getTTestFamily().getLatestQualifierAndValueAsSet()) {
-				TTestQualifier qual = (TTestQualifier) ent.getKey();
-				if (TTestFamily.P_VALUE.equals(qual.getColumnName()) == false) {
-					continue;
-				}
-				if (isBeyondThreshold(ent, pValueThreshold) == false) {
-					continue;
-				}
-				results.add(entity);
-			}
-		}
-		return results;
+		// TreeSet<MainRatioAnalysis.RowKey> rowKeys =
+		// analysisRepo.getRowKeys();
+		// TreeSet<MainRatioAnalysis> results = new
+		// TreeSet<MainRatioAnalysis>();
+		// for (MainRatioAnalysis.RowKey rowKey : rowKeys) {
+		// MainRatioAnalysis entity = (MainRatioAnalysis)
+		// analysisRepo.get(rowKey);
+		// for (Entry<HBaseColumnQualifier, HBaseValue> ent : entity
+		// .getTTestFamily().getLatestQualifierAndValueAsSet()) {
+		// TTestQualifier qual = (TTestQualifier) ent.getKey();
+		// if (TTestFamily.P_VALUE.equals(qual.getColumnName()) == false) {
+		// continue;
+		// }
+		// if (isBeyondThreshold(ent, pValueThreshold) == false) {
+		// continue;
+		// }
+		// results.add(entity);
+		// }
+		// }
+		// return results;
+		return null;
 	}
 
 	private boolean isBeyondThreshold(
@@ -156,10 +159,10 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		return false;
 	}
 
-	void saveRatioDifferenceToHBase(File file) throws Exception {
+	void saveMainRatioAnalysisToHBase(File file) throws Exception {
 		CSVParser parser = CsvUtility.getParserAtDataStartRow(file,
-				getRatioDifferenceTargetTitles(file));
-		List<RatioDifference> entities = new ArrayList<RatioDifference>();
+				getMainRatioAnalysisTargetTitles(file));
+		List<MainRatioAnalysis> entities = new ArrayList<MainRatioAnalysis>();
 		Date ver = new Date();
 		for (CSVRecord record : parser) {
 			if (record.size() <= 1) {
@@ -179,15 +182,15 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 			BigDecimal sampleMean = getBigDecimal(record.get(10));
 			BigDecimal hypothesizedMean = getBigDecimal(record.get(11));
 			BigDecimal pValue = getBigDecimal(record.get(12));
-			RatioDifference entity = generateEntity(stockCode, reportType,
+			MainRatioAnalysis entity = generateEntity(stockCode, reportType,
 					year, season, elementId, ver, chineseName, englishName,
 					statistic, degreeOfFreedom, confidenceInterval, sampleMean,
 					hypothesizedMean, pValue);
 			entities.add(entity);
 		}
-		diffRepo.put(entities);
+		analysisRepo.put(entities);
 		logger.info(file.getName() + " saved to "
-				+ diffRepo.getTargetTableName() + ".");
+				+ analysisRepo.getTargetTableName() + ".");
 	}
 
 	// private TreeSet<String> getStockCodes(StockInfoRepository infoRepo) {
@@ -199,21 +202,21 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 	// return stockCodes;
 	// }
 
-	private RatioDifference generateEntity(String stockCode,
+	private MainRatioAnalysis generateEntity(String stockCode,
 			ReportType reportType, int year, int season, String elementId,
 			Date ver, String chineseName, String englishName,
 			BigDecimal statistic, BigDecimal degreeOfFreedom,
 			BigDecimal confidenceInterval, BigDecimal sampleMean,
 			BigDecimal hypothesizedMean, BigDecimal pValue) {
-		RatioDifference entity = diffRepo.generateEntity(stockCode, reportType,
-				year, season);
+		MainRatioAnalysis entity = analysisRepo.generateEntity(stockCode,
+				reportType, year, season);
 		generateTTestFamilyContent(entity, ver, elementId, chineseName,
 				englishName, statistic, degreeOfFreedom, confidenceInterval,
 				sampleMean, hypothesizedMean, pValue);
 		return entity;
 	}
 
-	private void generateTTestFamilyContent(RatioDifference entity, Date ver,
+	private void generateTTestFamilyContent(MainRatioAnalysis entity, Date ver,
 			String elementId, String chineseName, String englishName,
 			BigDecimal statistic, BigDecimal degreeOfFreedom,
 			BigDecimal confidenceInterval, BigDecimal sampleMean,
@@ -286,7 +289,7 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		return String.format("%s_%s", stockCode, reportType);
 	}
 
-	private File analyzeRatioDifference(Set<String> analyzedSet,
+	private File analyzeMainRatioAnalysis(Set<String> analyzedSet,
 			String stockCode, ReportType reportType, File targetDirectory)
 			throws IOException {
 		if (isAnalyzed(analyzedSet, stockCode, reportType)) {
@@ -321,7 +324,7 @@ public class AnalysisHbaseManager implements IAnalysisManager, InitializingBean 
 		return targetDirectory;
 	}
 
-	private String[] getRatioDifferenceTargetTitles(File file) {
+	private String[] getMainRatioAnalysisTargetTitles(File file) {
 		return new String[] { "stockCode", "reportType", "year", "season",
 				"elementId", "chineseName", "englishName", "statistic",
 				"degreeOfFreedom", "confidenceInterval", "sampleMean",

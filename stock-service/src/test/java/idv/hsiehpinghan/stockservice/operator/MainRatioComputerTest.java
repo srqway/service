@@ -22,7 +22,7 @@ public class MainRatioComputerTest {
 	}
 
 	@Test
-	public void computeRatioDifference() throws Exception {
+	public void tTestMainRatio() throws Exception {
 		File targetDirectory = new File("/tmp/getXbrlFromHbase");
 		deleteResultFile(targetDirectory);
 		File resultFile = computer.tTestMainRatio(targetDirectory);

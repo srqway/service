@@ -75,9 +75,9 @@ public class XbrlInstanceConverterTest {
 		testInfoFamily(xbrl);
 		testInstanceFamily(xbrl);
 		testItemFamily(xbrl);
-		testGrowthFamily(xbrl);
+		testMainItemFamily(xbrl);
 		testRatioFamily(xbrl);
-		testRatioDifferenceFamily(xbrl);
+		testMainRatioFamily(xbrl);
 	}
 
 	private void testRowKey(Xbrl xbrl, String stockCode) {
@@ -92,7 +92,7 @@ public class XbrlInstanceConverterTest {
 
 	private void testInstanceFamily(Xbrl xbrl) {
 		InstanceValue instVal = xbrl.getInstanceFamily().getInstanceValue(
-				elementId, periodType, startDate, endDate);
+				elementId, periodType, null, startDate, endDate);
 		Assert.assertEquals(unitType, instVal.getUnitType());
 		Assert.assertEquals(value, instVal.getValue());
 	}
@@ -100,42 +100,58 @@ public class XbrlInstanceConverterTest {
 	private void testItemFamily(Xbrl xbrl) {
 		Assert.assertEquals(
 				value,
-				xbrl.getItemFamily().get(elementId, periodType, startDate,
-						endDate));
+				xbrl.getItemFamily().get(elementId, periodType, null,
+						startDate, endDate));
 	}
 
-	private void testGrowthFamily(Xbrl xbrl) {
-		BigDecimal ratio = xbrl.getGrowthFamily().getRatio(elementId,
-				periodType, startDate, endDate);
-		Assert.assertEquals(0, ratio.compareTo(new BigDecimal("-0.10")));
+	private void testMainItemFamily(Xbrl xbrl) {
+		Assert.assertEquals(
+				value,
+				xbrl.getMainItemFamily().get(elementId, periodType, null,
+						startDate, endDate));
 	}
 
 	private void testRatioFamily(Xbrl xbrl) {
 		RatioFamily ratioFam = xbrl.getRatioFamily();
 		// Balance Sheet
-		BigDecimal balanceSheetPercent = ratioFam
-				.getRatio("ifrs_OtherCurrentFinancialAssets",
-						PeriodType.INSTANT, instant);
+		BigDecimal balanceSheetPercent = ratioFam.getRatio(
+				"ifrs_OtherCurrentFinancialAssets", PeriodType.INSTANT,
+				instant, null, null);
 		Assert.assertEquals(0,
 				balanceSheetPercent.compareTo(new BigDecimal("0.32")));
 		// Statement Of Comprehensive Income
 		BigDecimal statementOfComprehensiveIncomePercent = ratioFam.getRatio(
-				"tifrs-bsci-ci_OtherIncomeOthers", PeriodType.DURATION,
+				"tifrs-bsci-ci_OtherIncomeOthers", PeriodType.DURATION, null,
 				startDate, endDate);
 		Assert.assertEquals(0, statementOfComprehensiveIncomePercent
 				.compareTo(new BigDecimal("0.85")));
 		// Statement Of CashFlows
 		BigDecimal statementOfCashFlowsPercent = ratioFam.getRatio(
 				"tifrs-SCF_DecreaseIncreaseInNotesReceivable",
-				PeriodType.DURATION, startDate, endDate);
+				PeriodType.DURATION, null, startDate, endDate);
 		Assert.assertEquals(0,
 				statementOfCashFlowsPercent.compareTo(new BigDecimal("-1.5")));
 	}
 
-	private void testRatioDifferenceFamily(Xbrl xbrl) {
+	private void testMainRatioFamily(Xbrl xbrl) {
 		MainRatioFamily mainRatioFam = xbrl.getMainRatioFamily();
-		BigDecimal percent = mainRatioFam.getRatio("ifrs_Inventories",
-				PeriodType.INSTANT, instant, null, null);
-		Assert.assertEquals(0, percent.compareTo(new BigDecimal("0.13")));
+		// Balance Sheet
+		BigDecimal balanceSheetPercent = mainRatioFam.getRatio(
+				"ifrs_OtherCurrentFinancialAssets", PeriodType.INSTANT,
+				instant, null, null);
+		Assert.assertEquals(0,
+				balanceSheetPercent.compareTo(new BigDecimal("0.32")));
+		// Statement Of Comprehensive Income
+		BigDecimal statementOfComprehensiveIncomePercent = mainRatioFam
+				.getRatio("tifrs-bsci-ci_OtherIncomeOthers",
+						PeriodType.DURATION, null, startDate, endDate);
+		Assert.assertEquals(0, statementOfComprehensiveIncomePercent
+				.compareTo(new BigDecimal("0.85")));
+		// Statement Of CashFlows
+		BigDecimal statementOfCashFlowsPercent = mainRatioFam.getRatio(
+				"tifrs-SCF_DecreaseIncreaseInNotesReceivable",
+				PeriodType.DURATION, null, startDate, endDate);
+		Assert.assertEquals(0,
+				statementOfCashFlowsPercent.compareTo(new BigDecimal("-1.5")));
 	}
 }

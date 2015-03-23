@@ -85,12 +85,12 @@ public class FinancialReportHbaseManagerTest {
 		Date startDate = DateUtils.parseDate("20130101", DATE_PATTERN);
 		Date endDate = DateUtils.parseDate("20130331", DATE_PATTERN);
 		InstanceValue val = entity.getInstanceFamily().getInstanceValue(
-				elementId, periodType, startDate, endDate);
+				elementId, periodType, null, startDate, endDate);
 		Assert.assertEquals(val.getUnitType(), UnitType.TWD);
 		Assert.assertEquals(val.getValue().toString(), "-120107000");
 	}
 
-//	@Test(dependsOnMethods = { "processXbrlFiles" })
+	// @Test(dependsOnMethods = { "processXbrlFiles" })
 	@Test
 	public void saveFinancialReportToHBase() throws Exception {
 		File xbrlDir = stockServiceProperty.getFinancialReportExtractDir();
