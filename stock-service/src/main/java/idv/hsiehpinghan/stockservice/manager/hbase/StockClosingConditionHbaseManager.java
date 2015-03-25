@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Charsets;
@@ -95,6 +96,11 @@ public class StockClosingConditionHbaseManager implements
 		return conditionRepo.fuzzyScan(stockCode, null);
 	}
 
+//	@Scheduled(cron="0 0 22 * * *")
+	public void scheduledUpdateStockClosingCondition() {
+		updateStockClosingCondition();
+	}
+	
 	boolean updateStockClosingConditionOfTwse() throws NoSuchFieldException,
 			SecurityException, IllegalArgumentException,
 			IllegalAccessException, NoSuchMethodException,

@@ -7,6 +7,7 @@ import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
 import org.springframework.context.ApplicationContext;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 public class StatisticAnalysisHbaseManagerTest {
 	private StatisticAnalysisHbaseManager manager;
@@ -23,7 +24,7 @@ public class StatisticAnalysisHbaseManagerTest {
 		// dropAndCreateTable();
 	}
 
-	// @Test
+	@Test
 	public void updateAnalyzedData() throws Exception {
 		boolean result = manager.updateAnalyzedData();
 		Assert.assertTrue(result);

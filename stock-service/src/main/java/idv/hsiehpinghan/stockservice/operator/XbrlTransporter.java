@@ -46,9 +46,8 @@ public class XbrlTransporter {
 	private TaxonomyRepository taxonomyRepo;
 
 	public boolean saveHbaseDataToFile(String stockCode, ReportType reportType,
-			XbrlTaxonomyVersion version, File targetDirectory)
-			throws IOException, IllegalAccessException, NoSuchMethodException,
-			SecurityException, InstantiationException,
+			File targetDirectory) throws IOException, IllegalAccessException,
+			NoSuchMethodException, SecurityException, InstantiationException,
 			IllegalArgumentException, InvocationTargetException {
 		TreeSet<Xbrl> entities = xbrlRepo.fuzzyScan(stockCode, reportType,
 				null, null);
@@ -60,11 +59,16 @@ public class XbrlTransporter {
 		}
 		File targetFile = FileUtility.getOrCreateFile(targetDirectory, XBRL);
 		FileUtils.write(targetFile, generateTitle(), UTF_8, false);
+		XbrlTaxonomyVersion version = getXbrlTaxonomyVersion(entities);
 		NameFamily nameFam = taxonomyRepo.get(version).getNameFamily();
 		for (Xbrl entity : entities) {
 			writeToFile(targetFile, entity, nameFam);
 		}
 		return true;
+	}
+
+	private XbrlTaxonomyVersion getXbrlTaxonomyVersion(TreeSet<Xbrl> entities) {
+		return entities.last().getInfoFamily().getVersion();
 	}
 
 	private void writeToFile(File targetFile, Xbrl entity, NameFamily nameFam)

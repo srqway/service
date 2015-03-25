@@ -5,6 +5,7 @@ import idv.hsiehpinghan.resourceutility.utility.CsvUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.stockdao.entity.MainRatioAnalysis;
 import idv.hsiehpinghan.stockdao.entity.MainRatioAnalysis.TTestFamily;
+import idv.hsiehpinghan.stockdao.entity.StockInfo;
 import idv.hsiehpinghan.stockdao.entity.Xbrl;
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockdao.repository.MainRatioAnalysisRepository;
@@ -71,28 +72,28 @@ public class StatisticAnalysisHbaseManager implements
 
 	@Override
 	public boolean updateAnalyzedData() throws IOException {
-		TreeSet<Xbrl> entities = xbrlRepo.scanWithInfoFamilyOnly();
+		TreeSet<StockInfo.RowKey> rowKeys = infoRepo.getRowKeys();
+		// TreeSet<Xbrl> entities = xbrlRepo.scanWithInfoFamilyOnly();
 		Set<String> transportedSet = FileUtility
 				.readLinesAsHashSet(transportedLog);
 		Set<String> analyzedSet = FileUtility.readLinesAsHashSet(analyzedLog);
 		try {
-			for (Xbrl entity : entities) {
-				Xbrl.RowKey rowKey = (Xbrl.RowKey) entity.getRowKey();
-				int year = rowKey.getYear();
-				int season = rowKey.getSeason();
+			for (StockInfo.RowKey rowKey : rowKeys) {
 				String stockCode = rowKey.getStockCode();
-				ReportType reportType = rowKey.getReportType();
-				XbrlTaxonomyVersion version = entity.getInfoFamily()
-						.getVersion();
-				File targetDirectory = transportXbrl(transportedSet, year,
-						season, stockCode, reportType, version);
-				if (targetDirectory == null) {
-					continue;
+				for (ReportType reportType : ReportType.values()) {
+					File targetDirectory = transportXbrl(transportedSet,
+							stockCode, reportType);
+					if (targetDirectory == null) {
+						continue;
+					}
+					File analyzeFile = analyzeMainRatioAnalysis(analyzedSet,
+							stockCode, reportType, targetDirectory);
+					if (analyzeFile == null) {
+						continue;
+					}
+					saveMainRatioAnalysisToHBase(analyzeFile);
+					writeToAnalyzedFile(stockCode, reportType);
 				}
-				File analyzeFile = analyzeMainRatioAnalysis(analyzedSet,
-						stockCode, reportType, targetDirectory);
-				saveMainRatioAnalysisToHBase(analyzeFile);
-				writeToAnalyzedFile(stockCode, reportType);
 			}
 		} catch (Exception e) {
 			logger.error("Update analyzed data fail !!!");
@@ -262,28 +263,32 @@ public class StatisticAnalysisHbaseManager implements
 		if (isAnalyzed(analyzedSet, stockCode, reportType)) {
 			return null;
 		}
-		logger.info(String.format("Begin analyze %s %s", stockCode, reportType));
+		logger.info(String.format("%s / %s begin analyze.", stockCode,
+				reportType));
 		File resultFile = computer.tTestMainRatio(targetDirectory);
-		logger.info(String
-				.format("Finish analyze %s %s", stockCode, reportType));
+		logger.info(String.format("%s / %s finish analyze.", stockCode,
+				reportType));
+
 		return resultFile;
 	}
 
-	private File transportXbrl(Set<String> transportedSet, int year,
-			int season, String stockCode, ReportType reportType,
-			XbrlTaxonomyVersion version) throws IOException,
-			IllegalAccessException, NoSuchMethodException, SecurityException,
-			InstantiationException, IllegalArgumentException,
-			InvocationTargetException {
+	private File transportXbrl(Set<String> transportedSet, String stockCode,
+			ReportType reportType) throws IOException, IllegalAccessException,
+			NoSuchMethodException, SecurityException, InstantiationException,
+			IllegalArgumentException, InvocationTargetException {
 		File targetDirectory = FileUtility.getOrCreateDirectory(
-				stockServiceProperty.getTransportDir(), String.valueOf(year),
-				String.valueOf(season), stockCode, reportType.name());
+				stockServiceProperty.getTransportDir(), stockCode,
+				reportType.name());
 		if (isTransported(transportedSet, stockCode, reportType)) {
 			return targetDirectory;
 		}
+		logger.info(String.format("%s %s begin transport.", stockCode,
+				reportType));
 		// False means no data in hbase.
 		boolean transRst = transporter.saveHbaseDataToFile(stockCode,
-				reportType, version, targetDirectory);
+				reportType, targetDirectory);
+		logger.info(String.format("%s  %s finish transport.", stockCode,
+				reportType));
 		if (transRst == false) {
 			return null;
 		}

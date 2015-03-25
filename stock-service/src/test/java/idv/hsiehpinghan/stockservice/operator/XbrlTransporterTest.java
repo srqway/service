@@ -2,7 +2,6 @@ package idv.hsiehpinghan.stockservice.operator;
 
 import idv.hsiehpinghan.stockdao.enumeration.ReportType;
 import idv.hsiehpinghan.stockservice.suit.TestngSuitSetting;
-import idv.hsiehpinghan.xbrlassistant.enumeration.XbrlTaxonomyVersion;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +17,6 @@ import org.testng.annotations.Test;
 public class XbrlTransporterTest {
 	private String stockCode = "1256";
 	private ReportType reportType = ReportType.CONSOLIDATED_STATEMENT;
-	private XbrlTaxonomyVersion version = XbrlTaxonomyVersion.TIFRS_CI_CR_2014_03_31;
 	private XbrlTransporter transporter;
 
 	@BeforeClass
@@ -32,8 +30,7 @@ public class XbrlTransporterTest {
 	public void saveHbaseDataToFile() throws Exception {
 		File targetDirectory = new File(FileUtils.getTempDirectory(),
 				"getXbrlFromHbase");
-		transporter.saveHbaseDataToFile(stockCode, reportType, version,
-				targetDirectory);
+		transporter.saveHbaseDataToFile(stockCode, reportType, targetDirectory);
 		File file = new File(targetDirectory, "xbrl");
 		List<String> lines = FileUtils.readLines(file);
 		Assert.assertTrue(lines.size() > 1);

@@ -37,7 +37,7 @@ public class StockClosingConditionHbaseManagerTest {
 	public void saveStockClosingConditionOfTwseToHBase() throws Exception {
 		File dir = stockServiceProperty
 				.getStockClosingConditionDownloadDirOfTwse();
-		truncateProcessedLogFle(dir);
+		// truncateProcessedLogFle(dir);
 		int processedAmt = manager.saveStockClosingConditionOfTwseToHBase(dir);
 		Assert.assertTrue(processedAmt > 0);
 	}
@@ -46,7 +46,7 @@ public class StockClosingConditionHbaseManagerTest {
 	public void saveStockClosingConditionOfGretaiToHBase() throws Exception {
 		File dir = stockServiceProperty
 				.getStockClosingConditionDownloadDirOfGretai();
-		truncateProcessedLogFle(dir);
+		// truncateProcessedLogFle(dir);
 		int processedAmt = manager
 				.saveStockClosingConditionOfGretaiToHBase(dir);
 		Assert.assertTrue(processedAmt > 0);

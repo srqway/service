@@ -1,5 +1,6 @@
 package idv.hsiehpinghan.stockservice.operator;
 
+import idv.hsiehpinghan.datatypeutility.utility.CharsetUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
@@ -15,11 +16,11 @@ import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 
-import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -35,10 +36,11 @@ import org.springframework.stereotype.Service;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class StockClosingConditionOfGretaiDownloader implements
 		InitializingBean {
+	private final Charset UTF_8 = CharsetUtility.UTF_8;
 	private final String YYYYMMDD = "yyyyMMdd";
 	private final String ALL = "所有證券(不含權證、牛熊證)";
 	private final int MAX_TRY_AMOUNT = 3;
-	private final Date BEGIN_DATA_DATE = generateBeginDataDate();
+	private final Date BEGIN_DATA_DATE = DateUtility.getDate(2015, 1, 1);
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
 	private File downloadedLog;
@@ -149,10 +151,6 @@ public class StockClosingConditionOfGretaiDownloader implements
 		}
 	}
 
-	private Date generateBeginDataDate() {
-		return DateUtility.getDate(2013, 1, 1);
-	}
-
 	private void generateDownloadedLogFile() throws IOException {
 		if (downloadedLog == null) {
 			downloadedLog = new File(downloadDir, "downloaded.log");
@@ -177,7 +175,7 @@ public class StockClosingConditionOfGretaiDownloader implements
 	private void writeToDownloadedFileAndSet(String downloadInfo)
 			throws IOException {
 		String infoLine = downloadInfo + System.lineSeparator();
-		FileUtils.write(downloadedLog, infoLine, Charsets.UTF_8, true);
+		FileUtils.write(downloadedLog, infoLine, UTF_8, true);
 		downloadedSet.add(downloadInfo);
 	}
 
