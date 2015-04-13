@@ -357,7 +357,7 @@ public class StockClosingConditionHbaseManager implements
 			throws IOException {
 		String processedInfo = generateProcessedInfo(file);
 		if (processedSet.contains(processedInfo)) {
-			logger.info(processedInfo + " processed before.");
+			logger.debug(processedInfo + " processed before.");
 			return true;
 		}
 		return false;

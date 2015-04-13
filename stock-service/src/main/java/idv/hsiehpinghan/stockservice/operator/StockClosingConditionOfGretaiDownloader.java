@@ -40,7 +40,7 @@ public class StockClosingConditionOfGretaiDownloader implements
 	private final String YYYYMMDD = "yyyyMMdd";
 	private final String ALL = "所有證券(不含權證、牛熊證)";
 	private final int MAX_TRY_AMOUNT = 3;
-	private final Date BEGIN_DATA_DATE = DateUtility.getDate(2015, 1, 1);
+	private final Date BEGIN_DATA_DATE = DateUtility.getDate(2015, 3, 25);
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
 	private File downloadedLog;

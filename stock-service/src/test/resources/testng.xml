@@ -33,8 +33,9 @@
 				/> -->
 
 			<!-- Test manager -->
-			<class
-				name="idv.hsiehpinghan.stockservice.manager.hbase.StockClosingConditionHbaseManagerTest" />
+			<!-- <class -->
+			<!-- name="idv.hsiehpinghan.stockservice.manager.hbase.StockClosingConditionHbaseManagerTest" -->
+			<!-- /> -->
 		</classes>
 	</test>
 	<test name="companyBasicInfo">
