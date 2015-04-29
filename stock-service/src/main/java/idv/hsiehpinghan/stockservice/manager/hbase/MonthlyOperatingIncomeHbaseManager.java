@@ -120,6 +120,7 @@ public class MonthlyOperatingIncomeHbaseManager implements
 		case "功能性貨幣(SGD)":
 		case "功能性貨幣(新加坡幣)":
 		case "功能性貨幣(新加坡)":
+		case "功能性貨幣(新加幣)":
 			return CurrencyType.SGD;
 		case "功能性貨幣(港幣)":
 		case "功能性貨幣(HKD)":
