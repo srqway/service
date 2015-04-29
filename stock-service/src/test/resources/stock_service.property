@@ -1,4 +1,5 @@
 stock_service_download_dir=/home/centos/Desktop/stock/download
 stock_service_extract_dir=/home/centos/Desktop/stock/extract
+stock_service_repository_dir=/home/centos/Desktop/stock/repository
 stock_service_transport_dir=/home/centos/Desktop/stock/transport
 stock_service_r_script_dir=/home/centos/git/service/stock-service/src/main/r_script

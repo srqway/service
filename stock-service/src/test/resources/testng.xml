@@ -25,6 +25,10 @@
 	<test name="stockClosingCondition">
 		<classes>
 			<!-- Test operator -->
+			<class
+				name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfTwseDownloader_RunnableDownloaderTest" />
+
+			<!-- Test operator -->
 			<!-- <class -->
 			<!-- name="idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfTwseDownloaderTest" -->
 			<!-- /> -->

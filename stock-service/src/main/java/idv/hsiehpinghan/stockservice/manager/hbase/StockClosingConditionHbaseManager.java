@@ -8,7 +8,7 @@ import idv.hsiehpinghan.stockdao.entity.StockClosingCondition.ClosingConditionFa
 import idv.hsiehpinghan.stockdao.repository.StockClosingConditionRepository;
 import idv.hsiehpinghan.stockservice.manager.IStockClosingConditionManager;
 import idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfGretaiDownloader;
-import idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfTwseDownloader;
+import idv.hsiehpinghan.stockservice.operator.StockClosingConditionOfTwseDownloader_bk;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
 
 import java.io.File;
@@ -413,8 +413,8 @@ public class StockClosingConditionHbaseManager implements
 	}
 
 	private File downloadStockClosingConditionOfTwse() {
-		StockClosingConditionOfTwseDownloader downloaderOfTwse = applicationContext
-				.getBean(StockClosingConditionOfTwseDownloader.class);
+		StockClosingConditionOfTwseDownloader_bk downloaderOfTwse = applicationContext
+				.getBean(StockClosingConditionOfTwseDownloader_bk.class);
 		try {
 			File dir = downloaderOfTwse.downloadStockClosingCondition();
 			logger.info(dir.getAbsolutePath() + " download finish.");

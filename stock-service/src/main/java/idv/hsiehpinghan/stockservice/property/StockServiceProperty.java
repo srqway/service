@@ -20,6 +20,7 @@ public class StockServiceProperty implements InitializingBean {
 	private final String GRETAI = "gretai";
 	private String downloadDir;
 	private String extractDir;
+	private String repositoryDir;
 	private String transportDir;
 	private String rScriptDir;
 
@@ -30,6 +31,7 @@ public class StockServiceProperty implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		processDownloadDir();
 		processExtractDir();
+		processRepositoryDir();
 		processTransportDir();
 		processRScriptDir();
 	}
@@ -39,6 +41,11 @@ public class StockServiceProperty implements InitializingBean {
 		return new File(dir, STOCK_CLOSING_CONDITION);
 	}
 
+	public File getStockClosingConditionRepositoryDirOfTwse() {
+		File dir = new File(repositoryDir, TWSE);
+		return new File(dir, STOCK_CLOSING_CONDITION);
+	}
+	
 	public File getStockClosingConditionDownloadDirOfGretai() {
 		File dir = new File(downloadDir, GRETAI);
 		return new File(dir, STOCK_CLOSING_CONDITION);
@@ -93,6 +100,14 @@ public class StockServiceProperty implements InitializingBean {
 		}
 	}
 
+	private void processRepositoryDir() {
+		String pRepositoryDir = "stock_service_repository_dir";
+		repositoryDir = environment.getProperty(pRepositoryDir);
+		if (repositoryDir == null) {
+			throw new RuntimeException(pRepositoryDir + " not set !!!");
+		}
+	}
+	
 	private void processTransportDir() {
 		String pTransportDir = "stock_service_transport_dir";
 		transportDir = environment.getProperty(pTransportDir);
