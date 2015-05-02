@@ -5,36 +5,42 @@ import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
 import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
+import idv.hsiehpinghan.seleniumassistant.pool.HtmlUnitBrowserPool;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
+import idv.hsiehpinghan.seleniumassistant.webelement.Select;
+import idv.hsiehpinghan.seleniumassistant.webelement.TextInput;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
+import idv.hsiehpinghan.threadutility.utility.ThreadUtility;
 
 import java.io.File;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import com.gargoylesoftware.htmlunit.BrowserVersion;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 	private File downloadDir;
 	private File repositoryDir;
-	
+
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
-	
+
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		downloadDir = stockServiceProperty
@@ -43,40 +49,75 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 				.getStockClosingConditionRepositoryDirOfTwse();
 		// generateDownloadedLogFile();
 	}
-	
+
 	@Component
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-	static class RunnableDownloader implements Runnable, InitializingBean {
-		private File downloadDir;
-		private File repositoryDir;
-		private Date beginDate;
-		private Date endDate;
+	static class RunnableDownloader implements Runnable {
+		private static final String YYYYMMDD = "yyyyMMdd";
+		private static final String ALL = "全部(不含權證、牛熊證、可展延牛熊證)";
+		private static final Logger logger = Logger
+				.getLogger(RunnableDownloader.class.getName());
+		private static final int MAX_TRY_AMOUNT = 3;
+		private final File DOWNLOAD_DIR;
+		private final File REPOSITORY_DIR;
+		private final Date BEGIN_DATE;
+		private final Date END_DATE;
 		private Set<String> downloadedSet;
 		private HtmlUnitBrowser browser;
 		@Autowired
-		private ApplicationContext applicationContext;
+		private HtmlUnitBrowserPool pool;
 
-
-		RunnableDownloader(File downloadDir, File repositoryDir, Date beginDate, Date endDate) {
+		RunnableDownloader(File downloadDir, File repositoryDir,
+				Date beginDate, Date endDate) {
 			super();
-			this.downloadDir = downloadDir;
-			this.repositoryDir = repositoryDir;
-			this.beginDate = beginDate;
-			this.endDate = endDate;
+			this.DOWNLOAD_DIR = downloadDir;
+			this.REPOSITORY_DIR = repositoryDir;
+			this.BEGIN_DATE = beginDate;
+			this.END_DATE = endDate;
 		}
 
-		@Override
-		public void afterPropertiesSet() throws Exception {
-			browser = applicationContext.getBean(HtmlUnitBrowser.class);
-			// generateDownloadedLogFile();
+		@PostConstruct
+		public void postConstruct() throws Exception {
+			browser = pool.borrowObject();
+		}
+
+		@PreDestroy
+		public void preDestroy() throws Exception {
+			pool.returnObject(browser);
 		}
 
 		@Override
 		public void run() {
 			moveToTargetPage(browser);
+			downloadedSet = getDownloadedSetByMonth(BEGIN_DATE, END_DATE,
+					DOWNLOAD_DIR, REPOSITORY_DIR);
+			Date targetDate = BEGIN_DATE;
+			while (targetDate.getTime() < END_DATE.getTime()) {
+				String fileName = generateFileName(targetDate);
+				if (downloadedSet.contains(fileName) == false) {
+					inputDataDate(targetDate);
+					selectType(ALL);
+					logger.info(fileName + " process start.");
+					repeatTryDownload(targetDate);
+					logger.info(fileName + " processed success.");
+					writeToDownloadedSet(fileName);
+				}
+				targetDate = DateUtils.addDays(targetDate, 1);
+			}
 
-			downloadedSet = getDownloadedSetByMonth(beginDate, endDate,
-					downloadDir, repositoryDir);
+		}
+
+		void selectType(String text) {
+			Select typeSel = browser.getSelect(By
+					.cssSelector("#main-content > form > select"));
+			typeSel.selectByText(text);
+		}
+
+		void inputDataDate(Date date) {
+			TextInput dataDateInput = browser.getTextInput(By.id("date-field"));
+			dataDateInput.clear();
+			String dateStr = DateUtility.getRocDateString(date, "yyyy/MM/dd");
+			dataDateInput.inputText(dateStr);
 		}
 
 		static void moveToTargetPage(BrowserBase browser) {
@@ -85,6 +126,71 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 			Div div = browser.getDiv(By.id("breadcrumbs"));
 			AjaxWaitUtility.waitUntilTextStartWith(div,
 					"首頁 > 交易資訊 > 盤後資訊 > 每日收盤行情");
+		}
+
+		void repeatTryDownload(Date targetDate) {
+			int tryAmount = 0;
+			while (true) {
+				try {
+					downloadCsv(targetDate);
+					break;
+				} catch (Exception e) {
+					++tryAmount;
+					logger.info("Download fail " + tryAmount + " times !!!");
+					if (tryAmount >= MAX_TRY_AMOUNT) {
+						logger.error(browser.getWebDriver().getPageSource());
+						throw new RuntimeException(e);
+					}
+					ThreadUtility.sleep(tryAmount * 10);
+				}
+			}
+		}
+
+		String getContentDispositionFileName(String contentDisposition) {
+			int idxBegin = contentDisposition.indexOf("=") + 1;
+			return contentDisposition.substring(idxBegin);
+		}
+
+		private void validateContentDispositionFileName(Date targetDate) {
+			String contentDispositionFileName = getContentDispositionFileName(browser
+					.getContentDisposition());
+			// ex. A11220130102MS2.csv
+			String expectedFileName = String.format(
+					"A112%1$tY%1$tm%1$tdMS2.csv", targetDate);
+			if (expectedFileName.equals(contentDispositionFileName) == false) {
+				throw new RuntimeException("Content disposition file name("
+						+ contentDispositionFileName
+						+ ") not equals expected file name(" + expectedFileName
+						+ ") !!!");
+			}
+		}
+
+		private void downloadCsv(Date targetDate) {
+			browser.cacheCurrentPage();
+			try {
+				browser.getButton(By.cssSelector(".dl-csv")).click();
+				validateContentDispositionFileName(targetDate);
+				File dir = getOrCreateDownloadDirectoryByMonth(DOWNLOAD_DIR,
+						targetDate);
+				String fileName = generateFileName(targetDate);
+				File file = new File(dir, fileName);
+				browser.download(file);
+				logger.info(file.getAbsolutePath() + " downloaded.");
+				browser.restorePage();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			} finally {
+				browser.restorePage();
+			}
+		}
+
+		private void writeToDownloadedSet(String fileName) {
+			downloadedSet.add(fileName);
+		}
+
+		private String generateFileName(Date date) {
+			return String.format("%s.csv",
+					DateFormatUtils.format(date, YYYYMMDD));
 		}
 
 		private static Set<String> getDownloadedSetByMonth(Date beginDate,
@@ -119,7 +225,9 @@ public class StockClosingConditionOfTwseDownloader implements InitializingBean {
 			return FileUtility.getOrCreateDirectory(repositoryDir,
 					String.valueOf(year), String.valueOf(month));
 		}
+
 	}
+
 }
 
 //
