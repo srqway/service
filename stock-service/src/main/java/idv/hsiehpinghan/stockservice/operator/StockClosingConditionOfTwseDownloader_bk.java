@@ -54,8 +54,7 @@ public class StockClosingConditionOfTwseDownloader_bk implements
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		browser = applicationContext.getBean(HtmlUnitBrowser.class,
-				BrowserVersion.FIREFOX_24, true);
+		browser = applicationContext.getBean(HtmlUnitBrowser.class);
 		downloadDir = stockServiceProperty
 				.getStockClosingConditionDownloadDirOfTwse();
 		generateDownloadedLogFile();

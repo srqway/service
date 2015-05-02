@@ -28,8 +28,22 @@ import com.gargoylesoftware.htmlunit.BrowserVersion;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class StockClosingConditionOfTwseDownloader {
-
+public class StockClosingConditionOfTwseDownloader implements InitializingBean {
+	private File downloadDir;
+	private File repositoryDir;
+	
+	@Autowired
+	private StockServiceProperty stockServiceProperty;
+	
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		downloadDir = stockServiceProperty
+				.getStockClosingConditionDownloadDirOfTwse();
+		repositoryDir = stockServiceProperty
+				.getStockClosingConditionRepositoryDirOfTwse();
+		// generateDownloadedLogFile();
+	}
+	
 	@Component
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 	static class RunnableDownloader implements Runnable, InitializingBean {
@@ -41,23 +55,19 @@ public class StockClosingConditionOfTwseDownloader {
 		private HtmlUnitBrowser browser;
 		@Autowired
 		private ApplicationContext applicationContext;
-		@Autowired
-		private StockServiceProperty stockServiceProperty;
 
-		RunnableDownloader(Date beginDate, Date endDate) {
+
+		RunnableDownloader(File downloadDir, File repositoryDir, Date beginDate, Date endDate) {
 			super();
+			this.downloadDir = downloadDir;
+			this.repositoryDir = repositoryDir;
 			this.beginDate = beginDate;
 			this.endDate = endDate;
 		}
 
 		@Override
 		public void afterPropertiesSet() throws Exception {
-			browser = applicationContext.getBean(HtmlUnitBrowser.class,
-					BrowserVersion.FIREFOX_24, true);
-			downloadDir = stockServiceProperty
-					.getStockClosingConditionDownloadDirOfTwse();
-			repositoryDir = stockServiceProperty
-					.getStockClosingConditionRepositoryDirOfTwse();
+			browser = applicationContext.getBean(HtmlUnitBrowser.class);
 			// generateDownloadedLogFile();
 		}
 
