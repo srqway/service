@@ -3,7 +3,7 @@ package idv.hsiehpinghan.stockservice.operator;
 import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Button;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
@@ -27,8 +27,11 @@ import org.openqa.selenium.TimeoutException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import com.gargoylesoftware.htmlunit.BrowserVersion;
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -39,13 +42,16 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 	private File downloadDir;
 	private File downloadedLog;
 	private Set<String> downloadedSet;
+	private HtmlUnitBrowser browser;
 	@Autowired
-	private HtmlUnitFirefoxVersionBrowser browser;
+	private ApplicationContext applicationContext;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		browser = applicationContext.getBean(HtmlUnitBrowser.class,
+				BrowserVersion.FIREFOX_24, true);
 		downloadDir = stockServiceProperty.getCompanyBasicInfoDownloadDir();
 		generateDownloadedLogFile();
 	}
@@ -183,7 +189,7 @@ public class CompanyBasicInfoDownloader implements InitializingBean {
 			browser.getButton(
 					By.cssSelector("#table01 > form:nth-child(3) > button"))
 					.click();
-			if (browser.hasAttachment() == false) {
+			if (browser.hasContentDisposition() == false) {
 				throw new RuntimeException("No attachment !!!");
 			}
 			File file = new File(downloadDir.getAbsolutePath(), fileName);

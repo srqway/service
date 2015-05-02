@@ -4,7 +4,7 @@ import idv.hsiehpinghan.datatypeutility.utility.CharsetUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
@@ -29,8 +29,11 @@ import org.openqa.selenium.By;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import com.gargoylesoftware.htmlunit.BrowserVersion;
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -45,16 +48,16 @@ public class StockClosingConditionOfGretaiDownloader implements
 	private File downloadDir;
 	private File downloadedLog;
 	private Set<String> downloadedSet;
-
+	private HtmlUnitBrowser browser;
 	@Autowired
-	private HtmlUnitFirefoxVersionBrowser browser;
-	// private FirefoxBrowser browser = new FirefoxBrowser();
-
+	private ApplicationContext applicationContext;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		browser = applicationContext.getBean(HtmlUnitBrowser.class,
+				BrowserVersion.FIREFOX_24, true);
 		downloadDir = stockServiceProperty
 				.getStockClosingConditionDownloadDirOfGretai();
 		generateDownloadedLogFile();
@@ -138,10 +141,11 @@ public class StockClosingConditionOfGretaiDownloader implements
 		if (browser.hasChildWindow() == false) {
 			return;
 		}
-		AjaxWaitUtility.waitUntilFirstChildWindowAttachmentNotNull(browser);
+		AjaxWaitUtility
+				.waitUntilFirstChildWindowContentDispositionNotNull(browser);
 		browser.switchToFirstChildWindow();
 		try {
-			String fileName = getFileName(browser.getAttachment());
+			String fileName = getFileName(browser.getContentDisposition());
 			File file = new File(downloadDir.getAbsolutePath(), fileName);
 			browser.download(file);
 			logger.info(file.getAbsolutePath() + " downloaded.");

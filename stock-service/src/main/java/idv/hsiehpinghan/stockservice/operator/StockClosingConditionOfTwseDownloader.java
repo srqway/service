@@ -4,7 +4,7 @@ import idv.hsiehpinghan.collectionutility.utility.ArrayUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
 import idv.hsiehpinghan.stockservice.property.StockServiceProperty;
@@ -20,8 +20,11 @@ import org.openqa.selenium.By;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import com.gargoylesoftware.htmlunit.BrowserVersion;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -35,11 +38,11 @@ public class StockClosingConditionOfTwseDownloader {
 		private Date beginDate;
 		private Date endDate;
 		private Set<String> downloadedSet;
-
+		private HtmlUnitBrowser browser;
+		@Autowired
+		private ApplicationContext applicationContext;
 		@Autowired
 		private StockServiceProperty stockServiceProperty;
-		@Autowired
-		private HtmlUnitFirefoxVersionBrowser browser;
 
 		RunnableDownloader(Date beginDate, Date endDate) {
 			super();
@@ -49,6 +52,8 @@ public class StockClosingConditionOfTwseDownloader {
 
 		@Override
 		public void afterPropertiesSet() throws Exception {
+			browser = applicationContext.getBean(HtmlUnitBrowser.class,
+					BrowserVersion.FIREFOX_24, true);
 			downloadDir = stockServiceProperty
 					.getStockClosingConditionDownloadDirOfTwse();
 			repositoryDir = stockServiceProperty
@@ -59,9 +64,6 @@ public class StockClosingConditionOfTwseDownloader {
 		@Override
 		public void run() {
 			moveToTargetPage(browser);
-
-			
-			
 
 			downloadedSet = getDownloadedSetByMonth(beginDate, endDate,
 					downloadDir, repositoryDir);

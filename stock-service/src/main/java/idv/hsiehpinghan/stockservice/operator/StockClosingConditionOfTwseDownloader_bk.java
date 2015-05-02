@@ -4,7 +4,7 @@ import idv.hsiehpinghan.datatypeutility.utility.CharsetUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
@@ -27,12 +27,16 @@ import org.openqa.selenium.By;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.gargoylesoftware.htmlunit.BrowserVersion;
+
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class StockClosingConditionOfTwseDownloader_bk implements InitializingBean {
+public class StockClosingConditionOfTwseDownloader_bk implements
+		InitializingBean {
 	private final Charset UTF_8 = CharsetUtility.UTF_8;
 	private final String YYYYMMDD = "yyyyMMdd";
 	private final String ALL = "全部(不含權證、牛熊證、可展延牛熊證)";
@@ -42,16 +46,16 @@ public class StockClosingConditionOfTwseDownloader_bk implements InitializingBea
 	private File downloadDir;
 	private File downloadedLog;
 	private Set<String> downloadedSet;
-
+	private HtmlUnitBrowser browser;
 	@Autowired
-	private HtmlUnitFirefoxVersionBrowser browser;
-	// private HtmlUnitWithJavascriptBrowser browser;
-	// private FirefoxBrowser browser;
+	private ApplicationContext applicationContext;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		browser = applicationContext.getBean(HtmlUnitBrowser.class,
+				BrowserVersion.FIREFOX_24, true);
 		downloadDir = stockServiceProperty
 				.getStockClosingConditionDownloadDirOfTwse();
 		generateDownloadedLogFile();
@@ -129,7 +133,7 @@ public class StockClosingConditionOfTwseDownloader_bk implements InitializingBea
 		browser.cacheCurrentPage();
 		try {
 			browser.getButton(By.cssSelector(".dl-csv")).click();
-			String fileName = getFileName(browser.getAttachment());
+			String fileName = getFileName(browser.getContentDisposition());
 			File file = new File(downloadDir.getAbsolutePath(), fileName);
 			browser.download(file);
 			logger.info(file.getAbsolutePath() + " downloaded.");

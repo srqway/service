@@ -1,7 +1,7 @@
 package idv.hsiehpinghan.stockservice.operator;
 
 import idv.hsiehpinghan.datetimeutility.utility.CalendarUtility;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select.Option;
 import idv.hsiehpinghan.stockdao.enumeration.CurrencyType;
@@ -22,9 +22,11 @@ import org.openqa.selenium.By;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.google.common.base.Charsets;
 
 @Service
@@ -33,14 +35,16 @@ public class ExchangeRateDownloader implements InitializingBean {
 	private final int MAX_TRY_AMOUNT = 3;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
-
+	private HtmlUnitBrowser browser;
 	@Autowired
-	private HtmlUnitFirefoxVersionBrowser browser;
+	private ApplicationContext applicationContext;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		browser = applicationContext.getBean(HtmlUnitBrowser.class,
+				BrowserVersion.FIREFOX_24, true);
 		downloadDir = stockServiceProperty.getExchangeRateDownloadDir();
 	}
 

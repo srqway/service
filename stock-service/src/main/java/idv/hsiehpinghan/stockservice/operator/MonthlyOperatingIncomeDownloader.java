@@ -5,7 +5,7 @@ import idv.hsiehpinghan.datatypeutility.utility.StringUtility;
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.resourceutility.utility.FileUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Div;
 import idv.hsiehpinghan.seleniumassistant.webelement.Select;
@@ -38,8 +38,11 @@ import org.openqa.selenium.TimeoutException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import com.gargoylesoftware.htmlunit.BrowserVersion;
 
 @Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -57,16 +60,18 @@ public class MonthlyOperatingIncomeDownloader implements InitializingBean {
 	private File downloadedLog;
 	private Set<String> downloadedSet;
 	private StringBuilder sb = new StringBuilder();
-
+	private HtmlUnitBrowser browser;
+	@Autowired
+	private ApplicationContext applicationContext;
 	@Autowired
 	private StockServiceProperty stockServiceProperty;
 	@Autowired
 	private StockInfoRepository infoRepo;
-	@Autowired
-	private HtmlUnitFirefoxVersionBrowser browser;
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		browser = applicationContext.getBean(HtmlUnitBrowser.class,
+				BrowserVersion.FIREFOX_24, true);
 		downloadDir = stockServiceProperty
 				.getMonthlyOperatingIncomeDownloadDir();
 	}

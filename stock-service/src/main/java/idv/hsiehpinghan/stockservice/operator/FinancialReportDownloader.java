@@ -2,7 +2,7 @@ package idv.hsiehpinghan.stockservice.operator;
 
 import idv.hsiehpinghan.datetimeutility.utility.DateUtility;
 import idv.hsiehpinghan.seleniumassistant.browser.BrowserBase;
-import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitFirefoxVersionBrowser;
+import idv.hsiehpinghan.seleniumassistant.browser.HtmlUnitBrowser;
 import idv.hsiehpinghan.seleniumassistant.utility.AjaxWaitUtility;
 import idv.hsiehpinghan.seleniumassistant.webelement.Button;
 import idv.hsiehpinghan.seleniumassistant.webelement.Font;
@@ -25,8 +25,11 @@ import org.openqa.selenium.TimeoutException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import com.gargoylesoftware.htmlunit.BrowserVersion;
 
 /**
  * Response for download xbrl instance files from stock.
@@ -45,9 +48,9 @@ public class FinancialReportDownloader implements InitializingBean {
 	private final int targetSeason = 4;
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private File downloadDir;
-
+	private HtmlUnitBrowser browser;
 	@Autowired
-	private HtmlUnitFirefoxVersionBrowser browser;
+	private ApplicationContext applicationContext;
 	@Autowired
 	private FinancialReportUnzipper unzipper;
 	@Autowired
@@ -55,6 +58,8 @@ public class FinancialReportDownloader implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		browser = applicationContext.getBean(HtmlUnitBrowser.class,
+				BrowserVersion.FIREFOX_24, true);
 		downloadDir = stockServiceProperty.getFinancialReportDownloadDir();
 	}
 
@@ -84,14 +89,14 @@ public class FinancialReportDownloader implements InitializingBean {
 				List<Option> yearOpts = getYearSelect().getOptions();
 				for (int iYear = 0, yearSize = yearOpts.size(); iYear < yearSize; ++iYear) {
 					Option yearOpt = yearOpts.get(iYear);
-					if(isTargetYear(yearOpt) == false) {
+					if (isTargetYear(yearOpt) == false) {
 						continue;
 					}
 					yearOpt.click();
 					List<Option> seasonOpts = getSeasonSelect().getOptions();
 					for (int iSeason = 0, seasonSize = seasonOpts.size(); iSeason < seasonSize; ++iSeason) {
 						Option seasonOpt = seasonOpts.get(iSeason);
-						if(isTargetSeason(seasonOpt) == false) {
+						if (isTargetSeason(seasonOpt) == false) {
 							continue;
 						}
 						if (isFutureData(yearOpt, seasonOpt)) {
@@ -127,11 +132,11 @@ public class FinancialReportDownloader implements InitializingBean {
 	private boolean isTargetYear(Option yearOption) {
 		return Integer.valueOf(yearOption.getText()).compareTo(targetRocYear) == 0;
 	}
-	
+
 	private boolean isTargetSeason(Option seasonOption) {
 		return Integer.valueOf(seasonOption.getText()).compareTo(targetSeason) == 0;
 	}
-	
+
 	private boolean isFutureData(Option yearOpt, Option seasonOpt) {
 		Date seasonEndDate = getSeasonEndDate(yearOpt.getValue(),
 				seasonOpt.getValue());
@@ -299,9 +304,9 @@ public class FinancialReportDownloader implements InitializingBean {
 					logger.error(browser.getWebDriver().getPageSource());
 					throw new RuntimeException(e);
 				}
-				
+
 				browser.getWebDriver().manage().deleteAllCookies();
-				
+
 				ThreadUtility.sleep(tryAmount * 10);
 			}
 		}
